@@ -1,0 +1,308 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "默认模块",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "套餐订阅"
+    }
+  ],
+  "paths": {
+    "/api/user/packages/available": {
+      "get": {
+        "summary": "获取可订阅的套餐列表（公开接口，无需登录）",
+        "deprecated": false,
+        "description": "公开接口，无需认证即可访问，用于客户端展示可订阅的套餐列表。\n\n**安全防护：**\n- 已添加速率限制防护，每个IP地址在15分钟内最多允许100次请求\n- 超过限制将返回429状态码，响应中包含重试时间（retryAfter字段）\n- 使用真实IP地址识别（支持代理环境）\n\n**返回说明：**\n- 仅返回已启用（isActive=true）的套餐\n- 按优先级（priority）降序排列\n- 包含套餐的完整信息，包括有效期、额度、价格等\n",
+        "tags": [
+          "套餐订阅"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "套餐类型筛选。可选值：free（免费套餐）、paid（付费套餐）、trial（试用套餐）。不传则返回所有类型",
+            "required": false,
+            "example": "paid",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "free",
+                "paid",
+                "trial"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Success"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "套餐ID",
+                                "example": "clx1234567890"
+                              },
+                              "name": {
+                                "type": "string",
+                                "description": "套餐内部标识（唯一）",
+                                "example": "premium_monthly"
+                              },
+                              "displayName": {
+                                "type": "string",
+                                "description": "套餐显示名称",
+                                "example": "高级套餐（月付）"
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "套餐描述",
+                                "nullable": true,
+                                "example": "包含10000积分，支持所有模型"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "free",
+                                  "paid",
+                                  "trial"
+                                ],
+                                "description": "套餐类型",
+                                "example": "paid"
+                              },
+                              "duration": {
+                                "type": "integer",
+                                "description": "有效期数值，null表示永久",
+                                "nullable": true,
+                                "example": 30
+                              },
+                              "durationUnit": {
+                                "type": "string",
+                                "enum": [
+                                  "day",
+                                  "month",
+                                  "year"
+                                ],
+                                "description": "有效期单位：day（天）、month（月）、year（年），null表示永久",
+                                "nullable": true,
+                                "example": "month"
+                              },
+                              "quota": {
+                                "type": "number",
+                                "format": "decimal",
+                                "description": "额度（积分），null表示无限",
+                                "nullable": true,
+                                "example": 10000
+                              },
+                              "price": {
+                                "type": "number",
+                                "format": "decimal",
+                                "description": "套餐金额，免费套餐为null",
+                                "nullable": true,
+                                "example": 99
+                              },
+                              "priceUnit": {
+                                "type": "string",
+                                "enum": [
+                                  "CNY",
+                                  "USD"
+                                ],
+                                "description": "套餐金额单位",
+                                "nullable": true,
+                                "example": "CNY"
+                              },
+                              "discount": {
+                                "type": "number",
+                                "format": "decimal",
+                                "description": "套餐折扣（百分比，0-100）",
+                                "nullable": true,
+                                "example": 10
+                              },
+                              "maxDevices": {
+                                "type": "integer",
+                                "description": "最大设备数量，null表示无限",
+                                "nullable": true,
+                                "example": 5
+                              },
+                              "availableModels": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "可用模型ID列表，null或空数组表示所有模型都可用",
+                                "nullable": true,
+                                "example": [
+                                  "model1",
+                                  "model2"
+                                ]
+                              },
+                              "isStackable": {
+                                "type": "boolean",
+                                "description": "是否可叠加（用户是否可以同时拥有多个该套餐）",
+                                "example": false
+                              },
+                              "priority": {
+                                "type": "integer",
+                                "description": "优先级，数字越大优先级越高，用于排序",
+                                "example": 10
+                              },
+                              "isActive": {
+                                "type": "boolean",
+                                "description": "是否启用",
+                                "example": true
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "创建时间"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "更新时间"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "required": false,
+                "description": "速率限制窗口内的最大请求数",
+                "schema": {
+                  "type": "integer",
+                  "example": 100
+                }
+              },
+              "RateLimit-Remaining": {
+                "required": false,
+                "description": "当前窗口内剩余的请求数",
+                "schema": {
+                  "type": "integer",
+                  "example": 95
+                }
+              },
+              "RateLimit-Reset": {
+                "required": false,
+                "description": "速率限制重置时间（Unix时间戳，秒）",
+                "schema": {
+                  "type": "integer",
+                  "example": 1640995200
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "请求过于频繁（速率限制）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "message",
+                    "retryAfter"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "请求是否成功",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误消息",
+                      "example": "请求过于频繁，请稍后再试"
+                    },
+                    "retryAfter": {
+                      "type": "integer",
+                      "description": "重试时间（秒），表示多少秒后可以再次请求",
+                      "example": 300
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "message": "请求过于频繁，请稍后再试",
+                  "retryAfter": 300
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "required": false,
+                "description": "速率限制窗口内的最大请求数",
+                "schema": {
+                  "type": "integer",
+                  "example": 100
+                }
+              },
+              "RateLimit-Remaining": {
+                "required": false,
+                "description": "当前窗口内剩余的请求数",
+                "schema": {
+                  "type": "integer",
+                  "example": 0
+                }
+              },
+              "RateLimit-Reset": {
+                "required": false,
+                "description": "速率限制重置时间（Unix时间戳，秒）",
+                "schema": {
+                  "type": "integer",
+                  "example": 1640995200
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Success": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Success message"
+          },
+          "data": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      }
+    },
+    "responses": {},
+    "securitySchemes": {}
+  },
+  "servers": [],
+  "security": []
+}

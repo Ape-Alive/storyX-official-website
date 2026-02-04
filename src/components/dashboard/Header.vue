@@ -101,7 +101,7 @@ const handleLogout = () => {
 <style scoped>
 .dashboard-header {
   height: 64px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;

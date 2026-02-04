@@ -211,14 +211,11 @@ const calculatePrice = (pkg) => {
     return 0
   }
 
-  // 按年订阅且有折扣时应用折扣（折扣小于100%才应用）
-  // 注意：discount 为 100 表示免费，但这里只处理年付折扣，不影响月付价格
-  if (selectedDuration.value === 'year' && pkg.discount) {
-    const discount = typeof pkg.discount === 'string' ? parseFloat(pkg.discount) : pkg.discount
-    if (!isNaN(discount) && discount > 0 && discount < 100) {
-      price = price * (1 - discount / 100)
-    }
-  }
+  // 按年订阅时，如果 API 返回的年付套餐价格已经是最终价格，则不需要再应用折扣
+  // discount 字段可能表示其他含义（如免费标识），不应该直接用于价格计算
+  // 只有当明确需要应用年付折扣时，才使用固定的折扣率（如20%）
+  // 这里暂时移除 discount 字段的应用，直接使用 API 返回的价格
+  // 如果未来需要应用年付折扣，应该使用固定的折扣率，而不是 discount 字段
 
   // 返回数字类型，让 formatPrice 函数处理显示格式
   return price

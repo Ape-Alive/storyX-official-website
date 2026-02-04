@@ -78,7 +78,7 @@ import { Message, ChatLineRound } from '@element-plus/icons-vue'
 }
 
 .contact-left {
-  background: var(--accent-gradient);
+  background: var(--soft-gradient);
   padding: 48px;
   color: white;
   display: flex;
@@ -119,11 +119,11 @@ import { Message, ChatLineRound } from '@element-plus/icons-vue'
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(168, 85, 247, 0.8);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .info-text {
@@ -135,7 +135,7 @@ import { Message, ChatLineRound } from '@element-plus/icons-vue'
 
 .contact-footer {
   font-size: 10px;
-  color: rgba(168, 85, 247, 0.8);
+  color: rgba(255, 255, 255, 0.7);
   font-family: 'Courier New', monospace;
   font-weight: 900;
   text-transform: uppercase;
@@ -180,18 +180,25 @@ import { Message, ChatLineRound } from '@element-plus/icons-vue'
 .form-textarea {
   width: 100%;
   padding: 16px;
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   outline: none;
   font-weight: 500;
   font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
   transition: all 0.3s;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: var(--text-tertiary);
 }
 
 .form-input:focus,
 .form-textarea:focus {
-  border-color: rgba(147, 51, 234, 0.3);
+  border-color: var(--border-color-strong);
+  background: var(--bg-card);
 }
 
 .form-textarea {

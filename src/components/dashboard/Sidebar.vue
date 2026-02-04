@@ -55,7 +55,7 @@ const isActive = (path) => {
   position: relative;
   width: 288px;
   flex-shrink: 0;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-radius: 16px;
   box-shadow: var(--shadow-sm);
   z-index: 50;

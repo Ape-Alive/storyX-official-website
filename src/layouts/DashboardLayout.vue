@@ -73,7 +73,13 @@ const handleLogoutClick = async () => {
     await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
+      customClass: 'logout-confirm-dialog',
+      center: false,
+      showClose: true,
+      closeOnClickModal: false,
+      closeOnPressEscape: true,
+      distinguishCancelAndClose: true
     })
 
     removeToken()

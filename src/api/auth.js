@@ -45,3 +45,19 @@ export const login = (data) => {
     data
   })
 }
+
+/**
+ * 生成一次性token（用于桌面端登录）
+ * @param {Object} [options] - 可选参数
+ * @param {number} [options.expiresInMinutes] - 过期时间（分钟），默认10分钟，最长60分钟
+ * @returns {Promise}
+ */
+export const generateOneTimeToken = (options = {}) => {
+  return request({
+    url: '/auth/one-time-token',
+    method: 'post',
+    data: {
+      expiresInMinutes: options.expiresInMinutes || 10
+    }
+  })
+}

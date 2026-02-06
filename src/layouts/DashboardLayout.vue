@@ -43,6 +43,7 @@ import { Monitor } from '@element-plus/icons-vue'
 import Sidebar from '@/components/dashboard/Sidebar.vue'
 import Header from '@/components/dashboard/Header.vue'
 import { getUserInfo, removeToken, removeUserInfo } from '@/utils/storage'
+import { generateOneTimeToken } from '@/api/auth'
 
 const router = useRouter()
 const userEmail = ref('')
@@ -91,8 +92,35 @@ const handleLogoutClick = async () => {
   }
 }
 
-const openDesktopApp = () => {
-  window.open('storyx://open')
+const openDesktopApp = async () => {
+  try {
+    // 显示加载提示
+    const loadingMessage = ElMessage({
+      message: '正在生成登录令牌...',
+      type: 'info',
+      duration: 0 // 不自动关闭
+    })
+
+    // 调用 API 生成一次性 token
+    const response = await generateOneTimeToken({ expiresInMinutes: 10 })
+
+    // 关闭加载提示
+    loadingMessage.close()
+
+    if (response.success && response.data && response.data.token) {
+      const token = response.data.token
+
+      // 在浏览器中打开协议 URL
+      window.location.href = `storyx://login?token=${token}`
+
+      ElMessage.success('已生成登录令牌，正在打开桌面客户端...')
+    } else {
+      ElMessage.error('生成登录令牌失败，请稍后重试')
+    }
+  } catch (error) {
+    console.error('生成一次性 token 失败:', error)
+    ElMessage.error(error.response?.data?.message || '生成登录令牌失败，请稍后重试')
+  }
 }
 </script>
 

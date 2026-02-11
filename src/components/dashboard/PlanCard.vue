@@ -4,7 +4,15 @@
     <div class="plan-header">
       <div>
         <h4 class="plan-name">{{ plan.name }}</h4>
-        <p class="plan-expiry">有效期至: {{ plan.expiry }} ({{ plan.price === 0 ? '永久' : '自动续费中' }})</p>
+        <p class="plan-expiry">
+          有效期至: 
+          <template v-if="plan.expiry">
+            {{ plan.expiry }} ({{ plan.price === 0 || plan.price === null ? '永久' : '自动续费中' }})
+          </template>
+          <template v-else>
+            永久
+          </template>
+        </p>
       </div>
       <div class="plan-percentage">
         <span class="percentage-value">{{ percentage }}%</span>
@@ -19,8 +27,8 @@
       ></div>
     </div>
     <div class="plan-stats">
-      <span class="stat-text">已消耗 {{ (plan.used / 1000).toFixed(1) }}k 字符</span>
-      <span class="stat-text">剩余 {{ ((plan.limit - plan.used) / 1000).toFixed(1) }}k 字符</span>
+      <span class="stat-text">已消耗 {{ (plan.used / 1000).toFixed(1) }}k 积分</span>
+      <span class="stat-text">剩余 {{ ((plan.limit - plan.used) / 1000).toFixed(1) }}k 积分</span>
     </div>
   </div>
 </template>

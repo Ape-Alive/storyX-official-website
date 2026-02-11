@@ -23,12 +23,8 @@
             <span class="rec-dot"></span>
             REC 00:24:59:12
           </div>
-          <div class="camera-info camera-info-tr">
-            4K 60FPS ISO 400
-          </div>
-          <div class="camera-info camera-info-bl">
-            AF-C [MULTI-AGENT]
-          </div>
+          <div class="camera-info camera-info-tr">4K 60FPS ISO 400</div>
+          <div class="camera-info camera-info-bl">AF-C [MULTI-AGENT]</div>
 
           <!-- 主标题 -->
           <div class="title-content">
@@ -47,11 +43,16 @@
           <button
             v-for="duration in durations"
             :key="duration.value"
-            :class="['duration-btn', { active: selectedDuration === duration.value }]"
+            :class="[
+              'duration-btn',
+              { active: selectedDuration === duration.value },
+            ]"
             @click="selectedDuration = duration.value"
           >
             <span>{{ duration.label }}</span>
-            <span v-if="duration.discount" class="discount-badge">{{ duration.discount }}</span>
+            <span v-if="duration.discount" class="discount-badge">{{
+              duration.discount
+            }}</span>
           </button>
         </div>
       </div>
@@ -74,7 +75,9 @@
               <div class="package-header">
                 <h3 class="package-name">{{ pkg.displayName }}</h3>
                 <div class="package-price">
-                  <span class="price-amount">¥{{ formatPrice(pkg.displayPrice) }}</span>
+                  <span class="price-amount"
+                    >¥{{ formatPrice(pkg.displayPrice) }}</span
+                  >
                   <span class="price-unit">/{{ getDurationUnitLabel() }}</span>
                 </div>
                 <p class="package-desc">{{ pkg.description }}</p>
@@ -87,14 +90,26 @@
                 </div>
                 <div class="metric-item metric-item-purple">
                   <span class="metric-label">多端登录</span>
-                  <span class="metric-value">{{ pkg.maxDevices ? `${pkg.maxDevices}台` : '不限制' }}</span>
+                  <span class="metric-value">{{
+                    pkg.maxDevices ? `${pkg.maxDevices}台` : "不限制"
+                  }}</span>
                 </div>
               </div>
 
               <ul class="package-features">
-                <li v-for="feature in pkg.features" :key="feature" class="feature-item">
-                  <div :class="['feature-check', { 'check-popular': index === 1 }]">
-                    <el-icon :size="10" :color="index === 1 ? '#fff' : '#4f46e5'"><Select /></el-icon>
+                <li
+                  v-for="feature in pkg.features"
+                  :key="feature"
+                  class="feature-item"
+                >
+                  <div
+                    :class="['feature-check', { 'check-popular': index === 1 }]"
+                  >
+                    <el-icon
+                      :size="10"
+                      :color="index === 1 ? '#fff' : '#4f46e5'"
+                      ><Select
+                    /></el-icon>
                   </div>
                   <span>{{ feature }}</span>
                 </li>
@@ -116,7 +131,7 @@
                 <el-icon :size="36" color="#4f46e5"><Plus /></el-icon>
               </div>
               <h4 class="custom-title">定制方案</h4>
-              <p class="custom-desc">需要算力算集群<br/>或独立服务器部署？</p>
+              <p class="custom-desc">需要算力算集群<br />或独立服务器部署？</p>
               <div class="custom-link">
                 联系我们
                 <el-icon :size="14" color="#4f46e5"><ArrowRight /></el-icon>
@@ -161,54 +176,62 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Select, Loading, Lock, CreditCard, Star, Plus, ArrowRight } from '@element-plus/icons-vue'
-import { getAvailablePackages } from '@/api/pricing'
+import { ref, computed, onMounted } from "vue";
+import { ElMessage } from "element-plus";
+import {
+  Select,
+  Loading,
+  Lock,
+  CreditCard,
+  Star,
+  Plus,
+  ArrowRight,
+} from "@element-plus/icons-vue";
+import { getAvailablePackages } from "@/api/pricing";
 
-const scrollContainerRef = ref(null)
+const scrollContainerRef = ref(null);
 
 const durations = [
-  { value: 'day', label: '按天' },
-  { value: 'month', label: '按月' },
-  { value: 'year', label: '按年', discount: '省20%' },
-  { value: 'permanent', label: '永久' }
-]
+  { value: "day", label: "按天" },
+  { value: "month", label: "按月" },
+  { value: "year", label: "按年", discount: "省20%" },
+  { value: "permanent", label: "永久" },
+];
 
-const selectedDuration = ref('month')
-const packages = ref([])
-const loading = ref(true)
+const selectedDuration = ref("month");
+const packages = ref([]);
+const loading = ref(true);
 
 // 根据时长筛选套餐
 const filteredPackages = computed(() => {
   return packages.value
-    .filter(pkg => {
-      if (selectedDuration.value === 'permanent') {
-        return !pkg.durationUnit
+    .filter((pkg) => {
+      if (selectedDuration.value === "permanent") {
+        return !pkg.durationUnit;
       }
-      return pkg.durationUnit === selectedDuration.value
+      return pkg.durationUnit === selectedDuration.value;
     })
     .map((pkg, index) => ({
       ...pkg,
       isRecommended: index === 1,
       displayPrice: calculatePrice(pkg),
-      features: getPackageFeatures(pkg)
-    }))
-})
+      features: getPackageFeatures(pkg),
+    }));
+});
 
 // 计算显示价格（考虑折扣）
 const calculatePrice = (pkg) => {
   // 处理价格，支持字符串和数字类型
-  if (pkg.price === null || pkg.price === undefined || pkg.price === '') {
-    return 0
+  if (pkg.price === null || pkg.price === undefined || pkg.price === "") {
+    return 0;
   }
 
   // 转换为数字
-  let price = typeof pkg.price === 'string' ? parseFloat(pkg.price) : pkg.price
+  let price = typeof pkg.price === "string" ? parseFloat(pkg.price) : pkg.price;
 
   // 如果转换失败，返回 0
   if (isNaN(price)) {
-    return 0
+    return 0;
   }
 
   // 按年订阅时，如果 API 返回的年付套餐价格已经是最终价格，则不需要再应用折扣
@@ -218,104 +241,104 @@ const calculatePrice = (pkg) => {
   // 如果未来需要应用年付折扣，应该使用固定的折扣率，而不是 discount 字段
 
   // 返回数字类型，让 formatPrice 函数处理显示格式
-  return price
-}
+  return price;
+};
 
 // 格式化额度
 const formatQuota = (quota) => {
-  if (!quota && quota !== 0) return '无限'
-  const quotaNum = typeof quota === 'string' ? parseFloat(quota) : quota
-  if (isNaN(quotaNum)) return '无限'
+  if (!quota && quota !== 0) return "无限";
+  const quotaNum = typeof quota === "string" ? parseFloat(quota) : quota;
+  if (isNaN(quotaNum)) return "无限";
   if (quotaNum >= 1000) {
-    return `${(quotaNum / 1000).toFixed(0)}K点`
+    return `${(quotaNum / 1000).toFixed(0)}K点`;
   }
-  return `${quotaNum}点`
-}
+  return `${quotaNum}点`;
+};
 
 // 格式化价格显示
 const formatPrice = (price) => {
-  if (!price && price !== 0) return '0'
-  const priceNum = typeof price === 'string' ? parseFloat(price) : price
-  if (isNaN(priceNum)) return '0'
+  if (!price && price !== 0) return "0";
+  const priceNum = typeof price === "string" ? parseFloat(price) : price;
+  if (isNaN(priceNum)) return "0";
 
   // 如果价格小于 1，保留一位小数；否则显示整数
   if (priceNum < 1 && priceNum > 0) {
-    return priceNum.toFixed(1)
+    return priceNum.toFixed(1);
   }
 
-  return Math.round(priceNum).toString()
-}
+  return Math.round(priceNum).toString();
+};
 
 // 获取时长单位标签
 const getDurationUnitLabel = () => {
   const map = {
-    day: '天',
-    month: '月',
-    year: '年',
-    permanent: '永久'
-  }
-  return map[selectedDuration.value] || '月'
-}
+    day: "天",
+    month: "月",
+    year: "年",
+    permanent: "永久",
+  };
+  return map[selectedDuration.value] || "月";
+};
 
 // 获取按钮文本
 const getButtonText = () => {
   const map = {
-    day: '立即订阅',
-    month: '订阅按月版',
-    year: '订阅按年版',
-    permanent: '永久买断'
-  }
-  return map[selectedDuration.value] || '立即订阅'
-}
+    day: "立即订阅",
+    month: "订阅按月版",
+    year: "订阅按年版",
+    permanent: "永久买断",
+  };
+  return map[selectedDuration.value] || "立即订阅";
+};
 
 // 获取套餐特性列表
 const getPackageFeatures = (pkg) => {
-  const features = []
+  const features = [];
 
   if (pkg.quota) {
     if (pkg.quota <= 1000) {
-      features.push('2K 画质导出')
-      features.push('角色一致性引擎')
-      features.push('云端项目备份')
+      features.push("2K 画质导出");
+      features.push("角色一致性引擎");
+      features.push("云端项目备份");
     } else if (pkg.quota <= 5000) {
-      features.push('4K 原生渲染')
-      features.push('多智能体协作流')
-      features.push('自定义配音模型')
-      features.push('专属水印定制')
+      features.push("4K 原生渲染");
+      features.push("多智能体协作流");
+      features.push("自定义配音模型");
+      features.push("专属水印定制");
     } else {
-      features.push('团队共享额度')
-      features.push('项目权限分发')
-      features.push('ProRes 无损导出')
+      features.push("团队共享额度");
+      features.push("项目权限分发");
+      features.push("ProRes 无损导出");
     }
   }
 
-  return features
-}
+  return features;
+};
 
 // 加载套餐数据
 const loadPackages = async () => {
   try {
-    loading.value = true
-    const response = await getAvailablePackages('paid')
+    loading.value = true;
+    const response = await getAvailablePackages("paid");
     if (response.success && response.data) {
-      packages.value = response.data
+      packages.value = response.data;
     }
   } catch (error) {
-    console.error('加载套餐失败:', error)
-    ElMessage.error('加载套餐信息失败，请稍后重试')
+    console.error("加载套餐失败:", error);
+    ElMessage.error("加载套餐信息失败，请稍后重试");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 订阅处理
 const handleSubscribe = (pkg) => {
-  ElMessage.info(`正在跳转到订阅页面：${pkg.displayName}`)
-}
+  ElMessage.info(`正在跳转到订阅页面：${pkg.displayName}`);
+};
 
 onMounted(() => {
-  loadPackages()
-})
+  loadPackages();
+});
 </script>
 
 <style scoped>
@@ -331,26 +354,41 @@ onMounted(() => {
 
 /* 背景装饰 */
 .pricing-page::before {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 50% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+    radial-gradient(
+      circle at 20% 50%,
+      rgba(99, 102, 241, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(236, 72, 153, 0.06) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 50% 30%,
+      rgba(59, 130, 246, 0.08) 0%,
+      transparent 50%
+    );
   background-size: 100% 100%;
 }
 
 .pricing-page::after {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   opacity: 0.25;
-  background-image: radial-gradient(rgba(156, 163, 175, 0.3) 1px, transparent 0);
+  background-image: radial-gradient(
+    rgba(156, 163, 175, 0.3) 1px,
+    transparent 0
+  );
   background-size: 64px 64px;
   mix-blend-mode: multiply;
 }
@@ -387,8 +425,12 @@ onMounted(() => {
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 标题框架 */
@@ -459,7 +501,7 @@ onMounted(() => {
   color: rgba(99, 102, 241, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .camera-info-tl {
@@ -479,8 +521,13 @@ onMounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .camera-info-tr {
@@ -506,7 +553,7 @@ onMounted(() => {
   margin-bottom: 16px;
   color: #1e1b4b;
   line-height: 1;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 }
 
 @media (min-width: 768px) {
@@ -530,7 +577,7 @@ onMounted(() => {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 1.2;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 }
 
 @media (min-width: 768px) {
@@ -545,7 +592,12 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 1px;
-  background: linear-gradient(to right, transparent, rgba(99, 102, 241, 0.2), transparent);
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(99, 102, 241, 0.2),
+    transparent
+  );
 }
 
 /* 时长选择器 */
@@ -580,7 +632,7 @@ onMounted(() => {
   color: rgba(99, 102, 241, 0.3);
   cursor: pointer;
   transition: all 0.5s;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .duration-btn:hover {
@@ -660,7 +712,12 @@ onMounted(() => {
 }
 
 .package-card.recommended {
-  background: linear-gradient(to bottom, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.4), rgba(236, 72, 153, 0.4));
+  background: linear-gradient(
+    to bottom,
+    rgba(99, 102, 241, 0.4),
+    rgba(168, 85, 247, 0.4),
+    rgba(236, 72, 153, 0.4)
+  );
   box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.25);
   border: none;
 }
@@ -701,8 +758,13 @@ onMounted(() => {
 }
 
 @keyframes pulse-badge {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .package-header {
@@ -717,7 +779,7 @@ onMounted(() => {
   margin-bottom: 12px;
   text-transform: none;
   letter-spacing: -0.01em;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .package-price {
@@ -732,7 +794,7 @@ onMounted(() => {
   font-weight: 900;
   color: #1e1b4b;
   letter-spacing: -0.05em;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
   line-height: 1;
 }
 
@@ -801,7 +863,7 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 900;
   color: #1e1b4b;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 }
 
 /* 特性列表 */
@@ -863,7 +925,7 @@ onMounted(() => {
   border: none;
   cursor: pointer;
   transition: all 0.3s;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   background: rgba(99, 102, 241, 0.08);
   color: #4f46e5;
 }
@@ -937,7 +999,7 @@ onMounted(() => {
   margin-bottom: 12px;
   text-transform: none;
   letter-spacing: -0.01em;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .custom-desc {
@@ -995,8 +1057,13 @@ onMounted(() => {
 }
 
 @keyframes bounce-x {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(10px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(10px);
+  }
 }
 
 /* 加载状态 */
@@ -1057,7 +1124,7 @@ onMounted(() => {
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .footer-card p {

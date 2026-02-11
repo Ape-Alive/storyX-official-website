@@ -1,0 +1,843 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "默认模块",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "终端用户额度管理"
+    },
+    {
+      "name": "终端用户AI调用"
+    }
+  ],
+  "paths": {
+    "/api/user/quotas/usage/trend": {
+      "get": {
+        "summary": "获取我的使用趋势 [仅终端用户]",
+        "deprecated": false,
+        "description": "终端用户查询自己的使用趋势，按时间段（日/周/月）和模型统计额度消耗情况。\n\n**权限说明：**\n- 只能查询自己的使用趋势\n- 用户ID从认证token中自动获取\n\n**时间段类型（period）：**\n- day：按日统计，返回格式为 \"YYYY-MM-DD\"，如 \"2024-01-01\"\n- week：按周统计，返回格式为 \"YYYY-WXX\"，如 \"2024-W01\"（2024年第1周）\n- month：按月统计，返回格式为 \"YYYY-MM\"，如 \"2024-01\"\n\n**筛选参数：**\n- startDate：可选，开始时间，ISO 8601格式\n- endDate：可选，结束时间，ISO 8601格式\n- period：可选，时间段类型，默认为 \"day\"\n\n**统计说明：**\n- 基于AI调用日志（AICallLog）统计，只统计成功的调用（status='success'）\n- 按模型分组，每个模型包含该时间段内的消耗趋势\n- 每个时间段返回该时间段内的总消耗额度（totalCost）和总调用次数（totalCount）\n- 数据按模型ID和时间段排序\n\n**返回数据结构：**\n- 返回数组，每个元素代表一个模型的使用趋势\n- 每个模型包含：modelId、model信息（名称、显示名称、提供商）、trends数组\n- trends数组包含该模型在不同时间段的使用情况\n\n**使用场景：**\n- 查看不同模型在每日的使用趋势，了解各模型的使用规律\n- 查看不同模型在每周的使用趋势，分析周度变化\n- 查看不同模型在每月的使用趋势，分析月度变化\n- 对比不同模型的消耗情况\n",
+        "tags": [
+          "终端用户额度管理"
+        ],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "开始时间（可选），ISO 8601格式。如果不提供，统计所有历史数据",
+            "required": false,
+            "example": "2024-01-01T00:00:00.000Z",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "结束时间（可选），ISO 8601格式。如果不提供，统计到当前时间",
+            "required": false,
+            "example": "2024-01-31T23:59:59.999Z",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "description": "时间段类型。day=按日统计，week=按周统计，month=按月统计",
+            "required": false,
+            "example": "day",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "default": "day"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Success"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "description": "按模型分组的使用趋势数据",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "modelId": {
+                                "type": "string",
+                                "description": "模型ID",
+                                "example": "model_123"
+                              },
+                              "model": {
+                                "type": "object",
+                                "description": "模型信息",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "example": "model_123"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "模型名称（内部标识）",
+                                    "example": "deepseek-chat"
+                                  },
+                                  "displayName": {
+                                    "type": "string",
+                                    "description": "模型显示名称",
+                                    "example": "DeepSeek Chat"
+                                  },
+                                  "provider": {
+                                    "type": "object",
+                                    "description": "模型提供商信息",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string",
+                                        "example": "provider_123"
+                                      },
+                                      "name": {
+                                        "type": "string",
+                                        "example": "DeepSeek"
+                                      },
+                                      "displayName": {
+                                        "type": "string",
+                                        "example": "DeepSeek AI"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "trends": {
+                                "type": "array",
+                                "description": "该模型在不同时间段的使用趋势",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "period": {
+                                      "type": "string",
+                                      "description": "时间段标识（格式取决于period参数）",
+                                      "example": "2024-01-01"
+                                    },
+                                    "totalCost": {
+                                      "type": "number",
+                                      "description": "该时间段内的总消耗额度（积分）",
+                                      "example": 500
+                                    },
+                                    "totalCount": {
+                                      "type": "integer",
+                                      "description": "该时间段内的总调用次数",
+                                      "example": 5
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "examples": {
+                  "1": {
+                    "summary": "按日统计的使用趋势",
+                    "value": {
+                      "success": true,
+                      "message": "My usage trend retrieved successfully",
+                      "data": [
+                        {
+                          "modelId": "model_123",
+                          "model": {
+                            "id": "model_123",
+                            "name": "deepseek-chat",
+                            "displayName": "DeepSeek Chat",
+                            "provider": {
+                              "id": "provider_123",
+                              "name": "DeepSeek",
+                              "displayName": "DeepSeek AI"
+                            }
+                          },
+                          "trends": [
+                            {
+                              "period": "2024-01-01",
+                              "totalCost": 500,
+                              "totalCount": 5
+                            },
+                            {
+                              "period": "2024-01-02",
+                              "totalCost": 800,
+                              "totalCount": 8
+                            },
+                            {
+                              "period": "2024-01-03",
+                              "totalCost": 600,
+                              "totalCount": 6
+                            }
+                          ]
+                        },
+                        {
+                          "modelId": "model_456",
+                          "model": {
+                            "id": "model_456",
+                            "name": "gpt-4",
+                            "displayName": "GPT-4",
+                            "provider": {
+                              "id": "provider_456",
+                              "name": "OpenAI",
+                              "displayName": "OpenAI"
+                            }
+                          },
+                          "trends": [
+                            {
+                              "period": "2024-01-01",
+                              "totalCost": 300,
+                              "totalCount": 3
+                            },
+                            {
+                              "period": "2024-01-02",
+                              "totalCost": 400,
+                              "totalCount": 4
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "2": {
+                    "summary": "按周统计的使用趋势",
+                    "value": {
+                      "success": true,
+                      "message": "My usage trend retrieved successfully",
+                      "data": [
+                        {
+                          "modelId": "model_123",
+                          "model": {
+                            "id": "model_123",
+                            "name": "deepseek-chat",
+                            "displayName": "DeepSeek Chat",
+                            "provider": {
+                              "id": "provider_123",
+                              "name": "DeepSeek",
+                              "displayName": "DeepSeek AI"
+                            }
+                          },
+                          "trends": [
+                            {
+                              "period": "2024-W01",
+                              "totalCost": 3500,
+                              "totalCount": 35
+                            },
+                            {
+                              "period": "2024-W02",
+                              "totalCost": 4200,
+                              "totalCount": 42
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "3": {
+                    "summary": "按月统计的使用趋势",
+                    "value": {
+                      "success": true,
+                      "message": "My usage trend retrieved successfully",
+                      "data": [
+                        {
+                          "modelId": "model_123",
+                          "model": {
+                            "id": "model_123",
+                            "name": "deepseek-chat",
+                            "displayName": "DeepSeek Chat",
+                            "provider": {
+                              "id": "provider_123",
+                              "name": "DeepSeek",
+                              "displayName": "DeepSeek AI"
+                            }
+                          },
+                          "trends": [
+                            {
+                              "period": "2024-01",
+                              "totalCost": 15000,
+                              "totalCount": 150
+                            },
+                            {
+                              "period": "2024-02",
+                              "totalCost": 18000,
+                              "totalCount": 180
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/ai/logs": {
+      "get": {
+        "summary": "获取调用日志列表 [仅终端用户]",
+        "deprecated": false,
+        "description": "查询当前用户的所有AI调用日志，支持按模型、状态、时间范围筛选和分页查询。\n\n**使用示例：**\n```bash\n# 获取所有日志\ncurl \"http://localhost:5800/api/user/ai/logs?page=1&pageSize=20\" \\\n  -H \"Authorization: Bearer {token}\"\n\n# 按状态筛选\ncurl \"http://localhost:5800/api/user/ai/logs?status=success\" \\\n  -H \"Authorization: Bearer {token}\"\n\n# 按时间范围筛选\ncurl \"http://localhost:5800/api/user/ai/logs?startDate=2024-01-01T00:00:00Z&endDate=2024-01-31T23:59:59Z\" \\\n  -H \"Authorization: Bearer {token}\"\n\n# 组合筛选\ncurl \"http://localhost:5800/api/user/ai/logs?modelId=clx123456789&status=success&page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer {token}\"\n```\n",
+        "tags": [
+          "终端用户AI调用"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "每页数量",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "modelId",
+            "in": "query",
+            "description": "模型ID筛选",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "调用状态筛选",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "success",
+                "failed",
+                "timeout",
+                "error"
+              ]
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "开始日期（ISO 8601格式）",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "结束日期（ISO 8601格式）",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Success"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "example": "log_123456"
+                              },
+                              "requestId": {
+                                "type": "string",
+                                "example": "req_123456"
+                              },
+                              "userId": {
+                                "type": "string",
+                                "example": "user_123"
+                              },
+                              "modelId": {
+                                "type": "string",
+                                "example": "model_123"
+                              },
+                              "model": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "displayName": {
+                                    "type": "string"
+                                  },
+                                  "provider": {
+                                    "type": "object",
+                                    "properties": {
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "inputTokens": {
+                                "type": "integer",
+                                "example": 100
+                              },
+                              "outputTokens": {
+                                "type": "integer",
+                                "example": 200
+                              },
+                              "totalTokens": {
+                                "type": "integer",
+                                "example": 300
+                              },
+                              "cost": {
+                                "type": "number",
+                                "description": "本次调用成本（积分）",
+                                "example": 0.3
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "success",
+                                  "failure"
+                                ],
+                                "example": "success"
+                              },
+                              "errorMessage": {
+                                "type": "string",
+                                "nullable": true,
+                                "example": "API rate limit exceeded"
+                              },
+                              "requestTime": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2024-01-01T12:00:00Z"
+                              },
+                              "responseTime": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true,
+                                "example": "2024-01-01T12:00:01Z"
+                              },
+                              "duration": {
+                                "type": "integer",
+                                "description": "调用耗时（毫秒）",
+                                "nullable": true,
+                                "example": 1500
+                              },
+                              "deviceFingerprint": {
+                                "type": "string",
+                                "nullable": true,
+                                "example": "device_hash_abc123"
+                              }
+                            }
+                          }
+                        },
+                        "pagination": {
+                          "$ref": "#/components/schemas/Pagination"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "description": "未认证",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {}
+          },
+          "403": {
+            "description": "权限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/ai/logs/{requestId}": {
+      "get": {
+        "summary": "获取调用日志详情 [仅终端用户]",
+        "deprecated": false,
+        "description": "根据requestId获取调用日志的详细信息，包括完整的调用参数、响应信息等。\n\n**注意事项：**\n- 只能查看自己的调用日志\n- requestId必须唯一，由客户端生成\n\n**使用示例：**\n```bash\ncurl \"http://localhost:5800/api/user/ai/logs/req_123456\" \\\n  -H \"Authorization: Bearer {token}\"\n```\n",
+        "tags": [
+          "终端用户AI调用"
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "description": "请求ID",
+            "required": true,
+            "example": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Success"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "example": "log_123456"
+                            },
+                            "requestId": {
+                              "type": "string",
+                              "example": "req_123456"
+                            },
+                            "userId": {
+                              "type": "string",
+                              "example": "user_123"
+                            },
+                            "modelId": {
+                              "type": "string",
+                              "description": "模型ID",
+                              "example": "model_123"
+                            },
+                            "model": {
+                              "type": "object",
+                              "description": "调用的AI模型信息",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "example": "model_123"
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "description": "模型名称（内部标识）",
+                                  "example": "deepseek-chat"
+                                },
+                                "displayName": {
+                                  "type": "string",
+                                  "description": "模型显示名称",
+                                  "example": "DeepSeek Chat"
+                                },
+                                "provider": {
+                                  "type": "object",
+                                  "description": "模型提供商信息",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "example": "provider_123"
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "description": "提供商名称（内部标识）",
+                                      "example": "DeepSeek"
+                                    },
+                                    "displayName": {
+                                      "type": "string",
+                                      "description": "提供商显示名称",
+                                      "example": "DeepSeek AI"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "inputTokens": {
+                              "type": "integer",
+                              "description": "输入Token数量",
+                              "example": 100
+                            },
+                            "outputTokens": {
+                              "type": "integer",
+                              "description": "输出Token数量",
+                              "example": 200
+                            },
+                            "totalTokens": {
+                              "type": "integer",
+                              "description": "总Token数量（inputTokens + outputTokens）",
+                              "example": 300
+                            },
+                            "cost": {
+                              "type": "number",
+                              "description": "本次调用消耗的额度（积分）\n- 调用成功时：根据实际Token消耗计算的实际费用\n- 调用失败时：通常为0（预冻结的额度会被退回）\n",
+                              "example": 0.3
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "success",
+                                "failure"
+                              ],
+                              "description": "任务状态\n- `success`：调用成功\n- `failure`：调用失败（可能原因：API错误、超时、额度不足等）\n",
+                              "example": "success"
+                            },
+                            "errorMessage": {
+                              "type": "string",
+                              "description": "错误信息（调用失败时的错误详情）",
+                              "nullable": true,
+                              "example": "API rate limit exceeded"
+                            },
+                            "requestTime": {
+                              "type": "string",
+                              "format": "date-time",
+                              "description": "请求时间（客户端发起AI调用请求的时间）",
+                              "example": "2024-01-01T12:00:00Z"
+                            },
+                            "responseTime": {
+                              "type": "string",
+                              "format": "date-time",
+                              "description": "响应时间（AI服务返回结果的时间，调用失败时可能为null）",
+                              "nullable": true,
+                              "example": "2024-01-01T12:00:01Z"
+                            },
+                            "duration": {
+                              "type": "integer",
+                              "description": "调用耗时（毫秒），从请求到响应的时间差",
+                              "nullable": true,
+                              "example": 1500
+                            },
+                            "deviceFingerprint": {
+                              "type": "string",
+                              "description": "设备指纹（用于设备识别和管理）",
+                              "nullable": true,
+                              "example": "device_hash_abc123"
+                            },
+                            "ipAddress": {
+                              "type": "string",
+                              "description": "请求IP地址",
+                              "nullable": true,
+                              "example": "192.168.1.1"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "description": "未认证",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {}
+          },
+          "403": {
+            "description": "无权访问该日志",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Call log does not belong to user"
+                }
+              }
+            },
+            "headers": {}
+          },
+          "404": {
+            "description": "日志不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Error message"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        }
+      },
+      "Success": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Success message"
+          },
+          "data": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "example": 20
+          },
+          "total": {
+            "type": "integer",
+            "example": 100
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 5
+          }
+        }
+      }
+    },
+    "responses": {},
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "输入 JWT Token，格式：Bearer {token}"
+      }
+    }
+  },
+  "servers": [],
+  "security": []
+}

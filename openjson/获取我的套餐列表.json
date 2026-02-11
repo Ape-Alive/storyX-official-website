@@ -1,0 +1,349 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "默认模块",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "套餐订阅"
+    }
+  ],
+  "paths": {
+    "/api/user/packages/my-packages": {
+      "get": {
+        "summary": "获取我的套餐列表（终端用户）",
+        "deprecated": false,
+        "description": "获取当前登录用户的所有套餐列表，支持分页和筛选。\n\n**筛选参数：**\n- activeOnly：是否只返回活跃套餐（未过期且已开始）\n  - true：只返回活跃套餐（expiresAt为null或大于当前时间，且startedAt小于等于当前时间）\n  - false：返回所有套餐（包括已过期和未开始的）\n\n**返回数据：**\n- 包含套餐的完整信息（套餐详情、有效期、优先级等）\n- 包含套餐状态（status）和不可用原因（unavailableReason）\n- 包含积分信息（quotaInfo），如果套餐有积分配置\n- 按优先级（priority）降序排列\n- 支持分页查询\n\n**套餐状态（status）说明：**\n- `active`：套餐可用（已开始、未过期、有积分或无需积分）\n- `expired`：套餐已过期\n- `no_quota`：积分已用完（套餐有积分配置但可用积分 <= 0）\n- `inactive`：套餐已禁用\n- `not_started`：套餐尚未开始（startedAt > 当前时间，通常不会出现）\n\n**不可用原因（unavailableReason）说明：**\n- 当 `status` 为 `active` 时，`unavailableReason` 为 `null`\n- 当 `status` 为 `expired` 时，`unavailableReason` 为 `\"套餐已过期\"`\n- 当 `status` 为 `no_quota` 时，`unavailableReason` 为 `\"积分已用完\"`\n- 当 `status` 为 `inactive` 时，`unavailableReason` 为 `\"套餐已禁用\"`\n- 当 `status` 为 `not_started` 时，`unavailableReason` 为 `\"套餐尚未开始\"`\n\n**积分信息（quotaInfo）说明：**\n- 如果套餐有积分配置（package.quota），返回积分详情\n- `available`：可用积分\n- `frozen`：冻结积分\n- `used`：已使用积分\n- `total`：套餐总积分\n- `remaining`：剩余积分（available + frozen）\n- 如果套餐没有积分配置，`quotaInfo` 为 `null`\n",
+        "tags": [
+          "套餐订阅"
+        ],
+        "parameters": [
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "description": "是否只返回活跃套餐。true表示只返回未过期且已开始的套餐，false表示返回所有套餐",
+            "required": false,
+            "example": "true",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码（从1开始）",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "每页数量（最大1000）",
+            "required": false,
+            "example": 20,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "用户套餐ID",
+                            "example": "clx987654321"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "description": "用户ID"
+                          },
+                          "packageId": {
+                            "type": "string",
+                            "description": "套餐ID"
+                          },
+                          "startedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "套餐开始时间"
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "套餐过期时间，null表示永久",
+                            "nullable": true
+                          },
+                          "priority": {
+                            "type": "integer",
+                            "description": "优先级，数字越大优先级越高"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "expired",
+                              "no_quota",
+                              "inactive",
+                              "not_started"
+                            ],
+                            "description": "套餐状态\n- active：套餐可用\n- expired：套餐已过期\n- no_quota：积分已用完\n- inactive：套餐已禁用\n- not_started：套餐尚未开始\n",
+                            "example": "active"
+                          },
+                          "unavailableReason": {
+                            "type": "string",
+                            "description": "不可用原因，当status为active时为null",
+                            "nullable": true,
+                            "example": null
+                          },
+                          "quotaInfo": {
+                            "type": "object",
+                            "description": "积分信息，如果套餐有积分配置则返回，否则为null",
+                            "properties": {
+                              "available": {
+                                "type": "number",
+                                "description": "可用积分",
+                                "example": 5000
+                              },
+                              "frozen": {
+                                "type": "number",
+                                "description": "冻结积分",
+                                "example": 100
+                              },
+                              "used": {
+                                "type": "number",
+                                "description": "已使用积分",
+                                "example": 4900
+                              },
+                              "total": {
+                                "type": "number",
+                                "description": "套餐总积分",
+                                "example": 10000
+                              },
+                              "remaining": {
+                                "type": "number",
+                                "description": "剩余积分（available + frozen）",
+                                "example": 5100
+                              }
+                            },
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "package": {
+                            "type": "object",
+                            "description": "套餐详情",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "free",
+                                  "paid",
+                                  "trial"
+                                ]
+                              },
+                              "duration": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "durationUnit": {
+                                "type": "string",
+                                "enum": [
+                                  "day",
+                                  "month",
+                                  "year"
+                                ],
+                                "nullable": true
+                              },
+                              "quota": {
+                                "type": "number",
+                                "nullable": true
+                              },
+                              "price": {
+                                "type": "number",
+                                "nullable": true
+                              },
+                              "maxDevices": {
+                                "type": "integer",
+                                "nullable": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "总记录数",
+                      "example": 5
+                    },
+                    "page": {
+                      "type": "integer",
+                      "description": "当前页码",
+                      "example": 1
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "description": "每页数量",
+                      "example": 20
+                    }
+                  }
+                },
+                "examples": {
+                  "1": {
+                    "summary": "可用套餐（有积分）",
+                    "value": {
+                      "success": true,
+                      "data": [
+                        {
+                          "id": "clx987654321",
+                          "userId": "clx111111111",
+                          "packageId": "clx123456789",
+                          "startedAt": "2024-01-01T00:00:00.000Z",
+                          "expiresAt": "2024-02-01T00:00:00.000Z",
+                          "priority": 10,
+                          "status": "active",
+                          "unavailableReason": null,
+                          "quotaInfo": {
+                            "available": 5000,
+                            "frozen": 100,
+                            "used": 4900,
+                            "total": 10000,
+                            "remaining": 5100
+                          },
+                          "package": {
+                            "id": "clx123456789",
+                            "name": "premium_monthly",
+                            "displayName": "高级套餐（月付）",
+                            "quota": 10000
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "2": {
+                    "summary": "已过期套餐",
+                    "value": {
+                      "success": true,
+                      "data": [
+                        {
+                          "id": "clx987654322",
+                          "userId": "clx111111111",
+                          "packageId": "clx123456790",
+                          "startedAt": "2023-12-01T00:00:00.000Z",
+                          "expiresAt": "2023-12-31T23:59:59.000Z",
+                          "priority": 5,
+                          "status": "expired",
+                          "unavailableReason": "套餐已过期",
+                          "quotaInfo": null,
+                          "package": {
+                            "id": "clx123456790",
+                            "name": "trial_weekly",
+                            "displayName": "试用套餐（周）",
+                            "quota": 1000
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "3": {
+                    "summary": "积分已用完的套餐",
+                    "value": {
+                      "success": true,
+                      "data": [
+                        {
+                          "id": "clx987654323",
+                          "userId": "clx111111111",
+                          "packageId": "clx123456791",
+                          "startedAt": "2024-01-01T00:00:00.000Z",
+                          "expiresAt": "2024-02-01T00:00:00.000Z",
+                          "priority": 8,
+                          "status": "no_quota",
+                          "unavailableReason": "积分已用完",
+                          "quotaInfo": {
+                            "available": 0,
+                            "frozen": 0,
+                            "used": 10000,
+                            "total": 10000,
+                            "remaining": 0
+                          },
+                          "package": {
+                            "id": "clx123456791",
+                            "name": "basic_monthly",
+                            "displayName": "基础套餐（月付）",
+                            "quota": 10000
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "输入 JWT Token，格式：Bearer {token}"
+      }
+    }
+  },
+  "servers": [],
+  "security": []
+}

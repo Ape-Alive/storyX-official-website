@@ -1,0 +1,613 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "默认模块",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "套餐订阅"
+    }
+  ],
+  "paths": {
+    "/api/user/packages/available": {
+      "get": {
+        "summary": "获取可订阅的套餐列表（公开接口，无需登录）",
+        "deprecated": false,
+        "description": "公开接口，无需认证即可访问，用于客户端展示可订阅的套餐列表。\n\n**安全防护：**\n- 已添加速率限制防护，每个IP地址在15分钟内最多允许100次请求\n- 超过限制将返回429状态码，响应中包含重试时间（retryAfter字段）\n- 使用真实IP地址识别（支持代理环境）\n\n**返回说明：**\n- 仅返回已启用（isActive=true）的套餐\n- 按优先级（priority）降序排列\n- 包含套餐的完整信息，包括有效期、额度、价格等\n\n**筛选参数：**\n- type：按套餐类型筛选（free/paid/trial），可选\n- durationUnit：按有效期单位筛选（day/month/year/permanent），可选\n\n**使用示例：**\n- 获取所有套餐：`GET /api/user/packages/available`\n- 获取付费套餐：`GET /api/user/packages/available?type=paid`\n- 获取按月计费的套餐：`GET /api/user/packages/available?durationUnit=month`\n- 获取永久套餐：`GET /api/user/packages/available?durationUnit=permanent`\n- 组合筛选（付费且按月）：`GET /api/user/packages/available?type=paid&durationUnit=month`\n",
+        "tags": [
+          "套餐订阅"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "套餐类型筛选。可选值：free（免费套餐）、paid（付费套餐）、trial（试用套餐）。不传则返回所有类型",
+            "required": false,
+            "example": "paid",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "free",
+                "paid",
+                "trial"
+              ]
+            }
+          },
+          {
+            "name": "durationUnit",
+            "in": "query",
+            "description": "有效期单位筛选。可选值：\n- day：按天计费的套餐（durationUnit='day'）\n- month：按月计费的套餐（durationUnit='month'）\n- year：按年计费的套餐（durationUnit='year'）\n- permanent：永久套餐（duration和durationUnit都为null）\n不传则返回所有有效期单位的套餐。\n可与type参数组合使用，例如：?type=paid&durationUnit=month 表示获取付费且按月计费的套餐\n",
+            "required": false,
+            "example": "month",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day",
+                "month",
+                "year",
+                "permanent"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Success"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "套餐ID",
+                                "example": "clx1234567890"
+                              },
+                              "name": {
+                                "type": "string",
+                                "description": "套餐内部标识（唯一）",
+                                "example": "premium_monthly"
+                              },
+                              "displayName": {
+                                "type": "string",
+                                "description": "套餐显示名称",
+                                "example": "高级套餐（月付）"
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "套餐描述",
+                                "nullable": true,
+                                "example": "包含10000积分，支持所有模型"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "free",
+                                  "paid",
+                                  "trial"
+                                ],
+                                "description": "套餐类型",
+                                "example": "paid"
+                              },
+                              "duration": {
+                                "type": "integer",
+                                "description": "有效期数值，null表示永久",
+                                "nullable": true,
+                                "example": 30
+                              },
+                              "durationUnit": {
+                                "type": "string",
+                                "enum": [
+                                  "day",
+                                  "month",
+                                  "year"
+                                ],
+                                "description": "有效期单位：day（天）、month（月）、year（年），null表示永久",
+                                "nullable": true,
+                                "example": "month"
+                              },
+                              "quota": {
+                                "type": "number",
+                                "format": "decimal",
+                                "description": "额度（积分），null表示无限",
+                                "nullable": true,
+                                "example": 10000
+                              },
+                              "price": {
+                                "type": "number",
+                                "format": "decimal",
+                                "description": "套餐金额，免费套餐为null",
+                                "nullable": true,
+                                "example": 99
+                              },
+                              "priceUnit": {
+                                "type": "string",
+                                "enum": [
+                                  "CNY",
+                                  "USD"
+                                ],
+                                "description": "套餐金额单位",
+                                "nullable": true,
+                                "example": "CNY"
+                              },
+                              "discount": {
+                                "type": "number",
+                                "format": "decimal",
+                                "description": "套餐折扣（百分比，0-100）",
+                                "nullable": true,
+                                "example": 10
+                              },
+                              "maxDevices": {
+                                "type": "integer",
+                                "description": "最大设备数量，null表示无限",
+                                "nullable": true,
+                                "example": 5
+                              },
+                              "availableModels": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "可用模型ID列表，null或空数组表示所有模型都可用",
+                                "nullable": true,
+                                "example": [
+                                  "model1",
+                                  "model2"
+                                ]
+                              },
+                              "isStackable": {
+                                "type": "boolean",
+                                "description": "是否可叠加（用户是否可以同时拥有多个该套餐）",
+                                "example": false
+                              },
+                              "priority": {
+                                "type": "integer",
+                                "description": "优先级，数字越大优先级越高，用于排序",
+                                "example": 10
+                              },
+                              "isActive": {
+                                "type": "boolean",
+                                "description": "是否启用",
+                                "example": true
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "创建时间"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "更新时间"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "required": false,
+                "description": "速率限制窗口内的最大请求数",
+                "schema": {
+                  "type": "integer",
+                  "example": 100
+                }
+              },
+              "RateLimit-Remaining": {
+                "required": false,
+                "description": "当前窗口内剩余的请求数",
+                "schema": {
+                  "type": "integer",
+                  "example": 95
+                }
+              },
+              "RateLimit-Reset": {
+                "required": false,
+                "description": "速率限制重置时间（Unix时间戳，秒）",
+                "schema": {
+                  "type": "integer",
+                  "example": 1640995200
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "请求过于频繁（速率限制）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "message",
+                    "retryAfter"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "请求是否成功",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "错误消息",
+                      "example": "请求过于频繁，请稍后再试"
+                    },
+                    "retryAfter": {
+                      "type": "integer",
+                      "description": "重试时间（秒），表示多少秒后可以再次请求",
+                      "example": 300
+                    }
+                  }
+                },
+                "example": {
+                  "success": false,
+                  "message": "请求过于频繁，请稍后再试",
+                  "retryAfter": 300
+                }
+              }
+            },
+            "headers": {
+              "RateLimit-Limit": {
+                "required": false,
+                "description": "速率限制窗口内的最大请求数",
+                "schema": {
+                  "type": "integer",
+                  "example": 100
+                }
+              },
+              "RateLimit-Remaining": {
+                "required": false,
+                "description": "当前窗口内剩余的请求数",
+                "schema": {
+                  "type": "integer",
+                  "example": 0
+                }
+              },
+              "RateLimit-Reset": {
+                "required": false,
+                "description": "速率限制重置时间（Unix时间戳，秒）",
+                "schema": {
+                  "type": "integer",
+                  "example": 1640995200
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/user/packages/my-packages": {
+      "get": {
+        "summary": "获取我的套餐列表（终端用户）",
+        "deprecated": false,
+        "description": "获取当前登录用户的所有套餐列表，支持分页和筛选。\n\n**筛选参数：**\n- activeOnly：是否只返回活跃套餐（未过期且已开始）\n  - true：只返回活跃套餐（expiresAt为null或大于当前时间，且startedAt小于等于当前时间）\n  - false：返回所有套餐（包括已过期和未开始的）\n\n**返回数据：**\n- 包含套餐的完整信息（套餐详情、有效期、优先级等）\n- 按优先级（priority）降序排列\n- 支持分页查询\n\n**套餐状态说明：**\n- 活跃套餐：已开始且未过期（或永久套餐）\n- 已过期套餐：expiresAt小于当前时间\n- 未开始套餐：startedAt大于当前时间（通常不会出现）\n",
+        "tags": [
+          "套餐订阅"
+        ],
+        "parameters": [
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "description": "是否只返回活跃套餐。true表示只返回未过期且已开始的套餐，false表示返回所有套餐",
+            "required": false,
+            "example": "true",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码（从1开始）",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "每页数量（最大1000）",
+            "required": false,
+            "example": 20,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "用户套餐ID",
+                            "example": "clx987654321"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "description": "用户ID"
+                          },
+                          "packageId": {
+                            "type": "string",
+                            "description": "套餐ID"
+                          },
+                          "startedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "套餐开始时间"
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "套餐过期时间，null表示永久",
+                            "nullable": true
+                          },
+                          "priority": {
+                            "type": "integer",
+                            "description": "优先级，数字越大优先级越高"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "package": {
+                            "type": "object",
+                            "description": "套餐详情",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "free",
+                                  "paid",
+                                  "trial"
+                                ]
+                              },
+                              "duration": {
+                                "type": "integer",
+                                "nullable": true
+                              },
+                              "durationUnit": {
+                                "type": "string",
+                                "enum": [
+                                  "day",
+                                  "month",
+                                  "year"
+                                ],
+                                "nullable": true
+                              },
+                              "quota": {
+                                "type": "number",
+                                "nullable": true
+                              },
+                              "price": {
+                                "type": "number",
+                                "nullable": true
+                              },
+                              "maxDevices": {
+                                "type": "integer",
+                                "nullable": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "总记录数",
+                      "example": 5
+                    },
+                    "page": {
+                      "type": "integer",
+                      "description": "当前页码",
+                      "example": 1
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "description": "每页数量",
+                      "example": 20
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/packages/{id}": {
+      "get": {
+        "summary": "获取我的套餐详情（终端用户）",
+        "deprecated": false,
+        "description": "获取当前登录用户的指定套餐详情。\n\n**权限验证：**\n- 只能查看自己的套餐详情\n- 如果套餐不属于当前用户，会返回404错误\n\n**返回数据：**\n- 包含用户套餐的完整信息\n- 包含关联的套餐详情\n- 包含套餐的有效期、优先级等信息\n",
+        "tags": [
+          "套餐订阅"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "用户套餐ID（从 /api/user/packages/my-packages 接口获取）",
+            "required": true,
+            "example": "clx987654321",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Package detail retrieved successfully",
+                  "data": {
+                    "id": "clx987654321",
+                    "userId": "clx111111111",
+                    "packageId": "clx123456789",
+                    "startedAt": "2024-01-01T00:00:00.000Z",
+                    "expiresAt": "2024-02-01T00:00:00.000Z",
+                    "priority": 10,
+                    "createdAt": "2024-01-01T00:00:00.000Z",
+                    "updatedAt": "2024-01-01T00:00:00.000Z",
+                    "package": {
+                      "id": "clx123456789",
+                      "name": "premium_monthly",
+                      "displayName": "高级套餐（月付）",
+                      "description": "包含10000积分，支持所有模型",
+                      "type": "paid",
+                      "duration": 30,
+                      "durationUnit": "day",
+                      "quota": 10000,
+                      "price": 99,
+                      "priceUnit": "CNY",
+                      "maxDevices": 5,
+                      "isStackable": false,
+                      "priority": 10,
+                      "isActive": true
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "404": {
+            "description": "套餐不存在或不属于当前用户",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Error message"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        }
+      },
+      "Success": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Success message"
+          },
+          "data": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      }
+    },
+    "responses": {},
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "输入 JWT Token，格式：Bearer {token}"
+      }
+    }
+  },
+  "servers": [],
+  "security": []
+}

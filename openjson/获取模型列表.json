@@ -1,0 +1,326 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "默认模块",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "模型管理"
+    }
+  ],
+  "paths": {
+    "/api/models": {
+      "get": {
+        "summary": "获取模型列表 [管理员/终端用户]",
+        "deprecated": false,
+        "description": "获取AI模型列表，支持多条件筛选、分页和排序。\n\n**权限说明**：\n- **管理员角色**：super_admin、platform_admin、read_only 可访问（可查看所有模型）\n- **终端用户角色**：user、basic_user 可访问（仅查看，不能进行增删改操作）\n\n**筛选说明**：\n- 所有筛选参数都是可选的，可以组合使用\n- **如果不传 type 参数，将返回所有类型的模型**（llm、video、image、tts）\n- 支持模糊搜索的字段：name、displayName、baseUrl\n- 支持精确匹配的字段：type、category、providerId、isActive、requiresKey\n\n**分页说明**：\n- page：页码，从1开始，默认1\n- pageSize：每页数量，默认20，建议不超过100\n\n**排序说明**：\n- 默认按创建时间降序排列（最新的在前）\n\n**使用示例**：\n- 获取所有模型：`GET /api/models`\n- 仅获取 llm 类型：`GET /api/models?type=llm`\n- 搜索模型：`GET /api/models?name=deepseek`\n- 组合筛选：`GET /api/models?type=llm&isActive=true&page=1&pageSize=20`\n",
+        "tags": [
+          "模型管理"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码（从1开始）",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "每页数量（建议不超过100）",
+            "required": false,
+            "example": 20,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "模型内部标识（模糊搜索，如：deepseek-chat）",
+            "required": false,
+            "example": "deepseek",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "displayName",
+            "in": "query",
+            "description": "模型显示名称（模糊搜索）",
+            "required": false,
+            "example": "DeepSeek",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "baseUrl",
+            "in": "query",
+            "description": "接口路径（模糊搜索，如：/v1/chat/completions）",
+            "required": false,
+            "example": "/v1/chat",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "模型类型筛选（可选）\n- llm：大语言模型\n- video：视频生成模型\n- image：图像生成模型\n- tts：文本转语音模型\n如果不传此参数，将返回所有类型的模型\n",
+            "required": false,
+            "example": "llm",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "llm",
+                "video",
+                "image",
+                "tts"
+              ]
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "模型分类（精确匹配，如：chat、completion、generation）",
+            "required": false,
+            "example": "chat",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "description": "提供商ID（精确匹配）",
+            "required": false,
+            "example": "clx123456789",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "description": "是否启用（true=仅启用，false=仅禁用，不传=全部）",
+            "required": false,
+            "example": "true",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "requiresKey",
+            "in": "query",
+            "description": "是否需要API密钥（true=需要，false=不需要，不传=全部）",
+            "required": false,
+            "example": "false",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "创建开始时间（ISO 8601格式，用于时间范围筛选）",
+            "required": false,
+            "example": "2024-01-01T00:00:00Z",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "创建结束时间（ISO 8601格式，用于时间范围筛选）",
+            "required": false,
+            "example": "2024-12-31T23:59:59Z",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "模型ID",
+                            "example": "clx123456789"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "模型内部标识",
+                            "example": "deepseek-chat"
+                          },
+                          "displayName": {
+                            "type": "string",
+                            "description": "模型显示名称",
+                            "example": "DeepSeek Chat"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "llm",
+                              "video",
+                              "image",
+                              "tts"
+                            ],
+                            "description": "模型类型",
+                            "example": "llm"
+                          },
+                          "category": {
+                            "type": "string",
+                            "description": "模型分类",
+                            "nullable": true,
+                            "example": "chat"
+                          },
+                          "providerId": {
+                            "type": "string",
+                            "description": "提供商ID"
+                          },
+                          "provider": {
+                            "type": "object",
+                            "description": "提供商信息",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "baseUrl": {
+                            "type": "string",
+                            "description": "接口路径",
+                            "example": "/v1/chat/completions"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "描述信息",
+                            "nullable": true
+                          },
+                          "isActive": {
+                            "type": "boolean",
+                            "description": "是否启用",
+                            "example": true
+                          },
+                          "requiresKey": {
+                            "type": "boolean",
+                            "description": "是否需要API密钥",
+                            "example": false
+                          },
+                          "apiConfig": {
+                            "type": "string",
+                            "description": "API配置参数（JSON字符串）",
+                            "nullable": true,
+                            "example": "{\"temperature\": 0.7, \"max_tokens\": 2000}"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "创建时间"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "更新时间"
+                          }
+                        }
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 20
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 100
+                        },
+                        "totalPages": {
+                          "type": "integer",
+                          "example": 5
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          },
+          "401": {
+            "description": "未认证或token无效",
+            "headers": {}
+          },
+          "403": {
+            "description": "权限不足（非管理员角色）",
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "输入 JWT Token，格式：Bearer {token}"
+      }
+    }
+  },
+  "servers": [],
+  "security": []
+}

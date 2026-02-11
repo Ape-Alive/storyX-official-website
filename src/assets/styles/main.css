@@ -416,3 +416,371 @@ body {
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-lg);
 }
+
+/* 深色主题下日期选择器样式优化 */
+:root.dark-theme .el-date-editor.el-input__wrapper {
+  background-color: var(--bg-card) !important;
+}
+
+:root.dark-theme .el-date-editor .el-input__inner {
+  color: var(--text-primary) !important;
+}
+
+:root.dark-theme .el-date-editor .el-range-separator {
+  color: var(--text-secondary) !important;
+}
+
+:root.dark-theme .el-date-editor .el-input__suffix {
+  color: var(--text-tertiary) !important;
+}
+
+:root.dark-theme .el-picker__popper {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root.dark-theme .el-picker-panel {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root.dark-theme .el-picker-panel__header-label {
+  color: var(--text-primary) !important;
+}
+
+:root.dark-theme .el-picker-panel__icon-btn {
+  color: var(--text-primary) !important;
+}
+
+:root.dark-theme .el-picker-panel__icon-btn:hover {
+  color: var(--accent-color) !important;
+  background-color: var(--bg-hover) !important;
+}
+
+:root.dark-theme .el-date-table {
+  background-color: var(--bg-card) !important;
+}
+
+:root.dark-theme .el-date-table th {
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+  background-color: var(--bg-card) !important;
+}
+
+:root.dark-theme .el-date-table td {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+}
+
+:root.dark-theme .el-date-table td div {
+  color: var(--text-primary) !important;
+}
+
+:root.dark-theme .el-date-table td.available {
+  color: var(--text-primary) !important;
+}
+
+:root.dark-theme .el-date-table td.available:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+:root.dark-theme .el-date-table td.available:hover div {
+  color: var(--accent-color) !important;
+}
+
+:root.dark-theme .el-date-table td.current:not(.disabled) {
+  color: var(--accent-color) !important;
+}
+
+:root.dark-theme .el-date-table td.current:not(.disabled) div {
+  color: var(--accent-color) !important;
+}
+
+:root.dark-theme .el-date-table td.in-range {
+  background-color: rgba(96, 165, 250, 0.4) !important;
+}
+
+:root.dark-theme .el-date-table td.in-range div {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+:root.dark-theme .el-date-table td.in-range:not(.start-date):not(.end-date) {
+  background-color: rgba(96, 165, 250, 0.4) !important;
+}
+
+:root.dark-theme .el-date-table td.in-range:not(.start-date):not(.end-date) div {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+:root.dark-theme .el-date-table td.start-date,
+:root.dark-theme .el-date-table td.end-date {
+  background-color: var(--accent-color) !important;
+  color: white !important;
+}
+
+:root.dark-theme .el-date-table td.start-date div,
+:root.dark-theme .el-date-table td.end-date div {
+  color: white !important;
+}
+
+:root.dark-theme .el-date-table td.today:not(.start-date):not(.end-date) {
+  color: var(--accent-color) !important;
+  background-color: transparent !important;
+}
+
+:root.dark-theme .el-date-table td.today:not(.start-date):not(.end-date) div {
+  color: var(--accent-color) !important;
+}
+
+:root.dark-theme .el-date-table td.prev-month,
+:root.dark-theme .el-date-table td.next-month {
+  color: var(--text-tertiary) !important;
+}
+
+:root.dark-theme .el-date-table td.prev-month div,
+:root.dark-theme .el-date-table td.next-month div {
+  color: var(--text-tertiary) !important;
+}
+
+:root.dark-theme .el-date-table td.disabled {
+  color: var(--text-disabled) !important;
+}
+
+:root.dark-theme .el-date-table td.disabled div {
+  color: var(--text-disabled) !important;
+}
+
+:root.dark-theme .el-date-range-picker__header {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+:root.dark-theme .el-date-range-picker__header button {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+}
+
+:root.dark-theme .el-date-range-picker__header button:hover {
+  color: var(--accent-color) !important;
+  background-color: var(--bg-hover) !important;
+}
+
+/* 浅色主题下Element Plus选择器和日期选择器样式 - 使用卡片背景色 */
+:root.light-theme .el-select .el-input__wrapper,
+:root.light-theme .el-select .el-input__wrapper.is-focus,
+:root.light-theme .el-select .el-input__wrapper:hover,
+:root:not(.dark-theme) .el-select .el-input__wrapper,
+:root:not(.dark-theme) .el-select .el-input__wrapper.is-focus,
+:root:not(.dark-theme) .el-select .el-input__wrapper:hover {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root.light-theme .el-date-editor.el-input__wrapper,
+:root.light-theme .el-date-editor.el-input__wrapper.is-focus,
+:root.light-theme .el-date-editor.el-input__wrapper:hover,
+:root:not(.dark-theme) .el-date-editor.el-input__wrapper,
+:root:not(.dark-theme) .el-date-editor.el-input__wrapper.is-focus,
+:root:not(.dark-theme) .el-date-editor.el-input__wrapper:hover {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* 深色主题下Element Plus选择器样式 - 强制覆盖所有状态 */
+:root.dark-theme .el-select .el-input__wrapper,
+:root.dark-theme .el-select .el-input__wrapper.is-focus,
+:root.dark-theme .el-select .el-input__wrapper:hover,
+:root.dark-theme .el-select .el-input__wrapper.is-disabled {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root.dark-theme .el-select .el-input__inner,
+:root.dark-theme .el-select .el-input__inner::placeholder {
+  color: var(--text-primary) !important;
+}
+
+:root.dark-theme .el-select .el-input__inner::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+:root.dark-theme .el-select .el-input__suffix {
+  color: var(--text-tertiary) !important;
+}
+
+:root.dark-theme .el-select .el-input__suffix:hover {
+  color: var(--accent-color) !important;
+}
+
+/* 深色主题下所有el-select组件强制深色背景 */
+:root.dark-theme .el-select {
+  --el-select-input-color: var(--text-primary) !important;
+  --el-select-multiple-input-color: var(--text-primary) !important;
+  --el-select-input-focus-border-color: var(--accent-color) !important;
+  --el-select-border-color-hover: var(--accent-color) !important;
+}
+
+:root.dark-theme .el-select-dropdown {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root.dark-theme .el-select-dropdown__item {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-card) !important;
+}
+
+:root.dark-theme .el-select-dropdown__item:hover {
+  background-color: var(--bg-hover) !important;
+  color: var(--accent-color) !important;
+}
+
+/* 浅色主题下选中项样式 - 强制覆盖所有可能的样式，使用直接颜色值 */
+:root.light-theme .el-select-dropdown__item.is-selected,
+:root:not(.dark-theme) .el-select-dropdown__item.is-selected,
+:root.light-theme .el-select-dropdown .el-select-dropdown__item.is-selected,
+:root:not(.dark-theme) .el-select-dropdown .el-select-dropdown__item.is-selected,
+.el-select-dropdown__item.is-selected:not(:root.dark-theme *) {
+  color: #9333ea !important;
+  background-color: rgba(147, 51, 234, 0.1) !important;
+  background: rgba(147, 51, 234, 0.1) !important;
+  font-weight: 600;
+}
+
+:root.dark-theme .el-select-dropdown__item.is-selected,
+:root.dark-theme .el-select-dropdown .el-select-dropdown__item.is-selected {
+  color: var(--accent-color) !important;
+  background-color: rgba(96, 165, 250, 0.1) !important;
+  background: rgba(96, 165, 250, 0.1) !important;
+  font-weight: 600;
+}
+
+/* 覆盖Element Plus的内联样式 */
+:root.light-theme .el-select-dropdown__item.is-selected[style*="background"],
+:root:not(.dark-theme) .el-select-dropdown__item.is-selected[style*="background"],
+.el-select-dropdown__item.is-selected[style*="background"]:not(:root.dark-theme *) {
+  background-color: rgba(147, 51, 234, 0.1) !important;
+  background: rgba(147, 51, 234, 0.1) !important;
+}
+
+:root.light-theme .el-select-dropdown__item.is-selected[style*="color"],
+:root:not(.dark-theme) .el-select-dropdown__item.is-selected[style*="color"],
+.el-select-dropdown__item.is-selected[style*="color"]:not(:root.dark-theme *) {
+  color: #9333ea !important;
+}
+
+/* 深色主题下Element Plus分页器样式 */
+:root.dark-theme .el-pagination {
+  color: var(--text-primary) !important;
+}
+
+:root.dark-theme .el-pagination__total,
+:root.dark-theme .el-pagination__jump {
+  color: var(--text-secondary) !important;
+}
+
+:root.dark-theme .el-pagination .btn-prev,
+:root.dark-theme .el-pagination .btn-next,
+:root.dark-theme .el-pagination .el-pager li {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root.dark-theme .el-pagination .btn-prev:hover,
+:root.dark-theme .el-pagination .btn-next:hover,
+:root.dark-theme .el-pagination .el-pager li:hover {
+  background-color: var(--bg-hover) !important;
+  color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+}
+
+:root.dark-theme .el-pagination .el-pager li.is-active {
+  background-color: var(--accent-color) !important;
+  color: white !important;
+  border-color: var(--accent-color) !important;
+}
+
+/* 浅色主题下分页器选择框样式 */
+:root.light-theme .el-pagination .el-pagination__sizes .el-select .el-input__wrapper,
+:root.light-theme .el-pagination .el-pagination__sizes .el-select .el-input__wrapper.is-focus,
+:root.light-theme .el-pagination .el-pagination__sizes .el-select .el-input__wrapper:hover,
+:root:not(.dark-theme) .el-pagination .el-pagination__sizes .el-select .el-input__wrapper,
+:root:not(.dark-theme) .el-pagination .el-pagination__sizes .el-select .el-input__wrapper.is-focus,
+:root:not(.dark-theme) .el-pagination .el-pagination__sizes .el-select .el-input__wrapper:hover {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root.light-theme .el-pagination .el-pagination__sizes .el-select .el-input__inner,
+:root:not(.dark-theme) .el-pagination .el-pagination__sizes .el-select .el-input__inner {
+  color: var(--text-primary) !important;
+}
+
+:root.light-theme .el-pagination .el-pagination__sizes .el-select .el-input__suffix,
+:root:not(.dark-theme) .el-pagination .el-pagination__sizes .el-select .el-input__suffix {
+  color: var(--text-tertiary) !important;
+}
+
+:root.light-theme .el-pagination .el-pagination__sizes .el-select .el-input__suffix:hover,
+:root:not(.dark-theme) .el-pagination .el-pagination__sizes .el-select .el-input__suffix:hover {
+  color: var(--accent-color) !important;
+}
+
+:root.dark-theme .el-pagination .el-pagination__sizes .el-select .el-input__wrapper,
+:root.dark-theme .el-pagination .el-pagination__sizes .el-select .el-input__wrapper.is-focus,
+:root.dark-theme .el-pagination .el-pagination__sizes .el-select .el-input__wrapper:hover {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root.dark-theme .el-pagination .el-pagination__sizes .el-select .el-input__inner {
+  color: var(--text-primary) !important;
+}
+
+:root.dark-theme .el-pagination .el-pagination__sizes .el-select .el-input__suffix {
+  color: var(--text-tertiary) !important;
+}
+
+:root.dark-theme .el-pagination .el-pagination__sizes .el-select .el-input__suffix:hover {
+  color: var(--accent-color) !important;
+}
+
+:root.dark-theme .el-pagination .el-pagination__jump .el-input__wrapper {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root.dark-theme .el-pagination .el-pagination__jump .el-input__inner {
+  color: var(--text-primary) !important;
+}
+
+/* 强制覆盖Element Plus的内联样式 - 使用属性选择器 */
+:root.dark-theme .el-select .el-input__wrapper[style*="background"],
+:root.dark-theme .el-select .el-input__wrapper[style*="background-color"] {
+  background-color: var(--bg-card) !important;
+  background: var(--bg-card) !important;
+}
+
+:root.dark-theme .el-pagination .el-select .el-input__wrapper[style*="background"],
+:root.dark-theme .el-pagination .el-select .el-input__wrapper[style*="background-color"] {
+  background-color: var(--bg-card) !important;
+  background: var(--bg-card) !important;
+}
+
+/* 使用CSS变量覆盖Element Plus默认值 */
+:root.dark-theme {
+  --el-fill-color-blank: var(--bg-card) !important;
+  --el-fill-color: var(--bg-card) !important;
+  --el-fill-color-light: var(--bg-hover) !important;
+  --el-fill-color-lighter: var(--bg-hover) !important;
+  --el-border-color: var(--border-color) !important;
+  --el-border-color-light: var(--border-color) !important;
+  --el-border-color-lighter: var(--border-color) !important;
+  --el-text-color-primary: var(--text-primary) !important;
+  --el-text-color-regular: var(--text-secondary) !important;
+  --el-text-color-placeholder: var(--text-tertiary) !important;
+}

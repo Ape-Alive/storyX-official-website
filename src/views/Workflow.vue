@@ -1,6 +1,9 @@
 <template>
   <div class="workflow-page">
-    <section class="workflow-hero">
+    <section
+      class="workflow-hero"
+      :style="{ '--hero-banner': `url('${BANNER_IMAGE}')` }"
+    >
       <p class="workflow-hero__eyebrow">制作流程</p>
       <h1 class="workflow-hero__title">从文字到成片，一条清晰的创作路径</h1>
       <p class="workflow-hero__desc">
@@ -51,6 +54,8 @@
 </template>
 
 <script setup>
+import { BANNER_IMAGE, WORKFLOW_IMAGES } from '@/config/cdn'
+
 const phases = [
   {
     id: 'story',
@@ -61,7 +66,7 @@ const phases = [
       '故事剧情、短剧脚本、种草内容都可以作为起点——创意从文字开始，而不是从空白时间线开始。',
     ],
     tag: '故事起点',
-    image: '/images/story-writing.webp',
+    image: WORKFLOW_IMAGES.storyWriting,
   },
   {
     id: 'style',
@@ -72,7 +77,7 @@ const phases = [
       '角色、场景、镜头图与视频都沿同一套美学前进，减少「每一镜都要重新找感觉」。',
     ],
     tag: '视觉方向',
-    image: '/images/visual-direction.webp',
+    image: WORKFLOW_IMAGES.visualDirection,
   },
   {
     id: 'storyboard',
@@ -83,7 +88,7 @@ const phases = [
       '你可以审阅、调整，让分镜真正成为可执行的拍摄蓝图，而不是不可改的黑盒结果。',
     ],
     tag: '智能分镜',
-    image: '/images/storyboard.webp',
+    image: WORKFLOW_IMAGES.storyboard,
   },
   {
     id: 'assets',
@@ -94,7 +99,7 @@ const phases = [
       '服饰、造型可沉淀成资产库，同一人物在不同镜头里保持统一形象——这是动画感成立的基础。',
     ],
     tag: '角色资产',
-    image: '/images/asset-creation.webp',
+    image: WORKFLOW_IMAGES.assetCreation,
   },
   {
     id: 'generate',
@@ -105,7 +110,7 @@ const phases = [
       '支持单镜与宫格分镜节奏，前后镜头可自然衔接，让生成结果更像「拍出来」而不像「拼出来」。',
     ],
     tag: '视听生成',
-    image: '/images/av-generation.webp',
+    image: WORKFLOW_IMAGES.avGeneration,
   },
   {
     id: 'polish',
@@ -116,7 +121,7 @@ const phases = [
       '素材可沉淀复用，任务进度一目了然——创作节奏由你掌控。',
     ],
     tag: '打磨合成',
-    image: '/images/compose-preview.webp',
+    image: WORKFLOW_IMAGES.composePreview,
   },
 ]
 </script>
@@ -151,7 +156,7 @@ const phases = [
   box-shadow: none;
   background:
     linear-gradient(180deg, rgba(250, 247, 242, 0.42), rgba(250, 247, 242, 0.58)),
-    url('/images/banner.webp') center / cover no-repeat;
+    var(--hero-banner) center / cover no-repeat;
 }
 
 .workflow-hero__eyebrow {

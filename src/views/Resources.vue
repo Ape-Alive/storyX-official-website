@@ -1,6 +1,9 @@
 <template>
   <div class="resources-page">
-    <section class="resources-hero">
+    <section
+      class="resources-hero"
+      :style="{ '--hero-banner': `url('${BANNER_IMAGE}')` }"
+    >
       <p class="resources-hero__eyebrow">{{ hero.eyebrow }}</p>
       <h1 class="resources-hero__title">{{ hero.title }}</h1>
       <p class="resources-hero__desc">{{ hero.desc }}</p>
@@ -106,6 +109,7 @@
 </template>
 
 <script setup>
+import { BANNER_IMAGE } from '@/config/cdn'
 import {
   resourceHero,
   advantageCards,
@@ -147,7 +151,7 @@ const faq = { hero: faqHero, items: faqs }
   box-shadow: none;
   background:
     linear-gradient(180deg, rgba(250, 247, 242, 0.42), rgba(250, 247, 242, 0.58)),
-    url('/images/banner.webp') center / cover no-repeat;
+    var(--hero-banner) center / cover no-repeat;
 }
 
 .resources-hero__eyebrow {

@@ -16,13 +16,15 @@
  * - 开始使用 / 转化入口 → /pricing
  * - 进入工作台 → /dashboard/home（未登录由路由守卫转到登录）
  */
+import { HOME_STORY_MEDIA } from '@/config/cdn'
+
 export const homeStoryConfig = {
   /** 首帧封面，避免 preload 大视频时长时间黑/白屏 */
-  poster: '/videos/home-story-poster.jpg',
+  poster: HOME_STORY_MEDIA.poster,
   /** 优先 webm，不支持时回退 mp4（文件较大，务必 preload=metadata） */
   videoSources: [
-    { src: '/videos/home-story.webm', type: 'video/webm' },
-    { src: '/videos/home-story.mp4', type: 'video/mp4' },
+    { src: HOME_STORY_MEDIA.webm, type: 'video/webm' },
+    { src: HOME_STORY_MEDIA.mp4, type: 'video/mp4' },
   ],
   /** 滚轮触发下一段的最小位移（像素），与播放速度无关 */
   wheelThreshold: 48,

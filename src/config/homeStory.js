@@ -1,11 +1,6 @@
 /**
  * 首页故事视频分段配置
  *
- * 视频地址通过环境变量配置（勿把大视频提交进仓库）：
- * - VITE_HOME_STORY_WEBM
- * - VITE_HOME_STORY_MP4
- * 本地开发可填 /videos/xxx；生产可填 CDN / 对象存储完整 URL。
- *
  * 修改 segments 即可调整每一段的起止时间与文案。
  * - start / end：秒，按视频真实时间轴
  * - label：底部时间轴显示名
@@ -16,21 +11,14 @@
  * - ctaLink：主入口跳转
  * - links：可挂载入口 [{ label, to }]
  */
-
-const buildVideoSources = () => {
-  const sources = []
-  const webm = (import.meta.env.VITE_HOME_STORY_WEBM || '').trim()
-  const mp4 = (import.meta.env.VITE_HOME_STORY_MP4 || '').trim()
-  if (webm) sources.push({ src: webm, type: 'video/webm' })
-  if (mp4) sources.push({ src: mp4, type: 'video/mp4' })
-  return sources
-}
-
 export const homeStoryConfig = {
   /** 首帧封面，避免 preload 大视频时长时间黑/白屏 */
   poster: '/videos/home-story-poster.jpg',
-  /** 优先 webm，不支持时回退 mp4；来源见上方环境变量 */
-  videoSources: buildVideoSources(),
+  /** 优先 webm，不支持时回退 mp4（文件较大，务必 preload=metadata） */
+  videoSources: [
+    { src: '/videos/home-story.webm', type: 'video/webm' },
+    { src: '/videos/home-story.mp4', type: 'video/mp4' },
+  ],
   /** 滚轮触发下一段的最小位移（像素），与播放速度无关 */
   wheelThreshold: 48,
   /** 触控滑动触发下一段的最小位移（像素） */
@@ -48,8 +36,8 @@ export const homeStoryConfig = {
       ctaLink: '/auth/register',
       links: [
         { label: '为什么是绘火', to: '/resources' },
-        { label: '立即创作', to: '/auth/login' }
-      ]
+        { label: '立即创作', to: '/auth/login' },
+      ],
     },
     {
       id: 'seg-02',
@@ -63,8 +51,8 @@ export const homeStoryConfig = {
       ctaLink: '/auth/login',
       links: [
         { label: 'AI故事创作', to: '/auth/login' },
-        { label: '灵感库', to: '/workflow' }
-      ]
+        { label: '灵感库', to: '/workflow' },
+      ],
     },
     {
       id: 'seg-03',
@@ -78,8 +66,8 @@ export const homeStoryConfig = {
       ctaLink: '/auth/login',
       links: [
         { label: 'AI角色创作', to: '/auth/login' },
-        { label: '世界观生成', to: '/workflow' }
-      ]
+        { label: '世界观生成', to: '/workflow' },
+      ],
     },
     {
       id: 'seg-04',
@@ -93,8 +81,8 @@ export const homeStoryConfig = {
       ctaLink: '/auth/login',
       links: [
         { label: 'AI视频生成', to: '/auth/login' },
-        { label: '作品展示', to: '/pricing' }
-      ]
+        { label: '作品展示', to: '/pricing' },
+      ],
     },
     {
       id: 'seg-05',
@@ -108,8 +96,8 @@ export const homeStoryConfig = {
       ctaLink: '/pricing',
       links: [
         { label: '创作风格库', to: '/workflow' },
-        { label: 'AI短剧工厂', to: '/auth/login' }
-      ]
+        { label: 'AI短剧工厂', to: '/auth/login' },
+      ],
     },
     {
       id: 'seg-06',
@@ -124,8 +112,8 @@ export const homeStoryConfig = {
       links: [
         { label: '进入工作台', to: '/auth/login' },
         { label: '新手教程', to: '/workflow' },
-        { label: '免费注册', to: '/auth/register' }
-      ]
-    }
-  ]
+        { label: '免费注册', to: '/auth/register' },
+      ],
+    },
+  ],
 }

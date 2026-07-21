@@ -1,0 +1,81 @@
+# 推送 prod 分支时：构建生产包并同步到服务器（与 StoryXBackEndAdmin 同一套 deploy 用户 / Secrets）
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - prod
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (production)
+        run: npm run build:prod
+
+      - name: Prepare release package
+        run: |
+          mkdir -p release/dist
+          cp -R dist/. release/dist/
+          cp deploy/remote-deploy.sh release/remote-deploy.sh
+          chmod +x release/remote-deploy.sh
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          PORT="${SSH_PORT:-22}"
+          ssh-keyscan -p "$PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload release to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          DEST="${DEPLOY_PATH:-/opt/storyx-official-website}"
+          ssh -p "$PORT" "${SSH_USER}@${SSH_HOST}" "mkdir -p '${DEST}/release' '${DEST}/dist'"
+          rsync -az --delete \
+            -e "ssh -p ${PORT}" \
+            release/ \
+            "${SSH_USER}@${SSH_HOST}:${DEST}/release/"
+
+      - name: Run remote deploy
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          DEST="${DEPLOY_PATH:-/opt/storyx-official-website}"
+          ssh -p "$PORT" "${SSH_USER}@${SSH_HOST}" \
+            "DEPLOY_PATH='${DEST}' bash '${DEST}/release/remote-deploy.sh'"

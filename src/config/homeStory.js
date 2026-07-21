@@ -10,6 +10,11 @@
  * - cta：主入口按钮文案
  * - ctaLink：主入口跳转
  * - links：可挂载入口 [{ label, to }]
+ *
+ * 跳转约定（首页不直接进登录/注册页）：
+ * - 功能体验 / 创作能力 → /workflow
+ * - 开始使用 / 转化入口 → /pricing
+ * - 进入工作台 → /dashboard/home（未登录由路由守卫转到登录）
  */
 export const homeStoryConfig = {
   /** 首帧封面，避免 preload 大视频时长时间黑/白屏 */
@@ -33,10 +38,10 @@ export const homeStoryConfig = {
       title: '一切创造，都始于一个念头',
       desc: '从第一束火焰，到今天的人工智能，人类一直在寻找创造世界的方式。',
       cta: '开始创造',
-      ctaLink: '/auth/register',
+      ctaLink: '/pricing',
       links: [
         { label: '为什么是绘火', to: '/resources' },
-        { label: '立即创作', to: '/auth/login' },
+        { label: '立即创作', to: '/workflow' },
       ],
     },
     {
@@ -48,9 +53,9 @@ export const homeStoryConfig = {
       title: '点燃你的第一个故事',
       desc: '一个简单的想法，可以成长为完整的故事、角色和电影世界。',
       cta: '生成故事',
-      ctaLink: '/auth/login',
+      ctaLink: '/workflow',
       links: [
-        { label: 'AI故事创作', to: '/auth/login' },
+        { label: 'AI故事创作', to: '/workflow' },
         { label: '灵感库', to: '/workflow' },
       ],
     },
@@ -63,9 +68,9 @@ export const homeStoryConfig = {
       title: '创造属于你的世界',
       desc: '从一个角色开始，构建独属于你的故事宇宙。',
       cta: '创造角色',
-      ctaLink: '/auth/login',
+      ctaLink: '/workflow',
       links: [
-        { label: 'AI角色创作', to: '/auth/login' },
+        { label: 'AI角色创作', to: '/workflow' },
         { label: '世界观生成', to: '/workflow' },
       ],
     },
@@ -78,9 +83,9 @@ export const homeStoryConfig = {
       title: '让故事拥有无限可能',
       desc: '将文字、角色和场景连接，生成属于你的影视作品。',
       cta: '创建影片',
-      ctaLink: '/auth/login',
+      ctaLink: '/workflow',
       links: [
-        { label: 'AI视频生成', to: '/auth/login' },
+        { label: 'AI视频生成', to: '/workflow' },
         { label: '作品展示', to: '/pricing' },
       ],
     },
@@ -96,7 +101,7 @@ export const homeStoryConfig = {
       ctaLink: '/pricing',
       links: [
         { label: '创作风格库', to: '/workflow' },
-        { label: 'AI短剧工厂', to: '/auth/login' },
+        { label: 'AI短剧工厂', to: '/workflow' },
       ],
     },
     {
@@ -108,11 +113,11 @@ export const homeStoryConfig = {
       title: '你的 AI 电影工厂',
       desc: '从灵感、剧本、角色、分镜，到最终视频，一站式完成创作。',
       cta: '立即开始创作',
-      ctaLink: '/auth/register',
+      ctaLink: '/pricing',
       links: [
-        { label: '进入工作台', to: '/auth/login' },
+        { label: '进入工作台', to: '/dashboard/home' },
         { label: '新手教程', to: '/workflow' },
-        { label: '免费注册', to: '/auth/register' },
+        { label: '免费注册', to: '/pricing' },
       ],
     },
   ],

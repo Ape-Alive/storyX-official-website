@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '24'
           cache: npm
 
       - name: Install dependencies
@@ -39,10 +39,32 @@ jobs:
           cp deploy/remote-deploy.sh release/remote-deploy.sh
           chmod +x release/remote-deploy.sh
 
+      - name: Check deploy secrets
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+        run: |
+          if [ -z "$SSH_PRIVATE_KEY" ] && [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::缺少 SSH 私钥 Secret。请在仓库 Settings → Secrets 中配置 SSH_PRIVATE_KEY（推荐，与后台仓库同名），或沿用旧名 DEPLOY_SSH_KEY。"
+            exit 1
+          fi
+          if [ -z "$SSH_HOST" ]; then
+            echo "::error::缺少 Secret: SSH_HOST（服务器 IP 或域名，例如 152.32.190.93）"
+            exit 1
+          fi
+          if [ -z "$SSH_USER" ] && [ -z "$DEPLOY_SSH_USER" ]; then
+            echo "::error::缺少 Secret: SSH_USER（应为 deploy），或沿用旧名 DEPLOY_SSH_USER。"
+            exit 1
+          fi
+
       - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # 优先新名 SSH_PRIVATE_KEY，兼容旧名 DEPLOY_SSH_KEY
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY || secrets.DEPLOY_SSH_KEY }}
 
       - name: Add server to known_hosts
         env:
@@ -56,7 +78,7 @@ jobs:
       - name: Upload release to server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_USER: ${{ secrets.SSH_USER || secrets.DEPLOY_SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
@@ -71,7 +93,7 @@ jobs:
       - name: Run remote deploy
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_USER: ${{ secrets.SSH_USER || secrets.DEPLOY_SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |

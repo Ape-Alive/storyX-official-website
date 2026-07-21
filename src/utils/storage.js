@@ -4,6 +4,7 @@
  */
 
 const TOKEN_KEY = 'token'
+const REFRESH_TOKEN_KEY = 'refreshToken'
 const USER_INFO_KEY = 'userInfo'
 
 /**
@@ -140,6 +141,39 @@ export const setToken = (token, remember = false) => {
 export const removeToken = () => {
   local.remove(TOKEN_KEY)
   session.remove(TOKEN_KEY)
+  removeRefreshToken()
+}
+
+export const getRefreshToken = () => {
+  return local.get(REFRESH_TOKEN_KEY) || session.get(REFRESH_TOKEN_KEY)
+}
+
+export const setRefreshToken = (refreshToken, remember = false) => {
+  if (remember) {
+    local.set(REFRESH_TOKEN_KEY, refreshToken)
+  } else {
+    session.set(REFRESH_TOKEN_KEY, refreshToken)
+  }
+}
+
+export const removeRefreshToken = () => {
+  local.remove(REFRESH_TOKEN_KEY)
+  session.remove(REFRESH_TOKEN_KEY)
+}
+
+/**
+ * 保存登录返回的访问令牌与刷新令牌
+ * @param {{ accessToken?: string, token?: string, refreshToken?: string }} tokens
+ * @param {boolean} remember
+ */
+export const saveAuthTokens = (tokens, remember = false) => {
+  const accessToken = tokens.accessToken || tokens.token
+  if (accessToken) {
+    setToken(accessToken, remember)
+  }
+  if (tokens.refreshToken) {
+    setRefreshToken(tokens.refreshToken, remember)
+  }
 }
 
 /**

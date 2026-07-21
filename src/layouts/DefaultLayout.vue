@@ -1,13 +1,16 @@
 <template>
-  <div class="default-layout">
+  <div class="default-layout" :class="{ 'is-home': isHome, 'is-chrome-hidden': hideChrome }">
     <Navbar
-      @start-click="handleStartClick"
+      :visible="!hideChrome"
+      :overlay="isHome"
+      :show-primary="!isHome"
+      primary-label="立即开启"
       @logo-click="handleLogoClick"
+      @primary-click="handlePrimaryClick"
     />
     <router-view />
-    <!-- 登录弹窗（仅在首页显示） -->
     <AuthModal
-      v-if="router.currentRoute.value.name === 'Home'"
+      v-if="isHome"
       :visible="isAuthOpen"
       @close="closeAuthModal"
       @submit="handleAuthSubmit"
@@ -16,16 +19,27 @@
 </template>
 
 <script setup>
-import { ref, provide } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, provide, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Navbar from '@/components/Navbar.vue'
 import AuthModal from '@/components/AuthModal.vue'
 
 const router = useRouter()
+const route = useRoute()
+const isHome = computed(() => route.name === 'Home')
 const isAuthOpen = ref(false)
+/** 首页加载特效期间隐藏顶栏（进入首页先藏，避免闪一下） */
+const hideChrome = ref(route.name === 'Home')
 
-// 提供登录弹窗状态给子组件使用
+watch(isHome, (home) => {
+  if (!home) hideChrome.value = false
+  else hideChrome.value = true
+})
+
+provide('setHomeChromeHidden', (hidden) => {
+  hideChrome.value = !!hidden
+})
 provide('isAuthOpen', isAuthOpen)
 provide('openAuthModal', () => {
   isAuthOpen.value = true
@@ -34,13 +48,16 @@ provide('closeAuthModal', () => {
   isAuthOpen.value = false
 })
 
-const handleStartClick = () => {
+const handlePrimaryClick = () => {
   router.push('/pricing')
 }
 
 const handleLogoClick = () => {
+  if (isHome.value) {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
   router.push('/')
-  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const handleAuthSubmit = (data) => {

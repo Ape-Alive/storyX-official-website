@@ -1,42 +1,6 @@
 <template>
   <div class="pricing-page">
     <div class="pricing-container">
-      <!-- Badge -->
-      <div class="pricing-badge">
-        <el-icon :size="12" color="#4f46e5" class="badge-icon">
-          <Star />
-        </el-icon>
-        灵活多样的制片体系
-      </div>
-
-      <!-- 主标题区域（取景框样式） -->
-      <div class="pricing-header-wrapper">
-        <div class="title-frame">
-          <!-- 取景框边角 -->
-          <div class="frame-corner frame-corner-tl"></div>
-          <div class="frame-corner frame-corner-tr"></div>
-          <div class="frame-corner frame-corner-bl"></div>
-          <div class="frame-corner frame-corner-br"></div>
-
-          <!-- 技术细节标注 -->
-          <div class="camera-info camera-info-tl">
-            <span class="rec-dot"></span>
-            REC 00:24:59:12
-          </div>
-          <div class="camera-info camera-info-tr">4K 60FPS ISO 400</div>
-          <div class="camera-info camera-info-bl">AF-C [MULTI-AGENT]</div>
-
-          <!-- 主标题 -->
-          <div class="title-content">
-            <h1 class="pricing-title-main">定制您的</h1>
-            <div class="pricing-title-gradient-wrapper">
-              <span class="pricing-title-gradient">制片权限</span>
-              <div class="title-underline"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- 订阅时长选择器 -->
       <div class="duration-selector-wrapper">
         <div class="duration-selector">
@@ -99,19 +63,27 @@
               <ul class="package-features">
                 <li
                   v-for="feature in pkg.features"
-                  :key="feature"
-                  class="feature-item"
+                  :key="feature.label"
+                  :class="['feature-item', { 'is-disabled': !feature.included }]"
                 >
                   <div
-                    :class="['feature-check', { 'check-popular': index === 1 }]"
+                    :class="[
+                      'feature-check',
+                      {
+                        'check-popular': index === 1 && feature.included,
+                        'check-disabled': !feature.included,
+                      },
+                    ]"
                   >
                     <el-icon
+                      v-if="feature.included"
                       :size="10"
                       :color="index === 1 ? '#fff' : '#4f46e5'"
                       ><Select
                     /></el-icon>
+                    <span v-else class="feature-dash" aria-hidden="true" />
                   </div>
-                  <span>{{ feature }}</span>
+                  <span>{{ feature.label }}</span>
                 </li>
               </ul>
 
@@ -183,7 +155,6 @@ import {
   Loading,
   Lock,
   CreditCard,
-  Star,
   Plus,
   ArrowRight,
 } from "@element-plus/icons-vue";
@@ -291,28 +262,36 @@ const getButtonText = () => {
   return map[selectedDuration.value] || "立即订阅";
 };
 
+// 套餐特性档位（无额度时仍展示对照项，并用划线表示不含）
+const FEATURE_TIERS = {
+  basic: ["2K 画质导出", "角色一致性引擎", "云端项目备份"],
+  pro: ["4K 原生渲染", "多智能体协作流", "自定义配音模型", "专属水印定制"],
+  team: ["团队共享额度", "项目权限分发", "ProRes 无损导出"],
+};
+
 // 获取套餐特性列表
 const getPackageFeatures = (pkg) => {
-  const features = [];
+  const quotaNum =
+    pkg.quota === null || pkg.quota === undefined || pkg.quota === ""
+      ? NaN
+      : Number(pkg.quota);
 
-  if (pkg.quota) {
-    if (pkg.quota <= 1000) {
-      features.push("2K 画质导出");
-      features.push("角色一致性引擎");
-      features.push("云端项目备份");
-    } else if (pkg.quota <= 5000) {
-      features.push("4K 原生渲染");
-      features.push("多智能体协作流");
-      features.push("自定义配音模型");
-      features.push("专属水印定制");
-    } else {
-      features.push("团队共享额度");
-      features.push("项目权限分发");
-      features.push("ProRes 无损导出");
-    }
+  let labels = FEATURE_TIERS.team;
+  let included = true;
+
+  if (!Number.isFinite(quotaNum) || quotaNum <= 0) {
+    // 无限/未配置额度：展示对照特性并划线
+    labels = FEATURE_TIERS.team;
+    included = false;
+  } else if (quotaNum <= 1000) {
+    labels = FEATURE_TIERS.basic;
+  } else if (quotaNum <= 5000) {
+    labels = FEATURE_TIERS.pro;
+  } else {
+    labels = FEATURE_TIERS.team;
   }
 
-  return features;
+  return labels.map((label) => ({ label, included }));
 };
 
 // 加载套餐数据
@@ -345,319 +324,91 @@ onMounted(() => {
 /* 页面基础样式 */
 .pricing-page {
   min-height: 100vh;
-  background: linear-gradient(to right, #faf5ff, #ffffff);
-  color: #1e1b4b;
-  padding-top: 80px;
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(124, 108, 240, 0.08), transparent 48%),
+    radial-gradient(ellipse at 85% 10%, rgba(91, 141, 239, 0.08), transparent 42%),
+    #f3eee6;
+  color: #1c1917;
+  padding-top: 88px;
   position: relative;
   overflow-x: hidden;
 }
 
-/* 背景装饰 */
-.pricing-page::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image:
-    radial-gradient(
-      circle at 20% 50%,
-      rgba(99, 102, 241, 0.08) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 80% 80%,
-      rgba(236, 72, 153, 0.06) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 50% 30%,
-      rgba(59, 130, 246, 0.08) 0%,
-      transparent 50%
-    );
-  background-size: 100% 100%;
-}
-
+.pricing-page::before,
 .pricing-page::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.25;
-  background-image: radial-gradient(
-    rgba(156, 163, 175, 0.3) 1px,
-    transparent 0
-  );
-  background-size: 64px 64px;
-  mix-blend-mode: multiply;
+  display: none;
 }
 
 .pricing-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 120px 32px 120px;
+  padding: 72px 32px 120px;
   position: relative;
   z-index: 10;
 }
 
-/* Badge */
-.pricing-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 16px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  margin-bottom: 40px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px);
-  color: #4f46e5;
-}
-
-.badge-icon {
-  margin-right: 8px;
-  animation: spin-slow 12s linear infinite;
-}
-
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 标题框架 */
-.pricing-header-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 96px;
-}
-
-.title-frame {
-  position: relative;
-  padding: 80px 60px;
-  transition: all 0.7s;
-}
-
-.title-frame:hover .frame-corner {
-  width: 80px;
-  height: 80px;
-}
-
-/* 取景框边角 */
-.frame-corner {
-  position: absolute;
-  width: 48px;
-  height: 48px;
-  border: 2px solid rgba(99, 102, 241, 0.4);
-  transition: all 0.5s;
-}
-
-.frame-corner-tl {
-  top: 0;
-  left: 0;
-  border-right: none;
-  border-bottom: none;
-  border-top-left-radius: 24px;
-}
-
-.frame-corner-tr {
-  top: 0;
-  right: 0;
-  border-left: none;
-  border-bottom: none;
-  border-top-right-radius: 24px;
-}
-
-.frame-corner-bl {
-  bottom: 0;
-  left: 0;
-  border-right: none;
-  border-top: none;
-  border-bottom-left-radius: 24px;
-}
-
-.frame-corner-br {
-  bottom: 0;
-  right: 0;
-  border-left: none;
-  border-top: none;
-  border-bottom-right-radius: 24px;
-}
-
-/* 相机信息标注 */
-.camera-info {
-  position: absolute;
-  font-size: 9px;
-  font-weight: 900;
-  color: rgba(99, 102, 241, 0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-family: "Courier New", monospace;
-}
-
-.camera-info-tl {
-  top: 16px;
-  left: 40px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.rec-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ef4444;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.camera-info-tr {
-  top: 16px;
-  right: 40px;
-}
-
-.camera-info-bl {
-  bottom: 16px;
-  left: 40px;
-}
-
-/* 标题内容 */
-.title-content {
-  position: relative;
-  text-align: center;
-}
-
-.pricing-title-main {
-  font-size: 96px;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  margin-bottom: 16px;
-  color: #1e1b4b;
-  line-height: 1;
-  font-family: "Space Grotesk", sans-serif;
-}
-
-@media (min-width: 768px) {
-  .pricing-title-main {
-    font-size: 128px;
-  }
-}
-
-.pricing-title-gradient-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.pricing-title-gradient {
-  font-size: 80px;
-  font-weight: 300;
-  letter-spacing: 0.2em;
-  font-style: italic;
-  background: linear-gradient(to right, #4f46e5, #9333ea, #ec4899);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1.2;
-  font-family: "Space Grotesk", sans-serif;
-}
-
-@media (min-width: 768px) {
-  .pricing-title-gradient {
-    font-size: 128px;
-  }
-}
-
-.title-underline {
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(99, 102, 241, 0.2),
-    transparent
-  );
-}
-
-/* 时长选择器 */
+/* 时长选择器：分段控件，刻意与顶栏胶囊导航区分 */
 .duration-selector-wrapper {
   display: flex;
   justify-content: center;
   margin-bottom: 64px;
+  width: 100%;
 }
 
 .duration-selector {
-  background: rgba(255, 255, 255, 0.4);
-  padding: 6px;
-  border-radius: 9999px;
   display: flex;
-  align-items: center;
-  gap: 4px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(99, 102, 241, 0.1);
-  box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.1);
+  align-items: stretch;
+  width: min(480px, 100%);
+  padding: 4px;
+  gap: 0;
+  border-radius: 12px;
+  background: #e7e1d7;
+  border: 1px solid rgba(28, 25, 23, 0.08);
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .duration-btn {
   position: relative;
-  padding: 14px 32px;
-  border-radius: 9999px;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  flex: 1;
+  min-width: 0;
+  padding: 11px 8px;
   border: none;
+  border-radius: 9px;
   background: transparent;
-  color: rgba(99, 102, 241, 0.3);
+  color: rgba(28, 25, 23, 0.55);
+  font-family: "Space Grotesk", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.5s;
-  font-family: "Inter", sans-serif;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .duration-btn:hover {
-  color: #4f46e5;
-  background: rgba(255, 255, 255, 0.4);
+  color: #1c1917;
 }
 
 .duration-btn.active {
-  background: #4f46e5;
-  color: white;
-  box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.3);
-  transform: scale(1.05);
+  background: #fffdf9;
+  color: #1c1917;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.08);
 }
 
 .discount-badge {
   position: absolute;
-  top: -12px;
-  right: -8px;
-  background: #ec4899;
-  color: white;
-  font-size: 7px;
-  font-weight: 900;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  box-shadow: 0 4px 6px rgba(236, 72, 153, 0.3);
+  top: -11px;
+  right: 4px;
+  background: #c45c3a;
+  color: #fffaf7;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  line-height: 1.3;
+  pointer-events: none;
 }
 
 /* 套餐滚动容器 */
@@ -697,64 +448,64 @@ onMounted(() => {
 .package-card {
   position: relative;
   flex-shrink: 0;
-  width: 380px;
-  padding: 4px;
-  border-radius: 56px;
-  transition: all 0.7s;
-  background: white;
-  border: 1px solid rgba(99, 102, 241, 0.1);
-  box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.1);
+  width: 360px;
+  height: 560px;
+  padding: 0;
+  border-radius: 28px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(28, 25, 23, 0.06);
+  box-shadow: 0 16px 40px rgba(28, 25, 23, 0.06);
+  display: flex;
+  flex-direction: column;
 }
 
 .package-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 25px 30px -5px rgba(99, 102, 241, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 22px 48px rgba(28, 25, 23, 0.1);
 }
 
 .package-card.recommended {
-  background: linear-gradient(
-    to bottom,
-    rgba(99, 102, 241, 0.4),
-    rgba(168, 85, 247, 0.4),
-    rgba(236, 72, 153, 0.4)
-  );
-  box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.25);
-  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 48px rgba(28, 25, 23, 0.1);
+  border: 1px solid rgba(28, 25, 23, 0.12);
 }
 
 .package-card.recommended:hover {
-  box-shadow: 0 30px 60px -12px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 26px 56px rgba(28, 25, 23, 0.14);
 }
 
 .package-inner {
   position: relative;
-  background: white;
-  border-radius: 54px;
-  padding: 40px;
+  background: transparent;
+  border-radius: 28px;
+  padding: 36px;
+  flex: 1;
+  min-height: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .package-card.recommended .package-inner {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(40px);
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .recommended-badge {
   position: absolute;
-  top: 32px;
-  right: 32px;
-  background: #4f46e5;
-  color: white;
-  font-size: 10px;
-  font-weight: 900;
-  padding: 4px 16px;
+  top: 28px;
+  right: 28px;
+  background: #2f2a27;
+  color: #faf7f2;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 14px;
   border-radius: 9999px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
-  animation: pulse-badge 2s ease-in-out infinite;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  box-shadow: none;
+  animation: none;
 }
 
 @keyframes pulse-badge {
@@ -913,6 +664,32 @@ onMounted(() => {
   color: #1e1b4b;
 }
 
+.feature-item.is-disabled {
+  pointer-events: none;
+}
+
+.feature-item.is-disabled span {
+  color: rgba(30, 27, 75, 0.35);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.feature-item.is-disabled:hover span {
+  color: rgba(30, 27, 75, 0.35);
+}
+
+.check-disabled {
+  background: rgba(30, 27, 75, 0.06);
+}
+
+.feature-dash {
+  display: block;
+  width: 8px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: rgba(30, 27, 75, 0.35);
+}
+
 /* 订阅按钮 */
 .subscribe-btn {
   width: 100%;
@@ -941,28 +718,28 @@ onMounted(() => {
 }
 
 .btn-popular {
-  background: #4f46e5;
-  color: white;
-  box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.3);
+  background: #2f2a27;
+  color: #faf7f2;
+  box-shadow: none;
 }
 
 .btn-popular:hover {
-  background: #4338ca;
-  box-shadow: 0 25px 30px -5px rgba(79, 70, 229, 0.4);
-  transform: translateY(-3px);
+  background: #1c1917;
+  box-shadow: none;
+  transform: translateY(-2px);
 }
 
 /* 定制方案卡片 */
 .custom-card {
-  border: 2px dashed rgba(99, 102, 241, 0.2);
-  background: rgba(237, 233, 254, 0.5);
+  border: 1px dashed rgba(28, 25, 23, 0.18);
+  background: rgba(255, 255, 255, 0.4);
   box-shadow: none;
 }
 
 .custom-card:hover {
-  background: rgba(237, 233, 254, 0.7);
-  border-color: rgba(99, 102, 241, 0.4);
-  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(28, 25, 23, 0.28);
+  transform: translateY(-4px);
 }
 
 .custom-inner {
@@ -971,6 +748,7 @@ onMounted(() => {
   justify-content: center;
   text-align: center;
   padding: 48px 40px;
+  height: 100%;
 }
 
 .custom-icon {
@@ -1134,27 +912,223 @@ onMounted(() => {
   font-weight: 600;
 }
 
-@media (max-width: 768px) {
-  .pricing-title-main {
-    font-size: 64px;
+@media (max-width: 960px) {
+  .pricing-page {
+    /* 顶部仅品牌行，导航已移至底部 Tab */
+    padding-top: 80px;
+    padding-bottom: 88px;
   }
 
-  .pricing-title-gradient {
-    font-size: 64px;
+  .pricing-container {
+    padding: 40px 20px 80px;
   }
 
-  .package-card {
-    width: 320px;
+  .duration-selector-wrapper {
+    margin-bottom: 36px;
   }
 
   .duration-selector {
-    flex-wrap: wrap;
-    gap: 4px;
+    width: 100%;
+    max-width: none;
   }
 
   .duration-btn {
-    padding: 10px 20px;
-    font-size: 9px;
+    padding: 10px 4px;
+    font-size: 13px;
+  }
+
+  .discount-badge {
+    top: -10px;
+    right: 2px;
+    font-size: 8px;
+    padding: 2px 5px;
+  }
+
+  .packages-scroll-wrapper {
+    margin-bottom: 40px;
+    padding: 0 0 24px;
+  }
+
+  .packages-scroll-container,
+  .packages-scroll-container.center-cards,
+  .packages-scroll-container:not(.center-cards) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    overflow: visible;
+    padding: 0;
+    justify-content: flex-start;
+  }
+
+  .package-card {
+    width: 100%;
+    max-width: none;
+    height: 520px;
+    border-radius: 22px;
+  }
+
+  .package-card:hover,
+  .custom-card:hover {
+    transform: none;
+  }
+
+  .package-inner {
+    padding: 24px 20px;
+    border-radius: 22px;
+  }
+
+  .recommended-badge {
+    top: 16px;
+    right: 16px;
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .package-header {
+    margin-bottom: 20px;
+    padding-right: 72px;
+  }
+
+  .package-name {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .price-amount {
+    font-size: 40px;
+  }
+
+  .price-unit {
+    font-size: 14px;
+  }
+
+  .package-desc {
+    font-size: 12px;
+  }
+
+  .package-metrics {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .metric-item {
+    padding: 12px 10px;
+    border-radius: 14px;
+  }
+
+  .metric-value {
+    font-size: 14px;
+  }
+
+  .package-features {
+    margin-bottom: 24px;
+  }
+
+  .feature-item {
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+
+  .feature-item span {
+    font-size: 12px;
+  }
+
+  .subscribe-btn {
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  .custom-inner {
+    padding: 32px 20px;
+  }
+
+  .custom-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+  }
+
+  .custom-title {
+    font-size: 18px;
+  }
+
+  .scroll-hint {
+    display: none;
+  }
+
+  .pricing-footer {
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+    align-items: stretch;
+  }
+
+  .footer-card {
+    max-width: none;
+    width: 100%;
+    padding: 18px 16px;
+    gap: 14px;
+    border-radius: 16px;
+  }
+
+  .footer-card:hover {
+    transform: none;
+  }
+
+  .footer-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .footer-card h4 {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: none;
+  }
+
+  .footer-card p {
+    font-size: 12px;
+  }
+
+  .loading-container {
+    padding: 64px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .pricing-page {
+    padding-top: 72px;
+    padding-bottom: 88px;
+  }
+
+  .pricing-container {
+    padding: 28px 16px 64px;
+  }
+
+  .duration-btn {
+    padding: 9px 2px;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  .discount-badge {
+    right: 0;
+  }
+
+  .package-inner {
+    padding: 20px 16px;
+  }
+
+  .package-header {
+    padding-right: 64px;
+  }
+
+  .price-amount {
+    font-size: 36px;
   }
 }
 </style>

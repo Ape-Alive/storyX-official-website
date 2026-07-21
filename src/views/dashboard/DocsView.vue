@@ -4,7 +4,7 @@
       <div class="docs-content">
         <h2 class="docs-title">开发集成指引</h2>
         <p class="docs-desc">
-          获取您的 API 密钥，并在几分钟内将 StoryX 的大模型能力集成到您的制片工作流中。
+          获取您的 API 密钥，并在几分钟内将 绘火AI 的大模型能力集成到您的制片工作流中。
         </p>
         <div class="code-block">
           <div class="code-header">
@@ -18,7 +18,7 @@
             <p class="code-comment code-spacing">// 初始化客户端实例</p>
             <p class="code-line">
               <span class="code-keyword">const</span> storyEngine =
-              <span class="code-keyword">new</span> StoryXClient('您的密钥');
+              <span class="code-keyword">new</span> HuiHuoClient('您的密钥');
             </p>
           </div>
         </div>

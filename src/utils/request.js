@@ -1,17 +1,69 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { getToken } from './storage'
+import { getToken, getRefreshToken, saveAuthTokens, removeToken, removeUserInfo } from './storage'
+
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // 创建 axios 实例
 const service = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+    baseURL,
     timeout: 10000
 })
+
+let isRefreshing = false
+let refreshSubscribers = []
+
+const subscribeTokenRefresh = (callback) => {
+    refreshSubscribers.push(callback)
+}
+
+const onTokenRefreshed = (token) => {
+    refreshSubscribers.forEach((callback) => callback(token))
+    refreshSubscribers = []
+}
+
+const tryRefreshToken = async () => {
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) {
+        return null
+    }
+
+    const response = await axios.post(
+        `${baseURL}/auth/refresh`,
+        { refreshToken },
+        { headers: { 'Content-Type': 'application/json' } }
+    )
+
+    const body = response.data
+    if (body?.success && body.data) {
+        saveAuthTokens(body.data)
+        return body.data.accessToken || body.data.token
+    }
+
+    return null
+}
+
+const redirectToLogin = () => {
+    removeToken()
+    removeUserInfo()
+    if (!window.location.pathname.startsWith('/auth/login')) {
+        window.location.href = '/auth/login'
+    }
+}
+
+const shouldAttemptTokenRefresh = (config) => {
+    if (!config || config.skipAuthRefresh) {
+        return false
+    }
+    const url = config.url || ''
+    return !url.includes('/auth/user/login') &&
+        !url.includes('/auth/user/register') &&
+        !url.includes('/auth/refresh')
+}
 
 // 请求拦截器
 service.interceptors.request.use(
     config => {
-        // 在发送请求之前做些什么
         const token = getToken()
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`
@@ -19,7 +71,6 @@ service.interceptors.request.use(
         return config
     },
     error => {
-        // 对请求错误做些什么
         console.error('请求错误:', error)
         return Promise.reject(error)
     }
@@ -28,10 +79,8 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
     response => {
-        // 对响应数据做点什么
         const res = response.data
 
-        // 如果返回的状态码不是200，则认为是错误
         if (res.code !== undefined && res.code !== 200) {
             ElMessage.error(res.message || '请求失败')
             return Promise.reject(new Error(res.message || '请求失败'))
@@ -39,9 +88,46 @@ service.interceptors.response.use(
 
         return res
     },
-    error => {
-        // 对响应错误做点什么
+    async error => {
         console.error('响应错误:', error)
+
+        const originalRequest = error.config
+
+        if (
+            error.response?.status === 401 &&
+            originalRequest &&
+            !originalRequest._retry &&
+            shouldAttemptTokenRefresh(originalRequest)
+        ) {
+            if (isRefreshing) {
+                return new Promise((resolve) => {
+                    subscribeTokenRefresh((token) => {
+                        originalRequest.headers['Authorization'] = `Bearer ${token}`
+                        resolve(service(originalRequest))
+                    })
+                })
+            }
+
+            originalRequest._retry = true
+            isRefreshing = true
+
+            try {
+                const newToken = await tryRefreshToken()
+                if (!newToken) {
+                    redirectToLogin()
+                    return Promise.reject(error)
+                }
+
+                onTokenRefreshed(newToken)
+                originalRequest.headers['Authorization'] = `Bearer ${newToken}`
+                return service(originalRequest)
+            } catch (refreshError) {
+                redirectToLogin()
+                return Promise.reject(refreshError)
+            } finally {
+                isRefreshing = false
+            }
+        }
 
         let message = '请求失败'
 
@@ -49,7 +135,6 @@ service.interceptors.response.use(
             switch (error.response.status) {
                 case 401:
                     message = '未授权，请重新登录'
-                    // 可以在这里清除token并跳转到登录页
                     break
                 case 403:
                     message = '拒绝访问'

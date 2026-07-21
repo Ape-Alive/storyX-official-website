@@ -1,7 +1,4 @@
-/* 引入 Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-
-/* 全局样式 */
+/* 全局样式（字体已在 index.html 引入，避免 CSS @import 阻塞渲染） */
 * {
   margin: 0;
   padding: 0;

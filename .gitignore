@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# 首页故事大视频（通过 VITE_HOME_STORY_* 配置地址，勿提交）
+public/videos/*.mp4
+public/videos/*.webm
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

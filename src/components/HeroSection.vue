@@ -14,7 +14,7 @@
       </h1>
 
       <p class="hero-desc">
-        StoryX 集成 DeepSeek 逻辑引擎与 Luma 视听模型，<br/>
+        绘火AI 集成 DeepSeek 逻辑引擎与 Luma 视听模型，<br/>
         让剧本创作、选角、拍摄到后期剪辑，在指尖瞬间完成。
       </p>
 

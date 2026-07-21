@@ -47,6 +47,20 @@ export const login = (data) => {
 }
 
 /**
+ * 使用 refreshToken 刷新访问令牌
+ * @param {string} refreshToken
+ * @returns {Promise}
+ */
+export const refreshAccessToken = (refreshToken) => {
+  return request({
+    url: '/auth/refresh',
+    method: 'post',
+    data: { refreshToken },
+    skipAuthRefresh: true
+  })
+}
+
+/**
  * 生成一次性token（用于桌面端登录）
  * @param {Object} [options] - 可选参数
  * @param {number} [options.expiresInMinutes] - 过期时间（分钟），默认10分钟，最长60分钟

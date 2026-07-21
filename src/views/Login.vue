@@ -66,7 +66,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Message, Lock } from '@element-plus/icons-vue'
 import { login } from '@/api/auth'
-import { setToken, setUserInfo, getToken } from '@/utils/storage'
+import { saveAuthTokens, setUserInfo } from '@/utils/storage'
 
 const router = useRouter()
 const loginFormRef = ref(null)
@@ -104,29 +104,15 @@ const handleLogin = async () => {
       })
 
       if (response.success && response.data) {
-        // 保存 token 和用户信息
-        if (response.data.token) {
-          setToken(response.data.token)
-          console.log('Token 已保存:', response.data.token)
-        }
+        saveAuthTokens(response.data)
         if (response.data.user) {
           setUserInfo(response.data.user)
         }
 
-        // 验证 token 是否已保存
-        const savedToken = getToken()
-        console.log('保存后的 Token:', savedToken)
-
         ElMessage.success('登录成功！')
 
-        // 直接跳转，token 已同步保存
         const redirect = router.currentRoute.value.query.redirect || '/dashboard/home'
-        console.log('准备跳转到:', redirect)
-
-        // 使用 replace 而不是 push，避免在历史记录中留下登录页
-        router.replace(redirect).catch(err => {
-          console.error('路由跳转失败:', err)
-          // 如果路由跳转失败，使用 window.location 强制跳转
+        router.replace(redirect).catch(() => {
           window.location.href = redirect
         })
       } else {

@@ -11,7 +11,7 @@
             <div class="info-icon">
               <el-icon :size="20"><Message /></el-icon>
             </div>
-            <span class="info-text">vip@storyx.ai</span>
+            <span class="info-text">vip@huihuo.ai</span>
           </div>
           <div class="info-item">
             <div class="info-icon">

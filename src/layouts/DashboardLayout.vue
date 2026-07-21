@@ -1,10 +1,6 @@
 <template>
   <div class="dashboard-layout">
-    <Header
-      :user-email="userEmail"
-      :user-name="userName"
-      @logout="handleLogoutClick"
-    />
+    <Header :user-email="userEmail" :user-name="userName" @logout="handleLogoutClick" />
     <div class="dashboard-inner">
       <Sidebar />
       <div class="dashboard-content-wrapper">
@@ -14,9 +10,9 @@
           </div>
           <footer class="dashboard-footer">
             <div class="footer-content">
-              <span>STORY-X 控制台 • V2.5.0</span>
+              <span>绘火AI 控制台 • V2.5.0</span>
               <span>所有算力节点运行正常</span>
-              <span>© 2024 StoryX AI</span>
+              <span>© 2026 绘火AI</span>
             </div>
           </footer>
         </main>
@@ -35,94 +31,92 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Monitor } from "@element-plus/icons-vue";
-import Sidebar from "@/components/dashboard/Sidebar.vue";
-import Header from "@/components/dashboard/Header.vue";
-import { getUserInfo, removeToken, removeUserInfo } from "@/utils/storage";
-import { generateOneTimeToken } from "@/api/auth";
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Monitor } from '@element-plus/icons-vue'
+import Sidebar from '@/components/dashboard/Sidebar.vue'
+import Header from '@/components/dashboard/Header.vue'
+import { getUserInfo, removeToken, removeUserInfo } from '@/utils/storage'
+import { generateOneTimeToken } from '@/api/auth'
 
-const router = useRouter();
-const userEmail = ref("");
-const userName = ref("");
+const router = useRouter()
+const userEmail = ref('')
+const userName = ref('')
 
 onMounted(() => {
-  const userInfo = getUserInfo();
+  const userInfo = getUserInfo()
   if (userInfo) {
     if (userInfo.email) {
-      userEmail.value = userInfo.email;
+      userEmail.value = userInfo.email
     }
     if (userInfo.name) {
-      userName.value = userInfo.name;
+      userName.value = userInfo.name
     } else if (userInfo.email) {
       // 如果没有 name，使用邮箱前缀作为用户名
-      const parts = userInfo.email.split("@");
-      userName.value = parts[0] || "用户";
+      const parts = userInfo.email.split('@')
+      userName.value = parts[0] || '用户'
     }
   }
-});
+})
 
 const handleSettingsClick = () => {
-  ElMessage.info("个人设置功能开发中...");
-};
+  ElMessage.info('个人设置功能开发中...')
+}
 
 const handleLogoutClick = async () => {
   try {
-    await ElMessageBox.confirm("确定要退出登录吗？", "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning",
-      customClass: "logout-confirm-dialog",
+    await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+      customClass: 'logout-confirm-dialog',
       center: false,
       showClose: true,
       closeOnClickModal: false,
       closeOnPressEscape: true,
       distinguishCancelAndClose: true,
-    });
+    })
 
-    removeToken();
-    removeUserInfo();
-    ElMessage.success("已退出登录");
-    router.push("/auth/login");
+    removeToken()
+    removeUserInfo()
+    ElMessage.success('已退出登录')
+    router.push('/auth/login')
   } catch {
     // 用户取消
   }
-};
+}
 
 const openDesktopApp = async () => {
   try {
     // 显示加载提示
     const loadingMessage = ElMessage({
-      message: "正在生成登录令牌...",
-      type: "info",
+      message: '正在生成登录令牌...',
+      type: 'info',
       duration: 0, // 不自动关闭
-    });
+    })
 
     // 调用 API 生成一次性 token
-    const response = await generateOneTimeToken({ expiresInMinutes: 10 });
+    const response = await generateOneTimeToken({ expiresInMinutes: 10 })
 
     // 关闭加载提示
-    loadingMessage.close();
+    loadingMessage.close()
 
     if (response.success && response.data && response.data.token) {
-      const token = response.data.token;
+      const token = response.data.token
 
       // 在浏览器中打开协议 URL
-      window.location.href = `storyx://login?token=${token}`;
+      window.location.href = `storyx://login?token=${token}`
 
-      ElMessage.success("已生成登录令牌，正在打开桌面客户端...");
+      ElMessage.success('已生成登录令牌，正在打开桌面客户端...')
     } else {
-      ElMessage.error("生成登录令牌失败，请稍后重试");
+      ElMessage.error('生成登录令牌失败，请稍后重试')
     }
   } catch (error) {
-    console.error("生成一次性 token 失败:", error);
-    ElMessage.error(
-      error.response?.data?.message || "生成登录令牌失败，请稍后重试",
-    );
+    console.error('生成一次性 token 失败:', error)
+    ElMessage.error(error.response?.data?.message || '生成登录令牌失败，请稍后重试')
   }
-};
+}
 </script>
 
 <style scoped>
@@ -180,7 +174,7 @@ const openDesktopApp = async () => {
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.3em;
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .desktop-app-btn {
@@ -214,7 +208,7 @@ const openDesktopApp = async () => {
 }
 
 .tooltip::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 100%;
   right: 24px;

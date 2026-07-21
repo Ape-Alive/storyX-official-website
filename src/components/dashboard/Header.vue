@@ -5,9 +5,7 @@
         <div class="logo-icon">
           <div class="logo-diamond"></div>
         </div>
-        <span class="logo-text">
-          STORY<span class="logo-x">X</span>
-        </span>
+        <span class="logo-text">绘火AI</span>
       </div>
       <!-- <h1 class="header-title">控制台</h1> -->
       <div class="header-right">

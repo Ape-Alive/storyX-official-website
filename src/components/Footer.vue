@@ -3,14 +3,9 @@
     <div class="footer-container">
       <div class="footer-brand">
         <div class="footer-logo">
-          <div class="footer-logo-glow"></div>
-          <div class="footer-logo-icon">
-            <el-icon :size="16" color="#000">
-              <Film />
-            </el-icon>
-          </div>
+          <img class="footer-logo-img" src="/icon.svg" alt="绘火AI" />
         </div>
-        <span class="footer-brand-text">STORYX</span>
+        <span class="footer-brand-text">绘火AI</span>
         <p class="footer-tagline">Autonomous Cinematic Intelligence Lab</p>
       </div>
 
@@ -22,14 +17,13 @@
       </div>
 
       <p class="footer-copyright">
-        © 2026 STORYX STUDIOS.
+        © 2026 绘火AI
       </p>
     </div>
   </footer>
 </template>
 
 <script setup>
-import { Film } from '@element-plus/icons-vue'
 </script>
 
 <style scoped>
@@ -78,24 +72,12 @@ import { Film } from '@element-plus/icons-vue'
   gap: 12px;
 }
 
-.footer-logo-glow {
-  position: absolute;
-  inset: 0;
-  background: #a855f7;
-  filter: blur(8px);
-  opacity: 0.2;
-  border-radius: 8px;
-}
-
-.footer-logo-icon {
-  position: relative;
+.footer-logo-img {
   width: 32px;
   height: 32px;
-  background: white;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  object-fit: contain;
+  display: block;
 }
 
 .footer-brand-text {

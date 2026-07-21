@@ -25,6 +25,11 @@ const routes = [
         component: () => import('@/views/Workflow.vue')
       },
       {
+        path: 'resources',
+        name: 'Resources',
+        component: () => import('@/views/Resources.vue')
+      },
+      {
         path: 'test',
         name: 'Test',
         component: () => import('@/views/Test.vue')

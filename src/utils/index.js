@@ -136,3 +136,5 @@ export function downloadFile(url, filename) {
   link.click()
   document.body.removeChild(link)
 }
+
+export { isMobileDevice, isPcDevice, useDevice, MOBILE_MAX_WIDTH } from './device'

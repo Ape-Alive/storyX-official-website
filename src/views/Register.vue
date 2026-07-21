@@ -105,7 +105,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Message, Lock, Key } from '@element-plus/icons-vue'
 import { sendRegisterCode, register } from '@/api/auth'
-import { setToken, setUserInfo } from '@/utils/storage'
+import { saveAuthTokens, setUserInfo } from '@/utils/storage'
 
 const router = useRouter()
 const registerFormRef = ref(null)
@@ -215,10 +215,7 @@ const handleRegister = async () => {
       })
 
       if (response.success && response.data) {
-        // 保存 token 和用户信息
-        if (response.data.token) {
-          setToken(response.data.token)
-        }
+        saveAuthTokens(response.data)
         if (response.data.user) {
           setUserInfo(response.data.user)
         }

@@ -1013,7 +1013,7 @@ onUnmounted(() => {
 }
 
 .story-home__copy.is-right {
-  /* 与顶栏 site-header__inner（max-width:1400 + 两侧 28px padding）右缘齐平 */
+  /* 对齐居中 max-width:1400px 内容区右缘（蓝线位置） */
   right: max(28px, calc((100vw - 1400px) / 2));
   left: auto;
   text-align: left;

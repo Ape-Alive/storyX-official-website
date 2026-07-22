@@ -10,7 +10,7 @@
         <span class="site-header__brand-name">绘火AI</span>
       </button>
 
-      <!-- 桌面端：顶部导航 -->
+      <!-- 桌面端：顶部导航（扁平文字 + 下箭头） -->
       <nav v-if="!isMobile" class="site-header__nav" aria-label="站点导航">
         <router-link
           v-for="item in navItems"
@@ -174,13 +174,15 @@ const handleDownload = () => {
   border-bottom: 1px solid rgba(28, 25, 23, 0.06);
 }
 
+/* 全宽三栏：左右贴边，中间菜单居中；缩放时左右始终靠边 */
 .site-header__inner {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 16px;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   pointer-events: none;
 }
 
@@ -223,37 +225,53 @@ const handleDownload = () => {
 .site-header__nav {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  justify-self: center;
+  gap: 36px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
 }
 
 .site-header__link {
+  display: inline-flex;
+  align-items: center;
   border: 0;
-  border-radius: 999px;
-  padding: 10px 18px;
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  border-radius: 0;
+  padding: 6px 0;
+  font-family: 'Inter', 'PingFang SC', sans-serif;
+  font-size: 15px;
   font-weight: 500;
-  color: rgba(28, 25, 23, 0.55);
+  color: rgba(28, 25, 23, 0.72);
   background: transparent;
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  transition: background 0.25s ease, color 0.25s ease;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.site-header.is-overlay .site-header__link {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.25);
 }
 
 .site-header__link:hover {
   color: #1c1917;
 }
 
+.site-header.is-overlay .site-header__link:hover {
+  color: #ffffff;
+}
+
 .site-header__link.is-active {
-  background: #2f2a27;
-  color: #faf7f2;
+  color: #1c1917;
+  background: transparent;
+}
+
+.site-header.is-overlay .site-header__link.is-active {
+  color: #ffffff;
 }
 
 .site-header__actions {
@@ -391,7 +409,6 @@ const handleDownload = () => {
 }
 
 .site-header.is-mobile:not(.is-overlay) {
-  /* 顶部只保留品牌行，导航已移到底部 */
   background: rgba(243, 238, 230, 0.72);
 }
 

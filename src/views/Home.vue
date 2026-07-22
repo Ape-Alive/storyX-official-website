@@ -1013,13 +1013,14 @@ onUnmounted(() => {
 }
 
 .story-home__copy.is-right {
-  right: clamp(24px, 8vw, 96px);
+  /* 与顶栏 site-header__inner（max-width:1400 + 两侧 28px padding）右缘齐平 */
+  right: max(28px, calc((100vw - 1400px) / 2));
   left: auto;
   text-align: left;
 }
 
 .story-home__copy.is-left {
-  left: clamp(24px, 8vw, 96px);
+  left: max(28px, calc((100vw - 1400px) / 2));
   right: auto;
   text-align: left;
 }

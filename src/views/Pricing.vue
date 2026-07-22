@@ -3,15 +3,17 @@
     <div class="pricing-container">
       <!-- 订阅时长选择器 -->
       <div class="duration-selector-wrapper">
-        <div class="duration-selector">
+        <div class="duration-selector" :class="{ 'is-disabled': loading }">
           <button
             v-for="duration in durations"
             :key="duration.value"
+            type="button"
+            :disabled="loading"
             :class="[
               'duration-btn',
               { active: selectedDuration === duration.value },
             ]"
-            @click="selectedDuration = duration.value"
+            @click="handleDurationChange(duration.value)"
           >
             <span>{{ duration.label }}</span>
             <span v-if="duration.discount" class="discount-badge">{{
@@ -21,8 +23,33 @@
         </div>
       </div>
 
+      <!-- 加载骨架 -->
+      <div v-if="loading" class="packages-scroll-wrapper" aria-busy="true" aria-live="polite">
+        <div class="packages-scroll-container center-cards">
+          <div v-for="n in 3" :key="n" class="package-card skeleton-card">
+            <div class="package-inner">
+              <div class="skeleton-line skeleton-title" />
+              <div class="skeleton-line skeleton-price" />
+              <div class="skeleton-line skeleton-desc" />
+              <div class="skeleton-metrics">
+                <div class="skeleton-block" />
+                <div class="skeleton-block" />
+              </div>
+              <div class="skeleton-line" />
+              <div class="skeleton-line" />
+              <div class="skeleton-line skeleton-short" />
+              <div class="skeleton-btn" />
+            </div>
+          </div>
+        </div>
+        <div class="loading-overlay">
+          <el-icon class="is-loading" :size="28"><Loading /></el-icon>
+          <span>正在加载套餐...</span>
+        </div>
+      </div>
+
       <!-- 套餐卡片（横向滚动） -->
-      <div class="packages-scroll-wrapper">
+      <div v-else class="packages-scroll-wrapper">
         <div
           class="packages-scroll-container"
           ref="scrollContainerRef"
@@ -88,10 +115,17 @@
               </ul>
 
               <button
+                type="button"
                 :class="['subscribe-btn', { 'btn-popular': index === 1 }]"
+                :disabled="subscribingId === pkg.id"
                 @click="handleSubscribe(pkg)"
               >
-                {{ getButtonText() }}
+                <el-icon v-if="subscribingId === pkg.id" class="is-loading" :size="16">
+                  <Loading />
+                </el-icon>
+                <span>{{
+                  subscribingId === pkg.id ? "处理中..." : getButtonText()
+                }}</span>
               </button>
             </div>
           </div>
@@ -118,12 +152,10 @@
             <el-icon :size="24" color="#6366f1"><ArrowRight /></el-icon>
           </div>
         </div>
-      </div>
 
-      <!-- 加载状态 -->
-      <div v-if="loading" class="loading-container">
-        <el-icon class="is-loading" :size="40"><Loading /></el-icon>
-        <p>加载中...</p>
+        <div v-if="!filteredPackages.length" class="empty-packages">
+          当前周期暂无可用套餐
+        </div>
       </div>
 
       <!-- 底部信息卡片 -->
@@ -172,6 +204,7 @@ const durations = [
 const selectedDuration = ref("month");
 const packages = ref([]);
 const loading = ref(true);
+const subscribingId = ref(null);
 
 // 根据时长筛选套餐
 const filteredPackages = computed(() => {
@@ -190,6 +223,11 @@ const filteredPackages = computed(() => {
     }));
 });
 
+const handleDurationChange = async (value) => {
+  if (loading.value || selectedDuration.value === value) return;
+  selectedDuration.value = value;
+  await loadPackages();
+};
 // 计算显示价格（考虑折扣）
 const calculatePrice = (pkg) => {
   // 处理价格，支持字符串和数字类型
@@ -298,12 +336,19 @@ const getPackageFeatures = (pkg) => {
 const loadPackages = async () => {
   try {
     loading.value = true;
-    const response = await getAvailablePackages("paid");
+    const durationUnit =
+      selectedDuration.value === "permanent"
+        ? undefined
+        : selectedDuration.value;
+    const response = await getAvailablePackages("paid", durationUnit);
     if (response.success && response.data) {
-      packages.value = response.data;
+      packages.value = Array.isArray(response.data) ? response.data : [];
+    } else {
+      packages.value = [];
     }
   } catch (error) {
     console.error("加载套餐失败:", error);
+    packages.value = [];
     ElMessage.error("加载套餐信息失败，请稍后重试");
   } finally {
     loading.value = false;
@@ -311,8 +356,17 @@ const loadPackages = async () => {
 };
 
 // 订阅处理
-const handleSubscribe = (pkg) => {
-  ElMessage.info(`正在跳转到订阅页面：${pkg.displayName}`);
+const handleSubscribe = async (pkg) => {
+  if (subscribingId.value) return;
+  subscribingId.value = pkg.id;
+  try {
+    ElMessage.info(`正在跳转到订阅页面：${pkg.displayName}`);
+  } finally {
+    // 预留真实下单请求；暂短延迟避免连点
+    setTimeout(() => {
+      if (subscribingId.value === pkg.id) subscribingId.value = null;
+    }, 600);
+  }
 };
 
 onMounted(() => {
@@ -705,6 +759,10 @@ onMounted(() => {
   font-family: "Inter", sans-serif;
   background: rgba(99, 102, 241, 0.08);
   color: #4f46e5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .subscribe-btn:hover {
@@ -715,6 +773,13 @@ onMounted(() => {
 
 .subscribe-btn:active {
   transform: scale(0.98);
+}
+
+.subscribe-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btn-popular {
@@ -844,14 +909,104 @@ onMounted(() => {
   }
 }
 
-/* 加载状态 */
-.loading-container {
+/* 加载骨架 */
+.duration-selector.is-disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 100px 0;
-  color: rgba(30, 27, 75, 0.6);
+  gap: 10px;
+  color: rgba(28, 25, 23, 0.55);
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(243, 238, 230, 0.35);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-line,
+.skeleton-block,
+.skeleton-btn {
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    rgba(28, 25, 23, 0.06) 25%,
+    rgba(28, 25, 23, 0.12) 37%,
+    rgba(28, 25, 23, 0.06) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.2s ease infinite;
+}
+
+.skeleton-line {
+  height: 14px;
+  margin-bottom: 12px;
+}
+
+.skeleton-title {
+  width: 48%;
+  height: 18px;
+  margin-bottom: 18px;
+}
+
+.skeleton-price {
+  width: 36%;
+  height: 36px;
+  margin-bottom: 14px;
+}
+
+.skeleton-desc {
+  width: 78%;
+  margin-bottom: 24px;
+}
+
+.skeleton-short {
+  width: 55%;
+}
+
+.skeleton-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 8px 0 24px;
+}
+
+.skeleton-block {
+  height: 64px;
+  border-radius: 14px;
+}
+
+.skeleton-btn {
+  height: 44px;
+  margin-top: 28px;
+  border-radius: 999px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.empty-packages {
+  text-align: center;
+  padding: 48px 16px;
+  color: rgba(28, 25, 23, 0.45);
+  font-size: 14px;
 }
 
 /* 底部信息卡片 */
@@ -1092,10 +1247,6 @@ onMounted(() => {
 
   .footer-card p {
     font-size: 12px;
-  }
-
-  .loading-container {
-    padding: 64px 0;
   }
 }
 

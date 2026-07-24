@@ -57,9 +57,8 @@ export const appDownloads = {
     label: '下载 Windows 应用',
     shortLabel: '下载应用',
     badge: 'Win',
-    // 与 mac 命名对齐的预测地址；Release 上传同名 exe 后将 available 改为 true
     url: assetUrl(`huihuoai-${APP_RELEASE_VERSION}-x64.exe`),
-    available: false,
+    available: true,
   },
   'windows-arm64': {
     id: 'windows-arm64',

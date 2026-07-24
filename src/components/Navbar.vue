@@ -70,11 +70,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { House, Guide, Collection, Ticket } from '@element-plus/icons-vue'
-import { getCurrentAppDownload } from '@/config/downloads'
+import {
+  getCurrentAppDownload,
+  getCurrentAppDownloadAsync,
+} from '@/config/downloads'
 import { isMobileDevice, useDevice } from '@/utils/device'
 
 defineProps({
@@ -100,8 +103,14 @@ defineEmits(['logo-click', 'primary-click'])
 
 const route = useRoute()
 const { isMobile } = useDevice()
-const downloadInfo = getCurrentAppDownload()
-const osBadge = computed(() => (downloadInfo.id === 'mac' ? 'Mac' : 'Win'))
+const downloadInfo = ref(getCurrentAppDownload())
+const osBadge = computed(() => downloadInfo.value.badge || 'App')
+
+onMounted(() => {
+  getCurrentAppDownloadAsync().then((info) => {
+    downloadInfo.value = info
+  })
+})
 
 const isHomeActive = () => route.path === '/' || route.name === 'Home'
 const isWorkflowActive = () => route.path === '/workflow' || route.name === 'Workflow'
@@ -148,11 +157,12 @@ const handleDownload = () => {
     ElMessage.warning('目前只支持桌面端（Windows / macOS），暂不支持移动端应用')
     return
   }
-  if (!downloadInfo.url) {
-    ElMessage.info(`${downloadInfo.label}即将上线，敬请期待`)
+  const info = downloadInfo.value
+  if (!info.url || info.available === false) {
+    ElMessage.info(`${info.label}即将上线，敬请期待`)
     return
   }
-  window.open(downloadInfo.url, '_blank', 'noopener,noreferrer')
+  window.open(info.url, '_blank', 'noopener,noreferrer')
 }
 </script>
 

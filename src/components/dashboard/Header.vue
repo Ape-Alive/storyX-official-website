@@ -50,9 +50,15 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { ArrowRight, SwitchButton } from '@element-plus/icons-vue'
 import { useThemeStore } from '@/stores/modules/theme'
+import {
+  getCurrentAppDownload,
+  getCurrentAppDownloadAsync,
+} from '@/config/downloads'
+import { isMobileDevice } from '@/utils/device'
 
 const props = defineProps({
   userEmail: {
@@ -68,6 +74,13 @@ const props = defineProps({
 const emit = defineEmits(['logout'])
 
 const themeStore = useThemeStore()
+const downloadInfo = ref(getCurrentAppDownload())
+
+onMounted(() => {
+  getCurrentAppDownloadAsync().then((info) => {
+    downloadInfo.value = info
+  })
+})
 
 const userInitials = computed(() => {
   if (props.userEmail) {
@@ -83,11 +96,26 @@ const themeLabel = computed(() => {
   return themeStore.theme === 'dark' ? '深色' : '浅色'
 })
 
+const handleDownload = () => {
+  if (isMobileDevice()) {
+    ElMessage.warning('目前只支持桌面端（Windows / macOS），暂不支持移动端应用')
+    return
+  }
+  const info = downloadInfo.value
+  if (!info.url || info.available === false) {
+    ElMessage.info(`${info.label}即将上线，敬请期待`)
+    return
+  }
+  window.open(info.url, '_blank', 'noopener,noreferrer')
+}
+
 const handleCommand = (command) => {
   if (command === 'logout') {
     handleLogout()
   } else if (command === 'theme') {
     themeStore.toggleTheme()
+  } else if (command === 'download') {
+    handleDownload()
   }
 }
 

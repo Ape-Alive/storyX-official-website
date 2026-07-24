@@ -923,6 +923,7 @@ onUnmounted(() => {
 .story-home {
   position: relative;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: #0b0b0f;
   color: #faf7f2;
@@ -930,7 +931,7 @@ onUnmounted(() => {
 
 .story-home__stage {
   position: relative;
-  height: 100vh;
+  height: 100%;
   width: 100%;
   overflow: hidden;
   isolation: isolate;
@@ -1399,7 +1400,7 @@ onUnmounted(() => {
     right: 16px;
     left: 16px;
     top: auto;
-    bottom: 188px;
+    bottom: 210px;
     transform: none;
     width: auto;
     max-width: 420px;
@@ -1412,23 +1413,39 @@ onUnmounted(() => {
   .story-home__bottom {
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
-    gap: 10px;
-    /* 为底部 Tab 栏预留空间 */
-    padding: 0 16px calc(18px + 64px + env(safe-area-inset-bottom, 0px));
+    gap: 12px;
+    /* Tab 实际约 68px+safe，再留出进度条与间距 */
+    padding: 0 16px calc(16px + 76px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 进度条放在最上方，避免被 Tab 遮住 */
+  .story-home__timeline {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    gap: 6px;
   }
 
   .story-home__status {
     grid-column: 1;
+    grid-row: 2;
+    padding-bottom: 0;
     white-space: normal;
   }
 
   .story-home__controls {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 2;
+    margin-bottom: 0;
   }
 
-  .story-home__timeline {
-    grid-column: 1 / -1;
+  .story-home__seg {
+    /* 扩大点击热区 */
+    padding-top: 10px;
+  }
+
+  .story-home__seg-track {
+    height: 4px;
+    margin-bottom: 8px;
   }
 
   .story-home__seg-label {

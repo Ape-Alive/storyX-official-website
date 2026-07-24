@@ -19,9 +19,12 @@ export const WORKFLOW_IMAGES = {
   composePreview: cdnUrl('images/cover/31f820fbb76f4fe597c6c9dd5c56a313.webp'),
 }
 
-/** 首页故事视频（原 public/videos/*） */
+/** 首页故事封面（视频地址单独放在 homeStoryVideo.js，按需动态加载） */
+export const HOME_STORY_POSTER = cdnUrl(
+  'images/cover/b5895546d6cf45059aec103133f32b52.jpg',
+)
+
+/** @deprecated 请用 HOME_STORY_POSTER；视频源见 homeStoryVideo.js */
 export const HOME_STORY_MEDIA = {
-  poster: cdnUrl('images/cover/b5895546d6cf45059aec103133f32b52.jpg'),
-  webm: cdnUrl('videos/preview/98d72b4844184ef09ac829fd2fc8c29f.webm'),
-  mp4: cdnUrl('videos/preview/b1bbff9776834f0fbdf1c453e513579c.mp4'),
+  poster: HOME_STORY_POSTER,
 }

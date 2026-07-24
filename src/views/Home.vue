@@ -49,14 +49,7 @@
         @loadedmetadata="onLoadedMetadata"
         @canplay="onCanPlay"
         @progress="onVideoProgress"
-      >
-        <source
-          v-for="source in config.videoSources"
-          :key="source.src"
-          :src="source.src"
-          :type="source.type"
-        />
-      </video>
+      />
 
       <div class="story-home__veil" aria-hidden="true" />
       <!-- 挡住点击穿透，降低部分浏览器把 video 识别成「可点播内容」的概率 -->
@@ -175,7 +168,7 @@ const config = homeStoryConfig
 const segments = config.segments
 const setHomeChromeHidden = inject('setHomeChromeHidden', () => {})
 
-/** 夸克/UC 等会劫持 video，改用封面背景 + 定时切段 */
+/** 夸克/UC/Android 系统浏览器等会劫持 video，改用封面背景 + 定时切段 */
 const usePosterBackdrop = isAggressiveVideoHijackBrowser()
 
 const videoRef = ref(null)
@@ -850,6 +843,24 @@ const preloadPoster = () => {
   img.src = config.poster
 }
 
+/** 仅在安全环境挂载视频地址，避免劫持浏览器扫描到 .mp4/.webm */
+const attachVideoSources = async () => {
+  if (usePosterBackdrop) return
+  const video = videoRef.value
+  if (!video) return
+
+  applyInlineVideoAttrs(video)
+  const { homeStoryVideoSources } = await import('@/config/homeStoryVideo')
+  while (video.firstChild) video.removeChild(video.firstChild)
+  homeStoryVideoSources.forEach((source) => {
+    const el = document.createElement('source')
+    el.src = source.src
+    el.type = source.type
+    video.appendChild(el)
+  })
+  video.load()
+}
+
 onMounted(() => {
   clearStartPlayTimer()
   clearLoadFailSafeTimer()
@@ -861,13 +872,19 @@ onMounted(() => {
   bumpLoadProgress(12, '正在点燃…')
 
   if (usePosterBackdrop) {
-    // 不加载 video，避免夸克/UC 等直接拉起独立播放页
+    // 不加载 video / 不引入视频地址，避免夸克与 OEM 浏览器拉起独立播放页
     metaReady = true
     canPlayReady = true
     bumpLoadProgress(80, '兼容模式就绪')
     tryFinishLoading()
   } else {
-    nextTick(() => applyInlineVideoAttrs(videoRef.value))
+    nextTick(() => {
+      attachVideoSources().catch(() => {
+        metaReady = true
+        bumpLoadProgress(70)
+        tryFinishLoading()
+      })
+    })
   }
 
   window.addEventListener('wheel', onWheel, { passive: false })

@@ -22,10 +22,28 @@
     </Transition>
 
     <div class="story-home__stage" :class="{ 'is-dimmed': showLoader }">
+      <!-- 易劫持浏览器：用封面图作背景，避免被拉起成独立播放页 -->
+      <div
+        v-if="usePosterBackdrop"
+        class="story-home__video story-home__video--poster"
+        :style="{ backgroundImage: `url('${config.poster}')` }"
+        aria-hidden="true"
+      />
       <video
+        v-else
         ref="videoRef"
         class="story-home__video"
+        muted
         playsinline
+        webkit-playsinline
+        x5-playsinline
+        x5-video-player-type="h5-page"
+        x5-video-player-fullscreen="false"
+        x5-video-orientation="portrait"
+        t7-video-player-type="inline"
+        x-webkit-airplay="allow"
+        controlslist="nodownload nofullscreen noremoteplayback"
+        disablePictureInPicture
         preload="metadata"
         :poster="config.poster"
         @loadedmetadata="onLoadedMetadata"
@@ -41,6 +59,8 @@
       </video>
 
       <div class="story-home__veil" aria-hidden="true" />
+      <!-- 挡住点击穿透，降低部分浏览器把 video 识别成「可点播内容」的概率 -->
+      <div class="story-home__hit-shield" aria-hidden="true" />
 
       <aside
         class="story-home__copy"
@@ -146,10 +166,17 @@
 import { computed, inject, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Microphone, Mute, VideoPause, VideoPlay } from '@element-plus/icons-vue'
 import { homeStoryConfig } from '@/config/homeStory'
+import {
+  applyInlineVideoAttrs,
+  isAggressiveVideoHijackBrowser,
+} from '@/utils/video'
 
 const config = homeStoryConfig
 const segments = config.segments
 const setHomeChromeHidden = inject('setHomeChromeHidden', () => {})
+
+/** 夸克/UC 等会劫持 video，改用封面背景 + 定时切段 */
+const usePosterBackdrop = isAggressiveVideoHijackBrowser()
 
 const videoRef = ref(null)
 const activeIndex = ref(0)
@@ -335,11 +362,16 @@ const finishLoading = async () => {
 /** 自动播前尽量等到有可播数据，避免卡在锁死状态 */
 const ensureVideoReady = () =>
   new Promise((resolve) => {
+    if (usePosterBackdrop) {
+      resolve()
+      return
+    }
     const video = videoRef.value
     if (!video) {
       resolve()
       return
     }
+    applyInlineVideoAttrs(video)
     video.preload = 'auto'
     if (video.readyState >= 2) {
       resolve()
@@ -389,11 +421,13 @@ const finishSegment = () => {
   const seg = activeSegment.value
   clearProgressLoop()
   playToken += 1
-  if (video) {
+  if (video && !usePosterBackdrop) {
     video.pause()
     const endAt = Math.min(seg.end, Number.isFinite(video.duration) ? video.duration : seg.end)
     video.currentTime = endAt
     currentTime.value = endAt
+  } else if (seg) {
+    currentTime.value = seg.end
   }
   isPlaying.value = false
   isPaused.value = false
@@ -409,6 +443,20 @@ const watchSegmentEnd = (seg, token, startedAt = performance.now()) => {
 
   const tick = () => {
     if (token !== playToken) return
+
+    if (usePosterBackdrop) {
+      const elapsed = (performance.now() - startedAt) / 1000
+      const local = Math.min(seg.end - seg.start, Math.max(0, elapsed))
+      currentTime.value = seg.start + local
+      if (elapsed >= seg.end - seg.start - 0.05) {
+        finishSegment()
+        return
+      }
+      if (isPaused.value) return
+      progressRaf = requestAnimationFrame(tick)
+      return
+    }
+
     const video = videoRef.value
     if (!video) return
 
@@ -451,9 +499,8 @@ const watchSegmentEnd = (seg, token, startedAt = performance.now()) => {
 }
 
 const playSegment = (index, { fromStart = true } = {}) => {
-  const video = videoRef.value
   const seg = segments[index]
-  if (!video || !seg) return
+  if (!seg) return
 
   const token = ++playToken
   const startedAt = performance.now()
@@ -464,6 +511,17 @@ const playSegment = (index, { fromStart = true } = {}) => {
   segmentFinished.value = false
   isPlaying.value = true
   clearProgressLoop()
+
+  if (usePosterBackdrop) {
+    if (fromStart) currentTime.value = seg.start
+    // 从暂停处续播：用已过时长回推 startedAt，避免进度条跳回段首
+    const already = Math.max(0, currentTime.value - seg.start)
+    watchSegmentEnd(seg, token, performance.now() - already * 1000)
+    return
+  }
+
+  const video = videoRef.value
+  if (!video) return
 
   if (fromStart) {
     try {
@@ -504,7 +562,7 @@ const playSegment = (index, { fromStart = true } = {}) => {
 
 /** 必须在用户手势同步栈里调用，才能真正出声 */
 const unlockAudioFromGesture = () => {
-  if (isMuted.value) return
+  if (usePosterBackdrop || isMuted.value) return
   audioUnlocked = true
   const video = videoRef.value
   if (!video) return
@@ -517,8 +575,9 @@ const unlockAudioFromGesture = () => {
 
 /** 滑动时若卡在「锁着但已停」的状态，尝试恢复播放（失败不假完成） */
 const recoverIfStuck = () => {
+  if (usePosterBackdrop || isPaused.value || showLoader.value) return
   const video = videoRef.value
-  if (!video || isPaused.value || showLoader.value) return
+  if (!video) return
   if (!navLocked && !isPlaying.value) return
 
   const seg = activeSegment.value
@@ -582,13 +641,33 @@ const jumpToSegment = (index) => {
 
 const togglePause = () => {
   if (showLoader.value) return
-  const video = videoRef.value
-  if (!video) return
 
   if (!hasStarted.value) {
     ensureStarted()
     return
   }
+
+  if (usePosterBackdrop) {
+    if (isPlaying.value || navLocked) {
+      clearProgressLoop()
+      isPaused.value = true
+      isPlaying.value = false
+      navLocked = false
+      return
+    }
+    if (segmentFinished.value || currentTime.value >= activeSegment.value.end - 0.05) {
+      segmentFinished.value = true
+      isPaused.value = false
+      goNext()
+      return
+    }
+    isPaused.value = false
+    playSegment(activeIndex.value, { fromStart: false })
+    return
+  }
+
+  const video = videoRef.value
+  if (!video) return
 
   if (!video.paused && (isPlaying.value || navLocked)) {
     video.pause()
@@ -613,8 +692,10 @@ const togglePause = () => {
 
 const toggleSound = () => {
   if (showLoader.value) return
-  const video = videoRef.value
   isMuted.value = !isMuted.value
+  if (usePosterBackdrop) return
+
+  const video = videoRef.value
   if (!video) return
 
   if (isMuted.value) {
@@ -714,6 +795,7 @@ const onPointerDown = (event) => {
 const onLoadedMetadata = () => {
   const video = videoRef.value
   if (!video) return
+  applyInlineVideoAttrs(video)
   const last = segments[segments.length - 1]
   if (last && Number.isFinite(video.duration) && last.end > video.duration) {
     last.end = video.duration
@@ -721,7 +803,7 @@ const onLoadedMetadata = () => {
   video.pause()
   video.currentTime = segments[0].start
   currentTime.value = segments[0].start
-  video.muted = isMuted.value
+  video.muted = true
   metaReady = true
   bumpLoadProgress(72, '故事就绪中…')
   tryFinishLoading()
@@ -777,6 +859,16 @@ onMounted(() => {
   loadRaf = requestAnimationFrame(tickLoadProgress)
   preloadPoster()
   bumpLoadProgress(12, '正在点燃…')
+
+  if (usePosterBackdrop) {
+    // 不加载 video，避免夸克/UC 等直接拉起独立播放页
+    metaReady = true
+    canPlayReady = true
+    bumpLoadProgress(80, '兼容模式就绪')
+    tryFinishLoading()
+  } else {
+    nextTick(() => applyInlineVideoAttrs(videoRef.value))
+  }
 
   window.addEventListener('wheel', onWheel, { passive: false })
   window.addEventListener('touchstart', onTouchStart, { passive: true })
@@ -986,6 +1078,12 @@ onUnmounted(() => {
   z-index: 0;
 }
 
+.story-home__video--poster {
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
 .story-home__veil {
   position: absolute;
   inset: 0;
@@ -995,6 +1093,14 @@ onUnmounted(() => {
     linear-gradient(180deg, rgba(8, 8, 12, 0.45) 0%, rgba(8, 8, 12, 0) 24%),
     linear-gradient(0deg, rgba(8, 8, 12, 0.62) 0%, rgba(8, 8, 12, 0) 30%),
     linear-gradient(90deg, rgba(8, 8, 12, 0.1) 45%, rgba(8, 8, 12, 0.35) 100%);
+}
+
+.story-home__hit-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  /* 挡住对 video 的直接点击；文案/底栏 z-index 更高，不受影响 */
+  pointer-events: auto;
 }
 
 .story-home__copy {

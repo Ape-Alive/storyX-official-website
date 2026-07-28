@@ -71,6 +71,11 @@
                   >
                   <span class="price-unit">/{{ getDurationUnitLabel() }}</span>
                 </div>
+                <div v-if="pkg.hasDiscount" class="package-discount">
+                  <span class="price-original">¥{{ formatPrice(pkg.originalPrice) }}</span>
+                  <span class="discount-badge-inline">{{ pkg.discountLabel }}</span>
+                  <span class="discount-saved">省¥{{ formatPrice(pkg.savedAmount) }}</span>
+                </div>
                 <p class="package-desc">{{ pkg.description }}</p>
               </div>
 
@@ -117,15 +122,10 @@
               <button
                 type="button"
                 :class="['subscribe-btn', { 'btn-popular': index === 1 }]"
-                :disabled="subscribingId === pkg.id"
+                :disabled="checkoutVisible && checkoutPkg?.id === pkg.id"
                 @click="handleSubscribe(pkg)"
               >
-                <el-icon v-if="subscribingId === pkg.id" class="is-loading" :size="16">
-                  <Loading />
-                </el-icon>
-                <span>{{
-                  subscribingId === pkg.id ? "处理中..." : getButtonText()
-                }}</span>
+                <span>{{ getButtonText() }}</span>
               </button>
             </div>
           </div>
@@ -176,23 +176,42 @@
         </div>
       </div>
     </div>
+
+    <PaymentCheckout
+      v-model:visible="checkoutVisible"
+      :pkg="checkoutPkg"
+      :price-unit="`/${getDurationUnitLabel()}`"
+      @success="onCheckoutSuccess"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
+import { getToken } from "@/utils/storage";
 import {
   Select,
-  Loading,
   Lock,
   CreditCard,
   Plus,
   ArrowRight,
 } from "@element-plus/icons-vue";
 import { getAvailablePackages } from "@/api/pricing";
+import PaymentCheckout from "@/components/PaymentCheckout.vue";
+import {
+  getPackageDiscountInfo,
+  formatPackagePrice,
+  formatDiscountLabel,
+} from "@/utils/packagePrice";
+
+const router = useRouter();
+const route = useRoute();
 
 const scrollContainerRef = ref(null);
+const checkoutVisible = ref(false);
+const checkoutPkg = ref(null);
 
 const durations = [
   { value: "day", label: "按天" },
@@ -204,7 +223,6 @@ const durations = [
 const selectedDuration = ref("month");
 const packages = ref([]);
 const loading = ref(true);
-const subscribingId = ref(null);
 
 // 根据时长筛选套餐
 const filteredPackages = computed(() => {
@@ -215,12 +233,19 @@ const filteredPackages = computed(() => {
       }
       return pkg.durationUnit === selectedDuration.value;
     })
-    .map((pkg, index) => ({
-      ...pkg,
-      isRecommended: index === 1,
-      displayPrice: calculatePrice(pkg),
-      features: getPackageFeatures(pkg),
-    }));
+    .map((pkg, index) => {
+      const info = getPackageDiscountInfo(pkg);
+      return {
+        ...pkg,
+        isRecommended: index === 1,
+        displayPrice: info.payable,
+        originalPrice: info.original,
+        hasDiscount: info.hasDiscount,
+        discountLabel: formatDiscountLabel(info.discount),
+        savedAmount: info.saved,
+        features: getPackageFeatures(pkg),
+      };
+    });
 });
 
 const handleDurationChange = async (value) => {
@@ -228,30 +253,9 @@ const handleDurationChange = async (value) => {
   selectedDuration.value = value;
   await loadPackages();
 };
-// 计算显示价格（考虑折扣）
-const calculatePrice = (pkg) => {
-  // 处理价格，支持字符串和数字类型
-  if (pkg.price === null || pkg.price === undefined || pkg.price === "") {
-    return 0;
-  }
 
-  // 转换为数字
-  let price = typeof pkg.price === "string" ? parseFloat(pkg.price) : pkg.price;
-
-  // 如果转换失败，返回 0
-  if (isNaN(price)) {
-    return 0;
-  }
-
-  // 按年订阅时，如果 API 返回的年付套餐价格已经是最终价格，则不需要再应用折扣
-  // discount 字段可能表示其他含义（如免费标识），不应该直接用于价格计算
-  // 只有当明确需要应用年付折扣时，才使用固定的折扣率（如20%）
-  // 这里暂时移除 discount 字段的应用，直接使用 API 返回的价格
-  // 如果未来需要应用年付折扣，应该使用固定的折扣率，而不是 discount 字段
-
-  // 返回数字类型，让 formatPrice 函数处理显示格式
-  return price;
-};
+// 格式化价格显示
+const formatPrice = (price) => formatPackagePrice(price);
 
 // 格式化额度
 const formatQuota = (quota) => {
@@ -262,20 +266,6 @@ const formatQuota = (quota) => {
     return `${(quotaNum / 1000).toFixed(0)}K点`;
   }
   return `${quotaNum}点`;
-};
-
-// 格式化价格显示
-const formatPrice = (price) => {
-  if (!price && price !== 0) return "0";
-  const priceNum = typeof price === "string" ? parseFloat(price) : price;
-  if (isNaN(priceNum)) return "0";
-
-  // 如果价格小于 1，保留一位小数；否则显示整数
-  if (priceNum < 1 && priceNum > 0) {
-    return priceNum.toFixed(1);
-  }
-
-  return Math.round(priceNum).toString();
 };
 
 // 获取时长单位标签
@@ -357,17 +347,19 @@ const loadPackages = async () => {
 
 // 订阅处理
 const handleSubscribe = async (pkg) => {
-  if (subscribingId.value) return;
-  subscribingId.value = pkg.id;
-  try {
-    ElMessage.info(`正在跳转到订阅页面：${pkg.displayName}`);
-  } finally {
-    // 预留真实下单请求；暂短延迟避免连点
-    setTimeout(() => {
-      if (subscribingId.value === pkg.id) subscribingId.value = null;
-    }, 600);
+  if (!getToken()) {
+    router.push({
+      path: "/auth/login",
+      query: { redirect: route.fullPath },
+    });
+    return;
   }
+
+  checkoutPkg.value = pkg;
+  checkoutVisible.value = true;
 };
+
+const onCheckoutSuccess = () => {};
 
 onMounted(() => {
   loadPackages();
@@ -591,7 +583,40 @@ onMounted(() => {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
+}
+
+.package-discount {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.price-original {
+  font-size: 13px;
+  color: rgba(30, 27, 75, 0.4);
+  text-decoration: line-through;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.discount-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(236, 72, 153, 0.12);
+  color: #db2777;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.discount-saved {
+  font-size: 12px;
+  font-weight: 600;
+  color: #db2777;
 }
 
 .price-amount {

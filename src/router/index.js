@@ -30,6 +30,12 @@ const routes = [
         component: () => import('@/views/Resources.vue')
       },
       {
+        path: 'payment/return',
+        name: 'PaymentReturn',
+        component: () => import('@/views/PaymentReturn.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         path: 'test',
         name: 'Test',
         component: () => import('@/views/Test.vue')
@@ -56,7 +62,7 @@ const routes = [
     path: '/dashboard',
     component: DashboardLayout,
     meta: { requiresAuth: true },
-    redirect: '/dashboard/home',
+    redirect: '/dashboard/usage',
     children: [
       {
         path: 'home',
@@ -119,7 +125,7 @@ router.beforeEach((to, from, next) => {
   }
   // 如果已登录用户访问登录/注册页，重定向到仪表盘
   else if (token && (to.path === '/auth/login' || to.path === '/auth/register')) {
-    next('/dashboard/home')
+    next('/dashboard/usage')
   }
   else {
     next()

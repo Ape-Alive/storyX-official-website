@@ -14,7 +14,7 @@
  * 跳转约定（首页不直接进登录/注册页）：
  * - 功能体验 / 创作能力 → /workflow
  * - 开始使用 / 转化入口 → /pricing
- * - 进入工作台 → /dashboard/home（未登录由路由守卫转到登录）
+ * - 进入工作台 → /dashboard/usage（未登录由路由守卫转到登录）
  */
 import { HOME_STORY_POSTER } from '@/config/cdn'
 
@@ -112,7 +112,7 @@ export const homeStoryConfig = {
       cta: '立即开始创作',
       ctaLink: '/pricing',
       links: [
-        { label: '进入工作台', to: '/dashboard/home' },
+        { label: '进入工作台', to: '/dashboard/usage' },
         { label: '新手教程', to: '/workflow' },
         { label: '免费注册', to: '/pricing' },
       ],

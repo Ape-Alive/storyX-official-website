@@ -4,6 +4,20 @@ import { getToken, getRefreshToken, saveAuthTokens, removeToken, removeUserInfo 
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
 
+const PROVIDER_LEAK_RE =
+    /\b(zpay|yungouos|yun\s*gou\s*os|易支付|码支付|alipay\.com|weixin\.qq|wx\.tenpay)\b/i
+
+const toSafeClientMessage = (message, url = '') => {
+    const text = String(message || '')
+    const isPayment =
+        String(url).includes('/payment') ||
+        (String(url).includes('/orders/') && String(url).includes('payment'))
+    if (isPayment || PROVIDER_LEAK_RE.test(text) || /API error|payment failed|query failed/i.test(text)) {
+        return '支付处理失败，请稍后重试'
+    }
+    return text || '请求失败'
+}
+
 // 创建 axios 实例
 const service = axios.create({
     baseURL,
@@ -82,8 +96,9 @@ service.interceptors.response.use(
         const res = response.data
 
         if (res.code !== undefined && res.code !== 200) {
-            ElMessage.error(res.message || '请求失败')
-            return Promise.reject(new Error(res.message || '请求失败'))
+            const safeMessage = toSafeClientMessage(res.message || '请求失败', response.config?.url)
+            ElMessage.error(safeMessage)
+            return Promise.reject(new Error(safeMessage))
         }
 
         return res
@@ -132,27 +147,20 @@ service.interceptors.response.use(
         let message = '请求失败'
 
         if (error.response) {
-            switch (error.response.status) {
-                case 401:
-                    message = '未授权，请重新登录'
-                    break
-                case 403:
-                    message = '拒绝访问'
-                    break
-                case 404:
-                    message = '请求错误，未找到该资源'
-                    break
-                case 500:
-                    message = '服务器错误'
-                    break
-                default:
-                    message = `连接错误${error.response.status}`
-            }
+            message =
+                error.response.data?.message ||
+                ({
+                    401: '未授权，请重新登录',
+                    403: '拒绝访问',
+                    404: '请求错误，未找到该资源',
+                    500: '服务器错误',
+                }[error.response.status] || `连接错误${error.response.status}`)
         } else if (error.request) {
             message = '网络连接失败'
         }
 
-        ElMessage.error(message)
+        const safeMessage = toSafeClientMessage(message, originalRequest?.url)
+        ElMessage.error(safeMessage)
         return Promise.reject(error)
     }
 )

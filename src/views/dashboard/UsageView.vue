@@ -1,15 +1,42 @@
 <template>
-  <div class="usage-view">
+  <div class="usage-view" :class="{ 'is-mobile': isMobile }">
+    <section v-if="isMobile" class="mobile-consumption" v-loading="consumptionLoading">
+      <h2 class="mobile-consumption__title">套餐消耗</h2>
+      <div class="mobile-consumption__scroll">
+        <div
+          v-for="(stat, i) in consumptionStats"
+          :key="i"
+          class="mobile-stat-card"
+        >
+          <div class="mobile-stat-card__icon" :class="stat.bg">
+            <el-icon :size="16" :class="stat.color">
+              <component :is="stat.icon" />
+            </el-icon>
+          </div>
+          <div class="mobile-stat-card__label">{{ stat.label }}</div>
+          <div class="mobile-stat-card__value">{{ stat.value }}</div>
+          <div
+            class="mobile-stat-card__trend"
+            :class="stat.trend?.includes('+') ? 'is-up' : 'is-down'"
+          >
+            {{ stat.trend }}
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="view-header">
       <div>
         <h2 class="view-title">消耗分析</h2>
-        <p class="view-desc">多维度可视化追踪您的AI调用足迹与资源分布</p>
+        <p v-if="!isMobile" class="view-desc">多维度可视化追踪您的AI调用足迹与资源分布</p>
       </div>
-      <div class="header-controls">
+
+      <div v-if="!isMobile" class="header-controls">
         <div class="time-range-selector">
           <button
             v-for="range in timeRanges"
             :key="range.id"
+            type="button"
             :class="['range-btn', { active: trendRange === range.id }]"
             @click="handlePeriodChange(range.id)"
           >
@@ -28,6 +55,32 @@
           @change="handleDateRangeChange"
         />
       </div>
+
+      <div v-else class="mobile-header-controls">
+        <van-tabs
+          v-model:active="trendRange"
+          shrink
+          type="card"
+          class="mobile-period-tabs"
+          @change="handlePeriodChange"
+        >
+          <van-tab
+            v-for="range in timeRanges"
+            :key="range.id"
+            :title="range.label"
+            :name="range.id"
+          />
+        </van-tabs>
+        <button
+          type="button"
+          class="mobile-date-btn"
+          :title="trendDateLabel"
+          @click="openTrendCalendar"
+        >
+          <van-icon name="calendar-o" size="16" />
+          <span class="mobile-date-btn__text">{{ trendDateShortLabel }}</span>
+        </button>
+      </div>
     </div>
 
     <div class="chart-card" v-loading="trendLoading">
@@ -40,7 +93,7 @@
           <span class="legend-dot legend-line legend-line-count"></span>
           次数
         </span>
-        <span class="chart-unit">① 单位: 积分/次数</span>
+        <span class="chart-unit">单位: 积分 / 次数</span>
       </div>
       <div class="chart-container" v-if="chartData.length > 0">
         <v-chart
@@ -58,7 +111,7 @@
     <div class="logs-section">
       <div class="logs-header">
         <h3 class="logs-title">调用日志</h3>
-        <div class="logs-header-right">
+        <div v-if="!isMobile" class="logs-header-right">
           <div class="logs-filters">
             <el-select
               v-model="logFilters.modelId"
@@ -97,13 +150,29 @@
               @change="handleLogFilterChange"
             />
           </div>
-          <button class="export-btn">
+          <button class="export-btn" type="button">
             导出表格
             <el-icon :size="14"><Link /></el-icon>
           </button>
         </div>
       </div>
-      <div class="logs-table-wrapper" v-loading="logsLoading">
+
+      <div v-if="isMobile" class="mobile-logs-filters">
+        <button type="button" class="mobile-filter-chip" @click="openModelPicker">
+          <span>{{ modelFilterLabel }}</span>
+          <van-icon name="arrow-down" size="12" />
+        </button>
+        <button type="button" class="mobile-filter-chip" @click="openStatusPicker">
+          <span>{{ statusFilterLabel }}</span>
+          <van-icon name="arrow-down" size="12" />
+        </button>
+        <button type="button" class="mobile-filter-chip is-date" @click="openLogCalendar">
+          <van-icon name="calendar-o" size="14" />
+          <span>{{ logDateShortLabel }}</span>
+        </button>
+      </div>
+
+      <div v-if="!isMobile" class="logs-table-wrapper" v-loading="logsLoading">
         <table class="logs-table">
           <thead>
             <tr>
@@ -134,19 +203,85 @@
           </tbody>
         </table>
       </div>
+
+      <div v-else class="logs-cards" v-loading="logsLoading">
+        <van-empty v-if="!logsLoading && logs.length === 0" description="暂无调用日志" />
+        <van-cell-group v-else inset class="log-cell-group">
+          <van-cell
+            v-for="log in logs"
+            :key="`m-${log.id}`"
+            :title="log.model?.displayName || log.model?.name || '-'"
+            :label="formatDateTime(log.requestTime)"
+          >
+            <template #value>
+              <div class="log-cell-value">
+                <span>{{ log.cost || 0 }} 积分</span>
+                <van-tag :type="log.status === 'success' ? 'success' : 'danger'" round>
+                  {{ log.status === 'success' ? '成功' : '失败' }}
+                </van-tag>
+              </div>
+            </template>
+          </van-cell>
+        </van-cell-group>
+      </div>
+
       <div class="pagination-wrapper" v-if="pagination.total > 0">
+        <van-pagination
+          v-if="isMobile"
+          v-model="pagination.page"
+          :total-items="pagination.total"
+          :items-per-page="pagination.pageSize"
+          force-ellipses
+          @change="handlePageChange"
+        />
         <el-pagination
+          v-else
           v-model:current-page="pagination.page"
           v-model:page-size="pagination.pageSize"
           :page-sizes="[10, 20, 50, 100]"
           :total="pagination.total"
           layout="total, sizes, prev, pager, next, jumper"
+          class="custom-pagination"
           @size-change="handlePageSizeChange"
           @current-change="handlePageChange"
-          class="custom-pagination"
         />
       </div>
     </div>
+
+    <van-calendar
+      v-model:show="showTrendCalendar"
+      type="range"
+      allow-same-day
+      :min-date="calendarMinDate"
+      :max-date="calendarMaxDate"
+      @confirm="onTrendCalendarConfirm"
+    />
+    <van-calendar
+      v-model:show="showLogCalendar"
+      type="range"
+      allow-same-day
+      :min-date="calendarMinDate"
+      :max-date="calendarMaxDate"
+      @confirm="onLogCalendarConfirm"
+    />
+    <van-popup v-model:show="showModelPicker" position="bottom" round>
+      <van-picker
+        title="选择模型"
+        :columns="modelPickerColumns"
+        :model-value="modelPickerValue"
+        @cancel="showModelPicker = false"
+        @confirm="onModelPickerConfirm"
+      />
+    </van-popup>
+    <van-popup v-model:show="showStatusPicker" position="bottom" round>
+      <van-picker
+        title="选择状态"
+        :columns="statusPickerColumns"
+        :model-value="statusPickerValue"
+        @cancel="showStatusPicker = false"
+        @confirm="onStatusPickerConfirm"
+      />
+    </van-popup>
   </div>
 </template>
 
@@ -154,6 +289,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { Link } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useDevice } from '@/utils/device'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart, LineChart } from 'echarts/charts'
@@ -164,8 +300,9 @@ import {
   GridComponent
 } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { getUsageTrend, getAILogs, getModels } from '@/api/usage'
+import { getUsageTrend, getAILogs, getModels, getDashboardStats } from '@/api/usage'
 import { formatDate } from '@/utils/index'
+import { emptyDashboardStats, mapDashboardStats } from '@/config/dashboardStats'
 import { useThemeStore } from '@/stores/modules/theme'
 
 // 注册 ECharts 组件
@@ -181,6 +318,53 @@ use([
 
 // 获取主题 store
 const themeStore = useThemeStore()
+const { isMobile } = useDevice()
+const consumptionStats = ref([...emptyDashboardStats])
+const consumptionLoading = ref(false)
+
+const loadDashboardStats = async () => {
+  try {
+    consumptionLoading.value = true
+    const response = await getDashboardStats()
+    if (response.success && response.data) {
+      consumptionStats.value = mapDashboardStats(response.data)
+    } else {
+      consumptionStats.value = mapDashboardStats({})
+    }
+  } catch (error) {
+    console.error('加载概览指标失败:', error)
+    consumptionStats.value = mapDashboardStats({})
+  } finally {
+    consumptionLoading.value = false
+  }
+}
+
+const showTrendCalendar = ref(false)
+const showLogCalendar = ref(false)
+const showModelPicker = ref(false)
+const showStatusPicker = ref(false)
+const calendarMinDate = new Date(2024, 0, 1)
+const calendarMaxDate = new Date()
+
+const formatDateYMD = (date) => {
+  const d = date instanceof Date ? date : new Date(date)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+const formatRangeLabel = (range, emptyText) => {
+  if (!range || !range[0] || !range[1]) return emptyText
+  return `${String(range[0]).replaceAll('-', '/')} 至 ${String(range[1]).replaceAll('-', '/')}`
+}
+
+const shortRange = (range, emptyText) => {
+  if (!range || !range[0] || !range[1]) return emptyText
+  const short = (d) => {
+    const parts = String(d).split('-')
+    return parts.length === 3 ? `${Number(parts[1])}/${Number(parts[2])}` : d
+  }
+  return `${short(range[0])}-${short(range[1])}`
+}
 
 const trendRange = ref('day')
 const dateRange = ref(null)
@@ -208,14 +392,93 @@ const pagination = ref({
 
 // 调用日志筛选条件
 const logFilters = ref({
-  modelId: null,
-  status: null,
+  modelId: '',
+  status: '',
   dateRange: null
 })
 
 // 可用模型列表（从接口获取）
 const availableModels = ref([])
 const modelsLoading = ref(false)
+
+const trendDateLabel = computed(() => formatRangeLabel(dateRange.value, '选择消耗分析日期'))
+const trendDateShortLabel = computed(() => shortRange(dateRange.value, '日期'))
+const logDateShortLabel = computed(() => shortRange(logFilters.value.dateRange, '日期'))
+
+const modelDropdownOptions = computed(() => [
+  { text: '全部模型', value: '' },
+  ...availableModels.value.map((m) => ({
+    text: m.displayName || m.name,
+    value: m.id
+  }))
+])
+
+const statusDropdownOptions = [
+  { text: '全部状态', value: '' },
+  { text: '成功', value: 'success' },
+  { text: '失败', value: 'failure' }
+]
+
+const modelPickerColumns = computed(() =>
+  modelDropdownOptions.value.map((o) => ({ text: o.text, value: o.value }))
+)
+const statusPickerColumns = statusDropdownOptions.map((o) => ({ text: o.text, value: o.value }))
+
+const modelPickerValue = computed(() => [logFilters.value.modelId || ''])
+const statusPickerValue = computed(() => [logFilters.value.status || ''])
+
+const modelFilterLabel = computed(() => {
+  const hit = modelDropdownOptions.value.find((o) => o.value === (logFilters.value.modelId || ''))
+  return hit?.text || '全部模型'
+})
+const statusFilterLabel = computed(() => {
+  const hit = statusDropdownOptions.find((o) => o.value === (logFilters.value.status || ''))
+  return hit?.text || '全部状态'
+})
+
+const openTrendCalendar = () => {
+  showTrendCalendar.value = true
+}
+
+const openLogCalendar = () => {
+  showLogCalendar.value = true
+}
+
+const openModelPicker = () => {
+  showModelPicker.value = true
+}
+
+const openStatusPicker = () => {
+  showStatusPicker.value = true
+}
+
+const onModelPickerConfirm = ({ selectedValues, selectedOptions }) => {
+  const value = selectedValues?.[0] ?? selectedOptions?.[0]?.value ?? ''
+  logFilters.value.modelId = value
+  showModelPicker.value = false
+  handleLogFilterChange()
+}
+
+const onStatusPickerConfirm = ({ selectedValues, selectedOptions }) => {
+  const value = selectedValues?.[0] ?? selectedOptions?.[0]?.value ?? ''
+  logFilters.value.status = value
+  showStatusPicker.value = false
+  handleLogFilterChange()
+}
+
+const onTrendCalendarConfirm = (values) => {
+  const [start, end] = values
+  dateRange.value = [formatDateYMD(start), formatDateYMD(end)]
+  showTrendCalendar.value = false
+  handleDateRangeChange(dateRange.value)
+}
+
+const onLogCalendarConfirm = (values) => {
+  const [start, end] = values
+  logFilters.value.dateRange = [formatDateYMD(start), formatDateYMD(end)]
+  showLogCalendar.value = false
+  handleLogFilterChange()
+}
 
 // 加载模型列表
 const loadModels = async () => {
@@ -723,6 +986,9 @@ onMounted(() => {
   loadUsageTrend()
   loadLogs()
   loadModels() // 加载模型列表
+  if (isMobile.value) {
+    loadDashboardStats()
+  }
 })
 </script>
 
@@ -1705,5 +1971,277 @@ onMounted(() => {
   color: var(--accent-color) !important;
   background-color: rgba(96, 165, 250, 0.1) !important;
   background: rgba(96, 165, 250, 0.1) !important;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: block;
+}
+
+.mobile-consumption {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.mobile-consumption__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.mobile-consumption__scroll {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.mobile-consumption__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-stat-card {
+  flex: 0 0 132px;
+  scroll-snap-align: start;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.mobile-stat-card__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.mobile-stat-card__label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-stat-card__value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.mobile-stat-card__trend {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mobile-stat-card__trend.is-up {
+  color: #f87171;
+}
+
+.mobile-stat-card__trend.is-down {
+  color: #22c55e;
+}
+
+.bg-yellow-50 { background: #fefce8; }
+.bg-green-50 { background: #f0fdf4; }
+.bg-purple-50 { background: #faf5ff; }
+.bg-blue-50 { background: #eff6ff; }
+.text-yellow-500 { color: #eab308; }
+.text-green-500 { color: #22c55e; }
+.text-purple-600 { color: #9333ea; }
+.text-blue-500 { color: #3b82f6; }
+
+.mobile-header-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.mobile-period-tabs {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-period-tabs :deep(.van-tabs__wrap) {
+  height: 36px;
+}
+
+.mobile-period-tabs :deep(.van-tabs__nav--card) {
+  margin: 0;
+  height: 36px;
+  border-radius: 10px;
+  border-color: var(--border-color);
+}
+
+.mobile-period-tabs :deep(.van-tab) {
+  flex: 1;
+  padding: 0 6px;
+  font-size: 12px;
+  line-height: 34px;
+}
+
+.mobile-date-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 42%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.mobile-date-btn__text {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-logs-filters {
+  margin: 12px 0 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-filter-chip {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mobile-filter-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-filter-chip.is-date {
+  flex: 0.9;
+}
+
+.log-cell-group {
+  margin: 0 !important;
+}
+
+.log-cell-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.logs-cards {
+  min-height: 80px;
+}
+
+@media (max-width: 960px) {
+  .usage-view.is-mobile {
+    gap: 12px;
+    padding-top: 0;
+  }
+
+  .usage-view.is-mobile .view-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 0;
+  }
+
+  .usage-view.is-mobile .mobile-header-controls {
+    margin-top: 0;
+  }
+
+  .usage-view.is-mobile .logs-section {
+    margin-top: 4px;
+  }
+
+  .view-title {
+    font-size: 22px !important;
+    line-height: 1.25;
+  }
+
+  .chart-card {
+    border-radius: 16px !important;
+    padding: 12px !important;
+    height: 300px;
+  }
+
+  .chart-legend {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    gap: 12px;
+  }
+
+  .chart-container {
+    padding-top: 44px;
+  }
+
+  .echarts-chart {
+    min-height: 220px !important;
+  }
+
+  .logs-header {
+    margin-bottom: 0;
+    gap: 8px;
+  }
+
+  .mobile-logs-filters {
+    margin: 8px 0 12px;
+  }
+
+  .pagination-wrapper {
+    justify-content: center;
+    margin-top: 12px;
+  }
 }
 </style>

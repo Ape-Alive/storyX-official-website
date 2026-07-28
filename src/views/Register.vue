@@ -223,7 +223,7 @@ const handleRegister = async () => {
         ElMessage.success('注册成功！')
 
         // 跳转到仪表盘页面
-        router.push('/dashboard/home')
+        router.push('/dashboard/usage')
       }
     } catch (error) {
       console.error('注册失败:', error)

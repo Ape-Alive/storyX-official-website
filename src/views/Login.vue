@@ -111,7 +111,7 @@ const handleLogin = async () => {
 
         ElMessage.success('登录成功！')
 
-        const redirect = router.currentRoute.value.query.redirect || '/dashboard/home'
+        const redirect = router.currentRoute.value.query.redirect || '/dashboard/usage'
         router.replace(redirect).catch(() => {
           window.location.href = redirect
         })

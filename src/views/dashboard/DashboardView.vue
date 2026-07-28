@@ -1,20 +1,51 @@
 <template>
-  <div class="dashboard-view">
-    <div class="stats-grid">
-      <StatCard
-        v-for="(stat, i) in stats"
-        :key="i"
-        :label="stat.label"
-        :value="stat.value"
-        :trend="stat.trend"
-        :icon="stat.icon"
-        :icon-bg-class="stat.bg"
-        :icon-color-class="stat.color"
-        :trend-class="stat.trend.includes('+') ? 'text-red-400' : 'text-green-500'"
-      />
+  <div class="dashboard-view" :class="{ 'is-mobile': isMobile }">
+    <!-- 顶部数据 -->
+    <div class="stats-grid" v-loading="statsLoading">
+      <template v-if="isMobile">
+        <van-cell-group inset class="mobile-stats-group">
+          <van-cell
+            v-for="(stat, i) in stats"
+            :key="i"
+            :title="stat.label"
+            :value="stat.value"
+            :label="stat.trend"
+          >
+            <template #icon>
+              <div class="mobile-stat-icon" :class="stat.bg">
+                <el-icon :size="18" :class="stat.color">
+                  <component :is="stat.icon" />
+                </el-icon>
+              </div>
+            </template>
+            <template #right-icon>
+              <span
+                class="mobile-stat-trend"
+                :class="stat.trend?.includes('+') ? 'is-up' : 'is-down'"
+              >
+                {{ stat.trend }}
+              </span>
+            </template>
+          </van-cell>
+        </van-cell-group>
+      </template>
+      <template v-else>
+        <StatCard
+          v-for="(stat, i) in stats"
+          :key="i"
+          :label="stat.label"
+          :value="stat.value"
+          :trend="stat.trend"
+          :icon="stat.icon"
+          :icon-bg-class="stat.bg"
+          :icon-color-class="stat.color"
+          :trend-class="stat.trend?.includes('+') ? 'text-red-400' : 'text-green-500'"
+        />
+      </template>
     </div>
 
-    <div class="hero-banner">
+    <!-- 桌面端 Hero（移动端隐藏） -->
+    <div v-if="!isMobile" class="hero-banner">
       <div class="corner corner-tl"></div>
       <div class="corner corner-tr"></div>
       <div class="corner corner-bl"></div>
@@ -41,40 +72,93 @@
       </div>
     </div>
 
-    <div class="content-grid">
+    <div class="content-grid" :class="{ 'is-mobile-content': isMobile }">
       <div class="plans-section">
         <div class="section-header">
           <div>
             <h3 class="section-title">活跃套餐监控</h3>
             <p class="section-desc">{{ statusDesc }}</p>
           </div>
-          <router-link to="/dashboard/plans" class="buy-btn">
+          <van-button
+            v-if="isMobile"
+            type="primary"
+            size="small"
+            round
+            icon="plus"
+            to="/dashboard/plans"
+          >
+            购买
+          </van-button>
+          <router-link v-else to="/dashboard/plans" class="buy-btn">
             <el-icon :size="16"><Plus /></el-icon>
             购买新额度
           </router-link>
         </div>
 
         <div v-loading="loading" class="plans-list">
-          <PlanCard
-            v-for="plan in plans"
-            :key="plan.id"
-            :plan="plan"
-          />
-          <div v-if="!loading && plans.length === 0" class="empty-plans">
-            <div class="empty-icon">
-              <el-icon :size="48" color="var(--text-tertiary)"><CreditCard /></el-icon>
+          <template v-if="isMobile">
+            <van-empty
+              v-if="!loading && plans.length === 0"
+              image="search"
+              description="暂无活跃套餐"
+            >
+              <van-button round type="primary" size="small" to="/dashboard/plans">
+                立即购买套餐
+              </van-button>
+            </van-empty>
+            <div
+              v-for="plan in plans"
+              :key="plan.id"
+              class="mobile-plan-card"
+              :class="{ 'is-warning': plan.status === 'warning' }"
+            >
+              <div class="mobile-plan-top">
+                <div>
+                  <div class="mobile-plan-name">{{ plan.name }}</div>
+                  <div class="mobile-plan-expiry">
+                    {{ plan.expiry ? `有效期至 ${plan.expiry}` : '永久有效' }}
+                  </div>
+                </div>
+                <van-tag v-if="plan.status === 'warning'" type="warning" round>
+                  额度将尽
+                </van-tag>
+                <van-tag v-else type="success" plain round>使用中</van-tag>
+              </div>
+              <van-progress
+                :percentage="planPercentage(plan)"
+                :stroke-width="8"
+                :color="plan.status === 'warning' ? '#f59e0b' : '#9333ea'"
+                track-color="rgba(28,25,23,0.06)"
+                pivot-text=""
+              />
+              <div class="mobile-plan-stats">
+                <span>已用 {{ formatQuota(plan.used) }}</span>
+                <span>剩余 {{ formatQuota(plan.remaining ?? Math.max((plan.limit || 0) - (plan.used || 0), 0)) }}</span>
+              </div>
             </div>
-            <h4 class="empty-title">暂无活跃套餐</h4>
-            <p class="empty-desc">购买套餐后，您可以开始使用我们的服务</p>
-            <router-link to="/dashboard/plans" class="empty-link">
-              <el-icon :size="16"><Plus /></el-icon>
-              立即购买套餐
-            </router-link>
-          </div>
+          </template>
+          <template v-else>
+            <PlanCard
+              v-for="plan in plans"
+              :key="plan.id"
+              :plan="plan"
+            />
+            <div v-if="!loading && plans.length === 0" class="empty-plans">
+              <div class="empty-icon">
+                <el-icon :size="48" color="var(--text-tertiary)"><CreditCard /></el-icon>
+              </div>
+              <h4 class="empty-title">暂无活跃套餐</h4>
+              <p class="empty-desc">购买套餐后，您可以开始使用我们的服务</p>
+              <router-link to="/dashboard/plans" class="empty-link">
+                <el-icon :size="16"><Plus /></el-icon>
+                立即购买套餐
+              </router-link>
+            </div>
+          </template>
         </div>
       </div>
 
-      <router-link to="/dashboard/plans" class="upgrade-card">
+      <router-link v-if="!isMobile" to="/dashboard/plans" class="upgrade-card">
         <div class="upgrade-icon">
           <el-icon :size="24"><Plus /></el-icon>
         </div>
@@ -89,108 +173,51 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { Lightning, Lock, CreditCard, TrendCharts, Plus } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { CreditCard, Plus } from '@element-plus/icons-vue'
 import StatCard from '@/components/dashboard/StatCard.vue'
 import PlanCard from '@/components/dashboard/PlanCard.vue'
-import { getMyPackages } from '@/api/pricing'
+import { emptyDashboardStats, mapDashboardStats } from '@/config/dashboardStats'
+import { useMyActivePackages, formatQuota, planPercentage } from '@/composables/useMyActivePackages'
+import { getDashboardStats } from '@/api/usage'
+import { useDevice } from '@/utils/device'
 
-const stats = [
-  { label: '今日调用量', value: '1,284', trend: '+12.5%', icon: Lightning, color: 'text-yellow-500', bg: 'bg-yellow-50' },
-  { label: '平均成功率', value: '99.8%', trend: '稳定', icon: Lock, color: 'text-green-500', bg: 'bg-green-50' },
-  { label: '今日估算费用', value: '¥24.50', trend: '+5.2%', icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
-  { label: 'API 响应均值', value: '120ms', trend: '-10ms', icon: TrendCharts, color: 'text-blue-500', bg: 'bg-blue-50' }
-]
+const router = useRouter()
+const { isMobile } = useDevice()
+const stats = ref([...emptyDashboardStats])
+const statsLoading = ref(false)
+const {
+  plans,
+  loading,
+  statusDesc,
+  loadMyPackages
+} = useMyActivePackages({ immediate: false })
 
-const plans = ref([])
-const loading = ref(false)
-
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-// 转换 API 数据为 PlanCard 需要的格式
-const transformPlanData = (myPackage) => {
-  const pkg = myPackage.package || {}
-  const quotaInfo = myPackage.quotaInfo || {}
-  
-  const total = quotaInfo.total || 0
-  const used = quotaInfo.used || 0
-  const remaining = quotaInfo.remaining || 0
-  
-  // 计算消耗率
-  const percentage = total > 0 ? Math.round((used / total) * 100) : 0
-  
-  // 判断状态：如果消耗率 >= 80%，显示警告状态
-  const status = percentage >= 80 ? 'warning' : 'active'
-  
-  // 格式化有效期：如果 expiresAt 为 null，显示空字符串（PlanCard 会显示"永久"）
-  // 否则显示格式化的日期
-  const expiry = myPackage.expiresAt ? formatDate(myPackage.expiresAt) : ''
-  
-  return {
-    id: myPackage.id,
-    name: pkg.displayName || pkg.name || '未知套餐',
-    status: status,
-    limit: total, // 总限额（字符数）
-    used: used, // 已使用（字符数）
-    expiry: expiry, // 有效期日期字符串，如果为空则 PlanCard 会显示"永久"
-    price: pkg.price || 0,
-    isCurrent: myPackage.status === 'active'
-  }
-}
-
-// 加载我的套餐列表
-const loadMyPackages = async () => {
+const loadStats = async () => {
   try {
-    loading.value = true
-    const response = await getMyPackages({ activeOnly: true })
-    
+    statsLoading.value = true
+    const response = await getDashboardStats()
     if (response.success && response.data) {
-      // 只显示活跃套餐（status === 'active'）
-      const activePackages = response.data.filter(pkg => pkg.status === 'active')
-      
-      // 转换为 PlanCard 需要的格式
-      plans.value = activePackages.map(transformPlanData)
-      
-      // 如果没有活跃套餐，更新描述文字
-      if (activePackages.length === 0) {
-        // 可以在这里更新 section-desc 的文字
-      }
+      stats.value = mapDashboardStats(response.data)
+    } else {
+      stats.value = mapDashboardStats({})
     }
   } catch (error) {
-    console.error('加载套餐失败:', error)
-    ElMessage.error('加载套餐信息失败，请稍后重试')
+    console.error('加载概览指标失败:', error)
+    stats.value = mapDashboardStats({})
   } finally {
-    loading.value = false
+    statsLoading.value = false
   }
 }
 
-// 计算总体状态描述
-const statusDesc = computed(() => {
-  if (plans.value.length === 0) {
-    return '暂无活跃套餐'
-  }
-  
-  // 检查是否有警告状态的套餐
-  const hasWarning = plans.value.some(p => p.status === 'warning')
-  if (hasWarning) {
-    return '部分套餐额度即将用完，请及时续费'
-  }
-  
-  return '目前您的算力配额运行状态良好'
-})
-
-// 组件挂载时加载数据
 onMounted(() => {
+  if (isMobile.value) {
+    router.replace('/dashboard/usage')
+    return
+  }
   loadMyPackages()
+  loadStats()
 })
 </script>
 
@@ -220,6 +247,63 @@ onMounted(() => {
   gap: 16px;
 }
 
+.mobile-stats-group {
+  margin: 0 !important;
+}
+
+.mobile-stats-group :deep(.van-cell) {
+  align-items: center;
+  padding: 14px 16px;
+}
+
+.mobile-stats-group :deep(.van-cell__title) {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.mobile-stats-group :deep(.van-cell__label) {
+  display: none;
+}
+
+.mobile-stats-group :deep(.van-cell__value) {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.mobile-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.mobile-stat-trend {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mobile-stat-trend.is-up {
+  color: #f87171;
+}
+
+.mobile-stat-trend.is-down {
+  color: #22c55e;
+}
+
+.bg-yellow-50 { background: #fefce8; }
+.bg-green-50 { background: #f0fdf4; }
+.bg-purple-50 { background: #faf5ff; }
+.bg-blue-50 { background: #eff6ff; }
+.text-yellow-500 { color: #eab308; }
+.text-green-500 { color: #22c55e; }
+.text-purple-600 { color: #9333ea; }
+.text-blue-500 { color: #3b82f6; }
+
 .hero-banner {
   position: relative;
   padding: 56px;
@@ -233,7 +317,6 @@ onMounted(() => {
   border: 1px solid var(--border-color);
   border-radius: 48px;
   box-shadow: var(--shadow-md);
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .corner {
@@ -284,7 +367,6 @@ onMounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.2em;
   margin-bottom: 24px;
-  transition: color 0.3s ease;
 }
 
 .status-dot {
@@ -296,7 +378,6 @@ onMounted(() => {
   margin-right: 6px;
   animation: pulse 2s infinite;
 }
-
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -314,239 +395,232 @@ onMounted(() => {
 .hero-subtitle {
   font-size: 64px;
   font-weight: 300;
-  font-style: italic;
   margin: 0;
   font-family: 'Space Grotesk', sans-serif;
 }
 
 .gradient-text {
-  background: var(--accent-gradient);
+  background: linear-gradient(135deg, #9333ea, #3b82f6);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-weight: bold;
+  color: transparent;
 }
 
 .hero-footer {
-  margin-top: 32px;
+  margin-top: 24px;
   display: flex;
   gap: 12px;
-  font-size: 10px;
-  color: var(--text-secondary);
-  font-family: 'Courier New', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  transition: color 0.3s ease;
+  font-size: 12px;
+  color: var(--text-tertiary);
 }
 
 .divider {
-  color: var(--text-tertiary);
-  transition: color 0.3s ease;
+  opacity: 0.4;
 }
 
 .content-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 32px;
-  align-items: stretch;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  align-items: start;
 }
 
-@media (max-width: 1024px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
+.content-grid.is-mobile-content {
+  grid-template-columns: 1fr;
+  gap: 0;
 }
 
 .plans-section {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 32px;
-  padding: 32px;
+  border-radius: 24px;
+  padding: 24px;
   box-shadow: var(--shadow-sm);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-  display: flex;
-  flex-direction: column;
 }
 
 .section-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .section-title {
+  margin: 0;
   font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 4px 0;
+  font-weight: 800;
   font-family: 'Space Grotesk', sans-serif;
-  transition: color 0.3s ease;
 }
 
 .section-desc {
-  font-size: 14px;
+  margin: 6px 0 0;
+  font-size: 13px;
   color: var(--text-secondary);
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  transition: color 0.3s ease;
 }
 
 .buy-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: rgba(147, 51, 234, 0.1);
-  color: var(--accent-color);
-  transition: color 0.3s ease;
-  border-radius: 9999px;
-  font-size: 14px;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-family: 'Inter', sans-serif;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #1c1917;
+  color: #fff;
   text-decoration: none;
-}
-
-.buy-btn:hover {
-  background: rgba(147, 51, 234, 0.15);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .plans-list {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  flex: 1;
-  min-height: 0;
+  gap: 12px;
+  min-height: 80px;
+}
+
+.mobile-plan-card {
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+}
+
+.mobile-plan-card.is-warning {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.mobile-plan-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.mobile-plan-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mobile-plan-expiry {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.mobile-plan-stats {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 600;
 }
 
 .empty-plans {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  min-height: 300px;
-  color: var(--text-secondary);
-  transition: color 0.3s ease;
-}
-
-.empty-icon {
-  margin-bottom: 24px;
-  opacity: 0.5;
+  text-align: center;
+  padding: 40px 16px;
 }
 
 .empty-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 8px 0;
-  font-family: 'Space Grotesk', sans-serif;
-  transition: color 0.3s ease;
+  margin: 12px 0 6px;
+  font-size: 16px;
 }
 
 .empty-desc {
-  margin: 0 0 32px 0;
-  font-size: 14px;
+  margin: 0 0 16px;
   color: var(--text-secondary);
-  font-family: 'Inter', sans-serif;
-  transition: color 0.3s ease;
+  font-size: 13px;
 }
 
 .empty-link {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: var(--accent-gradient);
-  color: white;
-  border-radius: 9999px;
-  font-size: 14px;
-  font-weight: 700;
+  gap: 6px;
+  color: var(--accent-color);
   text-decoration: none;
-  transition: all 0.3s;
-  font-family: 'Inter', sans-serif;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
-}
-
-.empty-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
+  font-weight: 600;
 }
 
 .upgrade-card {
-  background: var(--accent-gradient);
-  color: white;
-  border: none;
-  border-radius: 32px;
-  padding: 32px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 28px 24px;
+  text-decoration: none;
+  color: inherit;
   display: flex;
   flex-direction: column;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  cursor: pointer;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s;
 }
 
 .upgrade-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(147, 51, 234, 0.3);
+  border-color: rgba(147, 51, 234, 0.3);
+  transform: translateY(-2px);
 }
 
 .upgrade-icon {
   width: 48px;
   height: 48px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: rgba(147, 51, 234, 0.1);
+  color: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
 }
 
 .upgrade-title {
-  font-size: 24px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  font-family: 'Space Grotesk', sans-serif;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
 }
 
 .upgrade-desc {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-  line-height: 1.6;
-  margin: 0 0 32px 0;
-  flex: 1;
-  font-family: 'Inter', sans-serif;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .upgrade-btn {
-  width: 100%;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.95);
-  transition: background-color 0.3s ease;
-  color: var(--accent-color);
-  border-radius: 16px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 12px;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 8px 30px rgba(147, 51, 234, 0.4);
-  font-family: 'Inter', sans-serif;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--accent-color);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.upgrade-card:hover .upgrade-btn {
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0 12px 40px rgba(147, 51, 234, 0.5);
+.dashboard-view.is-mobile {
+  gap: 12px;
+}
+
+.dashboard-view.is-mobile .mobile-stats-group :deep(.van-cell) {
+  padding: 12px 14px;
+}
+
+.dashboard-view.is-mobile .plans-section {
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.dashboard-view.is-mobile .section-title {
+  font-size: 17px;
+}
+
+.dashboard-view.is-mobile .section-header {
+  margin-bottom: 10px;
+}
+
+.dashboard-view.is-mobile .stats-grid {
+  grid-template-columns: 1fr;
+  gap: 0;
 }
 </style>

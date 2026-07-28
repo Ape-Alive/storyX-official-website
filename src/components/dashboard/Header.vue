@@ -1,12 +1,10 @@
 <template>
   <header class="dashboard-header">
     <div class="header-content">
-      <div class="logo-wrapper">
-        <div class="logo-icon">
-          <div class="logo-diamond"></div>
-        </div>
+      <button class="logo-wrapper" type="button" @click="goHome">
+        <img class="logo-icon" src="/icon.svg" alt="绘火AI" />
         <span class="logo-text">绘火AI</span>
-      </div>
+      </button>
       <!-- <h1 class="header-title">控制台</h1> -->
       <div class="header-right">
         <el-dropdown @command="handleCommand" trigger="click" placement="bottom-end">
@@ -51,6 +49,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowRight, SwitchButton } from '@element-plus/icons-vue'
 import { useThemeStore } from '@/stores/modules/theme'
@@ -73,8 +72,13 @@ const props = defineProps({
 
 const emit = defineEmits(['logout'])
 
+const router = useRouter()
 const themeStore = useThemeStore()
 const downloadInfo = ref(getCurrentAppDownload())
+
+const goHome = () => {
+  router.push('/')
+}
 
 onMounted(() => {
   getCurrentAppDownloadAsync().then((info) => {
@@ -98,7 +102,7 @@ const themeLabel = computed(() => {
 
 const handleDownload = () => {
   if (isMobileDevice()) {
-    ElMessage.warning('目前只支持桌面端（Windows / macOS），暂不支持移动端应用')
+    ElMessage.warning('请在电脑端打开网站下载桌面程序')
     return
   }
   const info = downloadInfo.value
@@ -145,29 +149,43 @@ const handleLogout = () => {
   gap: 24px;
 }
 
+@media (max-width: 960px) {
+  .dashboard-header {
+    height: 56px;
+  }
+
+  .header-content {
+    padding: 0 16px;
+    gap: 12px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
 .logo-wrapper {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
 .logo-icon {
   width: 32px;
   height: 32px;
-  background: black;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-diamond {
-  width: 16px;
-  height: 16px;
-  border: 2px solid white;
-  transform: rotate(45deg);
-  border-radius: 2px;
+  object-fit: contain;
+  display: block;
 }
 
 .logo-text {

@@ -3,10 +3,12 @@ import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import 'element-plus/dist/index.css'
+import 'vant/lib/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
 import './assets/styles/main.css'
+import './assets/styles/vant-theme.css'
 import { useThemeStore } from './stores/modules/theme'
 
 const app = createApp(App)

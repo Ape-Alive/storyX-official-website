@@ -1,6 +1,17 @@
 import request from '@/utils/request'
 
 /**
+ * 获取控制台概览指标 [仅终端用户]
+ * @returns {Promise}
+ */
+export const getDashboardStats = () => {
+  return request({
+    url: '/user/quotas/dashboard-stats',
+    method: 'get'
+  })
+}
+
+/**
  * 获取我的使用趋势 [仅终端用户]
  * @param {Object} params - 查询参数
  * @param {string} [params.startDate] - 开始时间，ISO 8601格式

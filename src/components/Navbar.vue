@@ -442,8 +442,12 @@ const handleDownload = () => {
   font-size: 13px;
 }
 
-.site-header.is-mobile .site-header__download-os,
-.site-header.is-mobile .site-header__primary {
+.site-header.is-mobile .site-header__download-os {
   display: none;
+}
+
+.site-header.is-mobile .site-header__primary {
+  padding: 10px 16px;
+  font-size: 13px;
 }
 </style>

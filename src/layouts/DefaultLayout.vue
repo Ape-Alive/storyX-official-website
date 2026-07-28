@@ -3,8 +3,8 @@
     <Navbar
       :visible="!hideChrome"
       :overlay="isHome"
-      :show-primary="!isHome"
-      primary-label="立即开启"
+      :show-primary="true"
+      :primary-label="primaryLabel"
       @logo-click="handleLogoClick"
       @primary-click="handlePrimaryClick"
     />
@@ -24,10 +24,15 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Navbar from '@/components/Navbar.vue'
 import AuthModal from '@/components/AuthModal.vue'
+import { useUserStore } from '@/stores'
+import { getToken } from '@/utils/storage'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 const isHome = computed(() => route.name === 'Home')
+const isLoggedIn = computed(() => !!userStore.token || !!getToken())
+const primaryLabel = computed(() => (isLoggedIn.value ? '控制台' : '登录'))
 const isAuthOpen = ref(false)
 /** 首页加载特效期间隐藏顶栏（进入首页先藏，避免闪一下） */
 const hideChrome = ref(route.name === 'Home')
@@ -49,7 +54,11 @@ provide('closeAuthModal', () => {
 })
 
 const handlePrimaryClick = () => {
-  router.push('/pricing')
+  if (!isLoggedIn.value) {
+    router.push({ path: '/auth/login', query: { redirect: '/dashboard/usage' } })
+    return
+  }
+  router.push('/dashboard/usage')
 }
 
 const handleLogoClick = () => {

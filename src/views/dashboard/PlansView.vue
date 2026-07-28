@@ -1,5 +1,53 @@
 <template>
-  <div class="plans-view">
+  <div class="plans-view" :class="{ 'is-mobile': isMobile }">
+    <section v-if="isMobile" class="mobile-active-plans" v-loading="activePlansLoading">
+      <div class="mobile-active-plans__header">
+        <h2 class="mobile-active-plans__title">活跃套餐</h2>
+        <van-button type="primary" size="small" round icon="plus" @click="scrollToBuy">
+          购买
+        </van-button>
+      </div>
+
+      <van-empty
+        v-if="!activePlansLoading && activePlans.length === 0"
+        image="search"
+        description="暂无活跃套餐"
+      >
+        <van-button round type="primary" size="small" @click="scrollToBuy">
+          立即购买套餐
+        </van-button>
+      </van-empty>
+
+      <div
+        v-for="plan in activePlans"
+        :key="plan.id"
+        class="mobile-active-plan-card"
+        :class="{ 'is-warning': plan.status === 'warning' }"
+      >
+        <div class="mobile-active-plan-card__top">
+          <div>
+            <div class="mobile-active-plan-card__name">{{ plan.name }}</div>
+            <div class="mobile-active-plan-card__expiry">
+              {{ plan.expiry ? `有效期至 ${plan.expiry}` : '永久有效' }}
+            </div>
+          </div>
+          <van-tag v-if="plan.status === 'warning'" type="warning" round>额度将尽</van-tag>
+          <van-tag v-else type="success" plain round>使用中</van-tag>
+        </div>
+        <van-progress
+          :percentage="planPercentage(plan)"
+          :stroke-width="8"
+          :color="plan.status === 'warning' ? '#f59e0b' : '#9333ea'"
+          track-color="rgba(28,25,23,0.06)"
+          pivot-text=""
+        />
+        <div class="mobile-active-plan-card__stats">
+          <span>已用 {{ formatQuota(plan.used) }}</span>
+          <span>剩余 {{ formatQuota(plan.remaining ?? Math.max((plan.limit || 0) - (plan.used || 0), 0)) }}</span>
+        </div>
+      </div>
+    </section>
+
     <div class="plans-header">
       <h2 class="plans-title">选择您的算力规模</h2>
       <p class="plans-desc">
@@ -7,38 +55,98 @@
       </p>
     </div>
 
-    <!-- 时长选择器 -->
     <div class="duration-selector-wrapper">
-      <div class="duration-selector">
+      <van-tabs
+        v-if="isMobile"
+        v-model:active="selectedDuration"
+        shrink
+        type="card"
+        class="mobile-duration-tabs"
+        @change="handleDurationChange"
+      >
+        <van-tab
+          v-for="duration in durations"
+          :key="duration.value"
+          :name="duration.value"
+          :title="duration.discount ? `${duration.label} ${duration.discount}` : duration.label"
+        />
+      </van-tabs>
+      <div v-else class="duration-selector">
         <button
           v-for="duration in durations"
           :key="duration.value"
-          :class="[
-            'duration-btn',
-            { active: selectedDuration === duration.value },
-          ]"
+          type="button"
+          :class="['duration-btn', { active: selectedDuration === duration.value }]"
           @click="handleDurationChange(duration.value)"
         >
           <span>{{ duration.label }}</span>
-          <span v-if="duration.discount" class="discount-badge">{{
-            duration.discount
-          }}</span>
+          <span v-if="duration.discount" class="discount-badge">{{ duration.discount }}</span>
         </button>
       </div>
     </div>
 
-    <div class="plans-container" v-loading="loading">
-      <!-- 左导航按钮 -->
+    <div v-if="isMobile" class="mobile-plans" v-loading="loading">
+      <van-empty v-if="!loading && plans.length === 0" description="当前周期暂无可用套餐" />
+      <div
+        v-for="(plan, idx) in plans"
+        :key="plan.id || idx"
+        class="mobile-plan-card"
+        :class="{ popular: plan.popular, current: plan.current }"
+      >
+        <van-tag v-if="plan.popular" class="mobile-popular-tag" type="primary" round>最受欢迎</van-tag>
+        <van-tag v-if="plan.current" class="mobile-current-tag" type="success" plain round>当前套餐</van-tag>
+        <h3 class="mobile-plan-name">{{ plan.name }}</h3>
+        <p v-if="plan.desc" class="mobile-plan-desc">{{ plan.desc }}</p>
+        <div class="mobile-plan-price">
+          <span class="price-value">¥{{ plan.price }}</span>
+          <span class="price-unit">{{ getPriceUnit() }}</span>
+        </div>
+        <div v-if="plan.hasDiscount" class="mobile-plan-discount">
+          <span class="price-original">¥{{ plan.originalPrice }}</span>
+          <span class="discount-badge-inline">{{ plan.discountLabel }}</span>
+          <span class="discount-saved">省¥{{ plan.savedAmount }}</span>
+        </div>
+        <div class="mobile-plan-features">
+          <div v-for="(feature, i) in plan.features" :key="i" class="mobile-feature">
+            <van-icon name="arrow" color="#9333ea" />
+            <span>{{ feature }}</span>
+          </div>
+        </div>
+        <van-button
+          block
+          round
+          type="primary"
+          class="mobile-plan-btn"
+          :disabled="plan.buttonStatus?.disabled"
+          @click="handleSelectPlan(plan)"
+        >
+          {{ plan.buttonStatus?.text || '立即选择' }}
+        </van-button>
+      </div>
+
+      <div class="mobile-custom-card" @click="handleContact">
+        <div class="mobile-custom-icon">
+          <van-icon name="plus" size="22" color="#9333ea" />
+        </div>
+        <div class="mobile-custom-body">
+          <h4>定制方案</h4>
+          <p>需要算力集群或独立服务器部署？</p>
+        </div>
+        <van-icon name="arrow" color="#9333ea" />
+      </div>
+    </div>
+
+    <div v-else class="plans-container" v-loading="loading">
       <button
         v-if="totalCardsCount > 1"
         class="nav-btn nav-btn-left"
+        type="button"
         @click="scrollLeft"
         :disabled="!canScrollLeft"
       >
         <el-icon :size="20"><ArrowLeft /></el-icon>
       </button>
 
-      <!-- 卡片容器 -->
       <div
         class="plans-grid"
         ref="plansGridRef"
@@ -64,13 +172,14 @@
               <span class="price-value">¥{{ plan.price }}</span>
               <span class="price-unit">{{ getPriceUnit() }}</span>
             </div>
+            <div v-if="plan.hasDiscount" class="plan-discount">
+              <span class="price-original">¥{{ plan.originalPrice }}</span>
+              <span class="discount-badge-inline">{{ plan.discountLabel }}</span>
+              <span class="discount-saved">省¥{{ plan.savedAmount }}</span>
+            </div>
           </div>
           <div class="plan-features">
-            <div
-              v-for="(feature, i) in plan.features"
-              :key="i"
-              class="feature-item"
-            >
+            <div v-for="(feature, i) in plan.features" :key="i" class="feature-item">
               <div class="feature-icon">
                 <el-icon :size="12"><ArrowRight /></el-icon>
               </div>
@@ -78,6 +187,7 @@
             </div>
           </div>
           <button
+            type="button"
             :class="['plan-btn', { disabled: plan.buttonStatus?.disabled }]"
             :disabled="plan.buttonStatus?.disabled"
             @click="handleSelectPlan(plan)"
@@ -86,7 +196,6 @@
           </button>
         </div>
 
-        <!-- 定制方案卡片（当套餐少于3个时显示） -->
         <div v-if="plans.length < 3" class="plan-card custom-plan-card">
           <div class="custom-plan-content">
             <div class="custom-plan-icon">
@@ -104,24 +213,60 @@
         </div>
       </div>
 
-      <!-- 右导航按钮 -->
       <button
         v-if="totalCardsCount > 1"
         class="nav-btn nav-btn-right"
+        type="button"
         @click="scrollRight"
         :disabled="!canScrollRight"
       >
         <el-icon :size="20"><ArrowRight /></el-icon>
       </button>
     </div>
+
+    <PaymentCheckout
+      v-model:visible="checkoutVisible"
+      :pkg="checkoutPkg"
+      :order-type="checkoutOrderType"
+      :price-unit="getPriceUnit()"
+      @success="onCheckoutSuccess"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
+import { useRouter } from "vue-router";
 import { ArrowRight, ArrowLeft, Plus } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { getAvailablePackages, getMyPackages } from "@/api/pricing";
+import PaymentCheckout from "@/components/PaymentCheckout.vue";
+import { useDevice } from "@/utils/device";
+import { useMyActivePackages } from "@/composables/useMyActivePackages";
+import {
+  getPackagePayableAmount,
+  getPackageDiscountInfo,
+  formatPackagePrice,
+  formatDiscountLabel,
+} from "@/utils/packagePrice";
+
+const router = useRouter();
+const { isMobile } = useDevice();
+const {
+  plans: activePlans,
+  loading: activePlansLoading,
+  formatQuota,
+  planPercentage,
+} = useMyActivePackages();
+
+const scrollToBuy = () => {
+  document
+    .querySelector(".duration-selector-wrapper")
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+const checkoutVisible = ref(false);
+const checkoutPkg = ref(null);
+const checkoutOrderType = ref("purchase");
 
 // 时长选项
 const durations = [
@@ -217,10 +362,16 @@ const loadPackages = async () => {
           }
         }
 
+        const info = getPackageDiscountInfo(pkg);
+
         return {
           id: pkg.id,
           name: pkg.displayName || pkg.name,
-          price: formatPrice(pkg.price),
+          price: formatPrice(info.payable),
+          originalPrice: formatPrice(info.original),
+          hasDiscount: info.hasDiscount,
+          discountLabel: formatDiscountLabel(info.discount),
+          savedAmount: formatPrice(info.saved),
           desc: pkg.description || "",
           features: getPackageFeatures(pkg),
           current: myPackage?.status === "active", // 当前正在使用的套餐
@@ -241,20 +392,7 @@ const loadPackages = async () => {
 };
 
 // 格式化价格
-const formatPrice = (price) => {
-  if (price === null || price === undefined || price === "") {
-    return "0";
-  }
-  const priceNum = typeof price === "string" ? parseFloat(price) : price;
-  if (isNaN(priceNum)) {
-    return "0";
-  }
-  // 如果是小数且小于1，保留一位小数；否则显示整数
-  if (priceNum < 1 && priceNum > 0) {
-    return priceNum.toFixed(1);
-  }
-  return Math.round(priceNum).toString();
-};
+const formatPrice = (price) => formatPackagePrice(price);
 
 // 获取套餐特性列表
 const getPackageFeatures = (pkg) => {
@@ -363,8 +501,7 @@ watch(
 
 // 处理联系我们
 const handleContact = () => {
-  // TODO: 实现联系我们的逻辑，可以跳转到联系页面或打开联系弹窗
-  ElMessage.info("请联系客服获取定制方案");
+  router.push("/dashboard/contact");
 };
 
 // 处理套餐选择/复购
@@ -373,17 +510,27 @@ const handleSelectPlan = (plan) => {
     return;
   }
 
-  // 如果是复购，显示提示信息
-  if (plan.buttonStatus?.text === "复购") {
-    ElMessage.info(`正在为您复购套餐：${plan.name}`);
-    // TODO: 这里可以调用复购接口
-    // 例如：repurchasePackage(plan.myPackageId)
-  } else {
-    // 新购买套餐
-    ElMessage.info(`正在为您购买套餐：${plan.name}`);
-    // TODO: 这里可以调用购买接口
-    // 例如：purchasePackage(plan.id)
-  }
+  const pkg = plan.originalPackage || {
+    id: plan.id,
+    displayName: plan.name,
+    name: plan.name,
+    price: plan.price,
+    displayPrice: plan.price,
+  };
+
+  const payable = getPackagePayableAmount(pkg);
+  checkoutPkg.value = {
+    ...pkg,
+    displayName: pkg.displayName || plan.name,
+    displayPrice: payable,
+  };
+  checkoutOrderType.value =
+    plan.buttonStatus?.text === "复购" ? "renewal" : "purchase";
+  checkoutVisible.value = true;
+};
+
+const onCheckoutSuccess = () => {
+  loadPackages();
 };
 
 // 窗口大小变化处理
@@ -471,6 +618,9 @@ onUnmounted(() => {
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .duration-btn {
@@ -487,6 +637,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: "Inter", sans-serif;
+  flex-shrink: 0;
 }
 
 .duration-btn:hover {
@@ -727,6 +878,40 @@ onUnmounted(() => {
   gap: 4px;
 }
 
+.plan-discount,
+.mobile-plan-discount {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.price-original {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.discount-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(236, 72, 153, 0.12);
+  color: #db2777;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.discount-saved {
+  font-size: 12px;
+  font-weight: 600;
+  color: #db2777;
+}
+
 .price-value {
   font-size: 48px;
   font-weight: 900;
@@ -891,5 +1076,235 @@ onUnmounted(() => {
 .custom-plan-link:hover {
   color: var(--accent-color-light);
   transform: translateX(4px);
+}
+
+@media (max-width: 960px) {
+  .plans-view.is-mobile {
+    padding-top: 0;
+    padding-bottom: 8px;
+    gap: 12px;
+  }
+
+  .mobile-active-plans {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mobile-active-plans__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mobile-active-plans__title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--text-primary);
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  .mobile-active-plan-card {
+    padding: 14px;
+    border-radius: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+  }
+
+  .mobile-active-plan-card.is-warning {
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+
+  .mobile-active-plan-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .mobile-active-plan-card__name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .mobile-active-plan-card__expiry {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .mobile-active-plan-card__stats {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 600;
+  }
+
+  .plans-title {
+    font-size: 22px;
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+
+  .plans-desc {
+    font-size: 13px;
+    padding: 0;
+    line-height: 1.5;
+  }
+
+  .plans-header {
+    margin: 0;
+    text-align: left;
+    max-width: none;
+  }
+
+  .duration-selector-wrapper {
+    padding: 0;
+    margin-bottom: 0;
+  }
+
+  .mobile-duration-tabs {
+    width: 100%;
+  }
+
+  .mobile-duration-tabs :deep(.van-tabs__nav--card) {
+    margin: 0;
+    border-radius: 12px;
+  }
+
+  .mobile-plans {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 120px;
+  }
+
+  .mobile-plan-card {
+    position: relative;
+    padding: 18px 14px 14px;
+    border-radius: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .mobile-plan-card.popular {
+    border-color: rgba(147, 51, 234, 0.35);
+  }
+
+  .mobile-popular-tag {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .mobile-current-tag {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+
+  .mobile-plan-name {
+    margin: 6px 0 4px;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  .mobile-plan-desc {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .mobile-plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .mobile-plan-price .price-value {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--text-primary);
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  .mobile-plan-price .price-unit {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  .mobile-plan-features {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .mobile-feature {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .mobile-plan-btn {
+    --van-button-primary-background: #1c1917;
+    --van-button-primary-border-color: #1c1917;
+    font-weight: 700;
+  }
+
+  .mobile-custom-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(147, 51, 234, 0.06);
+    border: 1px dashed rgba(147, 51, 234, 0.35);
+    cursor: pointer;
+  }
+
+  .mobile-custom-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .mobile-custom-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-custom-body h4 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent-color);
+  }
+
+  .mobile-custom-body p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
 }
 </style>

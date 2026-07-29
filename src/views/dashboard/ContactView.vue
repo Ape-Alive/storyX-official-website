@@ -135,20 +135,26 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { Message, ChatLineRound } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { showSuccessToast, showFailToast } from 'vant'
 import { useDevice } from '@/utils/device'
 import { submitFeedback } from '@/api/feedback'
+import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
 
 const { isMobile } = useDevice()
+const { finishPageBoot } = useDashboardPageBoot()
 const submitting = ref(false)
 const form = reactive({
   name: '',
   email: '',
   phone: '',
   content: ''
+})
+
+onMounted(() => {
+  finishPageBoot()
 })
 
 const handleSubmit = async () => {

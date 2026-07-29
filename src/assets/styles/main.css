@@ -91,6 +91,19 @@ body {
   min-height: 100vh;
 }
 
+/* iOS Safari：输入框字号 < 16px 时聚焦会自动放大页面 */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select,
+  .el-input__inner,
+  .el-textarea__inner,
+  .el-select .el-select__input,
+  .van-field__control {
+    font-size: 16px !important;
+  }
+}
+
 ::selection {
   background-color: var(--color-purple);
   color: var(--color-white);

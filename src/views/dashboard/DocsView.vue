@@ -44,14 +44,21 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Link, Document, ChatLineRound, ArrowRight } from '@element-plus/icons-vue'
+import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
+
+const { finishPageBoot } = useDashboardPageBoot()
 
 const docLinks = ref([
   { title: 'API 接口文档', desc: '端点定义与核心参数规范说明', icon: Link },
   { title: '模型能力概览', desc: '探索各型号算力节点的能力边界', icon: Document },
   { title: 'Webhooks 回调', desc: '异步任务回调与状态监听配置', icon: ChatLineRound }
 ])
+
+onMounted(() => {
+  finishPageBoot()
+})
 </script>
 
 <style scoped>

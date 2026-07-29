@@ -182,9 +182,11 @@ import { emptyDashboardStats, mapDashboardStats } from '@/config/dashboardStats'
 import { useMyActivePackages, formatQuota, planPercentage } from '@/composables/useMyActivePackages'
 import { getDashboardStats } from '@/api/usage'
 import { useDevice } from '@/utils/device'
+import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
 
 const router = useRouter()
 const { isMobile } = useDevice()
+const { runPageBoot, finishPageBoot } = useDashboardPageBoot()
 const stats = ref([...emptyDashboardStats])
 const statsLoading = ref(false)
 const {
@@ -213,11 +215,11 @@ const loadStats = async () => {
 
 onMounted(() => {
   if (isMobile.value) {
+    finishPageBoot()
     router.replace('/dashboard/usage')
     return
   }
-  loadMyPackages()
-  loadStats()
+  runPageBoot(() => Promise.allSettled([loadMyPackages(), loadStats()]))
 })
 </script>
 

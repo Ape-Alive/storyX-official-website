@@ -297,29 +297,38 @@ const FEATURE_TIERS = {
   team: ["团队共享额度", "项目权限分发", "ProRes 无损导出"],
 };
 
-// 获取套餐特性列表
+// 获取套餐特性列表：优先使用套餐/角色权限文案
 const getPackageFeatures = (pkg) => {
+  const texts =
+    (Array.isArray(pkg.effectivePermissionTexts) && pkg.effectivePermissionTexts) ||
+    (Array.isArray(pkg.permissionTexts) && pkg.permissionTexts) ||
+    (Array.isArray(pkg.clientRole?.permissionTexts) && pkg.clientRole.permissionTexts) ||
+    []
+
+  const labels = texts.map((item) => String(item || '').trim()).filter(Boolean)
+  if (labels.length > 0) {
+    return labels.map((label) => ({ label, included: true }))
+  }
+
+  // 兼容旧数据：无文案时按额度档位回退
   const quotaNum =
     pkg.quota === null || pkg.quota === undefined || pkg.quota === ""
       ? NaN
       : Number(pkg.quota);
 
-  let labels = FEATURE_TIERS.team;
+  let fallback = FEATURE_TIERS.team;
   let included = true;
 
   if (!Number.isFinite(quotaNum) || quotaNum <= 0) {
-    // 无限/未配置额度：展示对照特性并划线
-    labels = FEATURE_TIERS.team;
+    fallback = FEATURE_TIERS.team;
     included = false;
   } else if (quotaNum <= 1000) {
-    labels = FEATURE_TIERS.basic;
+    fallback = FEATURE_TIERS.basic;
   } else if (quotaNum <= 5000) {
-    labels = FEATURE_TIERS.pro;
-  } else {
-    labels = FEATURE_TIERS.team;
+    fallback = FEATURE_TIERS.pro;
   }
 
-  return labels.map((label) => ({ label, included }));
+  return fallback.map((label) => ({ label, included }));
 };
 
 // 加载套餐数据
@@ -466,6 +475,7 @@ onMounted(() => {
 
 .packages-scroll-container {
   display: flex;
+  align-items: stretch;
   gap: 40px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -490,12 +500,13 @@ onMounted(() => {
   display: none;
 }
 
-/* 套餐卡片 */
+/* 套餐卡片：高度跟随最高卡片，按钮贴底对齐 */
 .package-card {
   position: relative;
   flex-shrink: 0;
   width: 360px;
-  height: 560px;
+  min-height: 0;
+  height: auto;
   padding: 0;
   border-radius: 28px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -504,6 +515,7 @@ onMounted(() => {
   box-shadow: 0 16px 40px rgba(28, 25, 23, 0.06);
   display: flex;
   flex-direction: column;
+  align-self: stretch;
 }
 
 .package-card:hover {
@@ -528,7 +540,7 @@ onMounted(() => {
   padding: 36px;
   flex: 1;
   min-height: 0;
-  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -700,8 +712,8 @@ onMounted(() => {
 .package-features {
   list-style: none;
   padding: 0;
-  margin: 0 0 40px 0;
-  flex: 1;
+  margin: 0 0 24px 0;
+  flex: 1 1 auto;
 }
 
 .feature-item {
@@ -772,6 +784,7 @@ onMounted(() => {
 /* 订阅按钮 */
 .subscribe-btn {
   width: 100%;
+  margin-top: auto;
   padding: 18px;
   border-radius: 20px;
   font-size: 12px;
@@ -1144,7 +1157,8 @@ onMounted(() => {
   .package-card {
     width: 100%;
     max-width: none;
-    height: 520px;
+    height: auto;
+    min-height: 0;
     border-radius: 22px;
   }
 

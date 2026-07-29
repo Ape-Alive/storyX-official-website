@@ -28,12 +28,27 @@
       </div>
     </div>
     <MobileTabBar v-if="isMobile" />
+
+    <Teleport to="body">
+      <div
+        v-if="isMobile && pageBootLoading"
+        class="dashboard-boot-overlay"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <div class="dashboard-boot-panel">
+          <van-loading type="spinner" color="#4f46e5" size="36px" vertical>
+            加载中
+          </van-loading>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Monitor } from '@element-plus/icons-vue'
 import Sidebar from '@/components/dashboard/Sidebar.vue'
@@ -42,11 +57,23 @@ import MobileTabBar from '@/components/dashboard/MobileTabBar.vue'
 import { getUserInfo, removeToken, removeUserInfo } from '@/utils/storage'
 import { generateOneTimeToken } from '@/api/auth'
 import { useDevice } from '@/utils/device'
+import {
+  createDashboardPageBoot,
+  provideDashboardPageBoot,
+} from '@/composables/useDashboardPageBoot'
 
+const route = useRoute()
 const router = useRouter()
 const { isMobile } = useDevice()
 const userEmail = ref('')
 const userName = ref('')
+
+const pageBoot = createDashboardPageBoot({
+  enabled: isMobile,
+  routePath: () => route.path,
+})
+provideDashboardPageBoot(pageBoot)
+const pageBootLoading = pageBoot.loading
 
 onMounted(() => {
   const userInfo = getUserInfo()
@@ -294,5 +321,32 @@ const openDesktopApp = async () => {
 
 .dashboard-layout.is-mobile .footer-status {
   display: none;
+}
+</style>
+
+<style>
+.dashboard-boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg-primary, #fafafc) 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.dashboard-boot-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  padding: 28px 32px;
+  border-radius: 16px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.92));
+  color: var(--text-primary, #1e1b4b);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
 }
 </style>

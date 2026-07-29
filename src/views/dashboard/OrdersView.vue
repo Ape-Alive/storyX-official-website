@@ -121,8 +121,10 @@ import { Clock } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getMyOrders } from '@/api/order'
 import { useDevice } from '@/utils/device'
+import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
 
 const { isMobile } = useDevice()
+const { runPageBoot } = useDashboardPageBoot()
 const orders = ref([])
 const loading = ref(false)
 const statusFilter = ref('')
@@ -232,7 +234,7 @@ const handlePageChange = (page) => {
 }
 
 onMounted(() => {
-  loadOrders()
+  runPageBoot(() => loadOrders())
 })
 </script>
 

@@ -118,6 +118,7 @@ import { ElMessage } from 'element-plus'
 import { Message, Lock, Key, Ticket } from '@element-plus/icons-vue'
 import { sendRegisterCode, register } from '@/api/auth'
 import { saveAuthTokens, setUserInfo } from '@/utils/storage'
+import { promptSubscribePackage } from '@/utils/request'
 
 const router = useRouter()
 const registerFormRef = ref(null)
@@ -244,7 +245,17 @@ const handleRegister = async () => {
 
         ElMessage.success('注册成功！')
 
-        // 跳转到仪表盘页面
+        const entitlement = response.data.entitlement
+        if (entitlement && entitlement.hasAccess === false) {
+          await router.push('/dashboard/plans').catch(() => {
+            window.location.href = '/dashboard/plans'
+          })
+          promptSubscribePackage(entitlement.message, entitlement.subscriptionGuide, {
+            force: true
+          })
+          return
+        }
+
         router.push('/dashboard/usage')
       }
     } catch (error) {

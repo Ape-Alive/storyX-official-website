@@ -349,6 +349,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { Link } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useDevice } from '@/utils/device'
+import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
+import { isNoEntitlementError } from '@/utils/request'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart, LineChart } from 'echarts/charts'
@@ -378,6 +380,7 @@ use([
 // 获取主题 store
 const themeStore = useThemeStore()
 const { isMobile } = useDevice()
+const { runPageBoot } = useDashboardPageBoot()
 const consumptionStats = ref([...emptyDashboardStats])
 const consumptionLoading = ref(false)
 
@@ -628,7 +631,9 @@ const loadModels = async () => {
     }
   } catch (error) {
     console.error('加载模型列表失败:', error)
-    ElMessage.error('加载模型列表失败，请稍后重试')
+    if (!isNoEntitlementError(error)) {
+      ElMessage.error('加载模型列表失败，请稍后重试')
+    }
   } finally {
     modelsLoading.value = false
   }
@@ -912,7 +917,9 @@ const loadUsageTrend = async () => {
     }
   } catch (error) {
     console.error('加载使用趋势失败:', error)
-    ElMessage.error('加载使用趋势失败，请稍后重试')
+    if (!isNoEntitlementError(error)) {
+      ElMessage.error('加载使用趋势失败，请稍后重试')
+    }
   } finally {
     trendLoading.value = false
   }
@@ -1086,7 +1093,9 @@ const loadLogs = async () => {
     }
   } catch (error) {
     console.error('加载调用日志失败:', error)
-    ElMessage.error('加载调用日志失败，请稍后重试')
+    if (!isNoEntitlementError(error)) {
+      ElMessage.error('加载调用日志失败，请稍后重试')
+    }
   } finally {
     logsLoading.value = false
   }
@@ -1110,12 +1119,11 @@ const handlePageSizeChange = (pageSize) => {
 onMounted(() => {
   // 初始化时设置默认日期范围（日视图）
   dateRange.value = calculateDateRange(trendRange.value)
-  loadUsageTrend()
-  loadLogs()
-  loadModels() // 加载模型列表
+  const tasks = [loadUsageTrend(), loadLogs(), loadModels()]
   if (isMobile.value) {
-    loadDashboardStats()
+    tasks.push(loadDashboardStats())
   }
+  runPageBoot(() => Promise.allSettled(tasks))
 })
 </script>
 

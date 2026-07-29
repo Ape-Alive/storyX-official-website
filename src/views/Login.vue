@@ -91,6 +91,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Message, Lock, Key } from '@element-plus/icons-vue'
 import { login, getCaptcha } from '@/api/auth'
+import { promptSubscribePackage } from '@/utils/request'
 import { saveAuthTokens, setUserInfo } from '@/utils/storage'
 
 const router = useRouter()
@@ -166,6 +167,17 @@ const handleLogin = async () => {
         }
 
         ElMessage.success('登录成功！')
+
+        const entitlement = response.data.entitlement
+        if (entitlement && entitlement.hasAccess === false) {
+          await router.replace('/dashboard/plans').catch(() => {
+            window.location.href = '/dashboard/plans'
+          })
+          promptSubscribePackage(entitlement.message, entitlement.subscriptionGuide, {
+            force: true
+          })
+          return
+        }
 
         const redirect = router.currentRoute.value.query.redirect || '/dashboard/usage'
         router.replace(redirect).catch(() => {

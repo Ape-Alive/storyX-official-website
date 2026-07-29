@@ -243,6 +243,7 @@ import { getAvailablePackages, getMyPackages } from "@/api/pricing";
 import PaymentCheckout from "@/components/PaymentCheckout.vue";
 import { useDevice } from "@/utils/device";
 import { useMyActivePackages } from "@/composables/useMyActivePackages";
+import { useDashboardPageBoot } from "@/composables/useDashboardPageBoot";
 import {
   getPackagePayableAmount,
   getPackageDiscountInfo,
@@ -252,12 +253,14 @@ import {
 
 const router = useRouter();
 const { isMobile } = useDevice();
+const { runPageBoot } = useDashboardPageBoot();
 const {
   plans: activePlans,
   loading: activePlansLoading,
   formatQuota,
   planPercentage,
-} = useMyActivePackages();
+  loadMyPackages: loadActivePackages,
+} = useMyActivePackages({ immediate: false });
 
 const scrollToBuy = () => {
   document
@@ -394,17 +397,27 @@ const loadPackages = async () => {
 // 格式化价格
 const formatPrice = (price) => formatPackagePrice(price);
 
-// 获取套餐特性列表
+// 获取套餐特性列表：优先权限文案
 const getPackageFeatures = (pkg) => {
-  const features = [];
+  const texts =
+    (Array.isArray(pkg.effectivePermissionTexts) && pkg.effectivePermissionTexts) ||
+    (Array.isArray(pkg.permissionTexts) && pkg.permissionTexts) ||
+    (Array.isArray(pkg.clientRole?.permissionTexts) &&
+      pkg.clientRole.permissionTexts) ||
+    [];
+  const labels = texts.map((item) => String(item || "").trim()).filter(Boolean);
+  if (labels.length > 0) return labels;
 
-  if (pkg.quota) {
+  const features = [];
+  if (pkg.quota != null && pkg.quota !== "") {
     const quotaNum =
       typeof pkg.quota === "string" ? parseFloat(pkg.quota) : pkg.quota;
-    if (quotaNum >= 1000) {
-      features.push(`积分额度 ${(quotaNum / 1000).toFixed(0)}K点`);
-    } else {
-      features.push(`积分额度 ${quotaNum}点`);
+    if (Number.isFinite(quotaNum)) {
+      if (quotaNum >= 1000) {
+        features.push(`积分额度 ${(quotaNum / 1000).toFixed(0)}K点`);
+      } else {
+        features.push(`积分额度 ${quotaNum}点`);
+      }
     }
   }
 
@@ -414,7 +427,6 @@ const getPackageFeatures = (pkg) => {
     features.push("多端登录 不限制");
   }
 
-  // 可以根据套餐的其他属性添加更多特性
   if (pkg.description) {
     features.push(pkg.description);
   }
@@ -542,7 +554,12 @@ const handleResize = () => {
 
 // 初始化
 onMounted(() => {
-  loadPackages();
+  runPageBoot(() =>
+    Promise.allSettled([
+      isMobile.value ? loadActivePackages() : Promise.resolve(),
+      loadPackages(),
+    ])
+  );
   // 初始化滚动状态检查
   nextTick(() => {
     if (plansGridRef.value) {
@@ -740,6 +757,7 @@ onUnmounted(() => {
 .plans-grid {
   display: flex;
   flex-wrap: nowrap;
+  align-items: stretch;
   gap: 32px;
   overflow-x: auto;
   overflow-y: visible; /* 改为 visible，允许标签超出容器 */
@@ -760,13 +778,15 @@ onUnmounted(() => {
   display: none;
 }
 
-/* 所有卡片固定宽度和高度 */
+/* 卡片等宽，高度跟随最高卡片 */
 .plans-grid .plan-card,
 .plans-grid .custom-plan-card {
   width: 320px;
-  height: 520px;
+  height: auto;
+  min-height: 0;
   flex: 0 0 320px;
   max-width: 320px;
+  align-self: stretch;
 }
 
 /* 当只有一个或两个卡片时，居中显示 */
@@ -934,8 +954,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 40px;
-  flex: 1;
+  margin-bottom: 24px;
+  flex: 1 1 auto;
 }
 
 .feature-item {
@@ -964,6 +984,7 @@ onUnmounted(() => {
 
 .plan-btn {
   width: 100%;
+  margin-top: auto;
   padding: 20px;
   border-radius: 16px;
   font-weight: 900;

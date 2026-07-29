@@ -458,8 +458,9 @@ const handleRegister = async () => {
 
 @media (max-width: 960px) {
   .auth-page {
-    padding: 56px 20px 24px;
-    align-items: center;
+    padding: 72px 20px 24px;
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .auth-card {

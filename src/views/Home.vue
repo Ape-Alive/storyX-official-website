@@ -1121,6 +1121,13 @@ onUnmounted(() => {
   pointer-events: auto;
 }
 
+@media (max-width: 960px) {
+  /* 底部留给站点 Tab，避免透明遮罩抢走点击 */
+  .story-home__hit-shield {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .story-home__copy {
   position: absolute;
   top: 40%;
@@ -1284,6 +1291,14 @@ onUnmounted(() => {
   align-items: end;
   gap: 18px;
   padding: 0 28px 28px;
+  /* 空白区不拦截点击，避免盖住站点底栏 Tab */
+  pointer-events: none;
+}
+
+.story-home__status,
+.story-home__timeline,
+.story-home__controls {
+  pointer-events: auto;
 }
 
 .story-home__status {
@@ -1414,8 +1429,9 @@ onUnmounted(() => {
     grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
     gap: 12px;
-    /* Tab 实际约 68px+safe，再留出进度条与间距 */
-    padding: 0 16px calc(16px + 76px + env(safe-area-inset-bottom, 0px));
+    /* 整体抬离底栏，避免 padding 区域压住 Tab */
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    padding: 0 16px 12px;
   }
 
   /* 进度条放在最上方，避免被 Tab 遮住 */

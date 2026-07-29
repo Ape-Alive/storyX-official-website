@@ -355,7 +355,7 @@ const handleDownload = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 50;
+  z-index: 300;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;

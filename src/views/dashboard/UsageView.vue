@@ -51,6 +51,7 @@
           end-placeholder="结束日期"
           format="YYYY/MM/DD"
           value-format="YYYY-MM-DD"
+          clearable
           class="date-picker"
           @change="handleDateRangeChange"
         />
@@ -71,15 +72,26 @@
             :name="range.id"
           />
         </van-tabs>
-        <button
-          type="button"
-          class="mobile-date-btn"
-          :title="trendDateLabel"
-          @click="openTrendCalendar"
-        >
-          <van-icon name="calendar-o" size="16" />
-          <span class="mobile-date-btn__text">{{ trendDateShortLabel }}</span>
-        </button>
+        <div class="mobile-date-btn-wrap">
+          <button
+            type="button"
+            class="mobile-date-btn"
+            :title="trendDateLabel"
+            @click="openTrendCalendar"
+          >
+            <van-icon name="calendar-o" size="16" />
+            <span class="mobile-date-btn__text">{{ trendDateShortLabel }}</span>
+          </button>
+          <button
+            v-if="dateRange?.[0] && dateRange?.[1]"
+            type="button"
+            class="mobile-date-clear"
+            aria-label="清空日期"
+            @click="clearTrendDateRange"
+          >
+            <van-icon name="clear" size="14" />
+          </button>
+        </div>
       </div>
     </div>
 
@@ -166,10 +178,21 @@
           <span>{{ statusFilterLabel }}</span>
           <van-icon name="arrow-down" size="12" />
         </button>
-        <button type="button" class="mobile-filter-chip is-date" @click="openLogCalendar">
-          <van-icon name="calendar-o" size="14" />
-          <span>{{ logDateShortLabel }}</span>
-        </button>
+        <div class="mobile-filter-chip-wrap">
+          <button type="button" class="mobile-filter-chip is-date" @click="openLogCalendar">
+            <van-icon name="calendar-o" size="14" />
+            <span>{{ logDateShortLabel }}</span>
+          </button>
+          <button
+            v-if="logFilters.dateRange?.[0] && logFilters.dateRange?.[1]"
+            type="button"
+            class="mobile-date-clear"
+            aria-label="清空日期"
+            @click="clearLogDateRange"
+          >
+            <van-icon name="clear" size="14" />
+          </button>
+        </div>
       </div>
 
       <div v-if="!isMobile" class="logs-table-wrapper" v-loading="logsLoading">
@@ -249,21 +272,57 @@
     </div>
 
     <van-calendar
+      :key="`trend-cal-${trendCalendarKey}`"
       v-model:show="showTrendCalendar"
       type="range"
       allow-same-day
+      :default-date="trendCalendarDefaultDate"
       :min-date="calendarMinDate"
       :max-date="calendarMaxDate"
+      @select="onTrendCalendarSelect"
       @confirm="onTrendCalendarConfirm"
-    />
+    >
+      <template #footer>
+        <div class="usage-calendar-footer">
+          <van-button plain block type="primary" @click="clearTrendDateRange">清除</van-button>
+          <van-button
+            block
+            type="primary"
+            native-type="button"
+            :disabled="!trendCalendarCanConfirm"
+            @click="confirmTrendCalendar"
+          >
+            确认
+          </van-button>
+        </div>
+      </template>
+    </van-calendar>
     <van-calendar
+      :key="`log-cal-${logCalendarKey}`"
       v-model:show="showLogCalendar"
       type="range"
       allow-same-day
+      :default-date="logCalendarDefaultDate"
       :min-date="calendarMinDate"
       :max-date="calendarMaxDate"
+      @select="onLogCalendarSelect"
       @confirm="onLogCalendarConfirm"
-    />
+    >
+      <template #footer>
+        <div class="usage-calendar-footer">
+          <van-button plain block type="primary" @click="clearLogDateRange">清除</van-button>
+          <van-button
+            block
+            type="primary"
+            native-type="button"
+            :disabled="!logCalendarCanConfirm"
+            @click="confirmLogCalendar"
+          >
+            确认
+          </van-button>
+        </div>
+      </template>
+    </van-calendar>
     <van-popup v-model:show="showModelPicker" position="bottom" round>
       <van-picker
         title="选择模型"
@@ -345,11 +404,31 @@ const showModelPicker = ref(false)
 const showStatusPicker = ref(false)
 const calendarMinDate = new Date(2024, 0, 1)
 const calendarMaxDate = new Date()
+const trendCalendarKey = ref(0)
+const logCalendarKey = ref(0)
+const trendCalendarSelected = ref(null)
+const logCalendarSelected = ref(null)
 
 const formatDateYMD = (date) => {
   const d = date instanceof Date ? date : new Date(date)
   const pad = (n) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+const parseDateYMD = (value) => {
+  if (!value) return null
+  if (value instanceof Date) return value
+  const parts = String(value).split('-').map(Number)
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null
+  return new Date(parts[0], parts[1] - 1, parts[2])
+}
+
+const toCalendarDefaultDate = (range) => {
+  if (!range?.[0] || !range?.[1]) return null
+  const start = parseDateYMD(range[0])
+  const end = parseDateYMD(range[1])
+  if (!start || !end) return null
+  return [start, end]
 }
 
 const formatRangeLabel = (range, emptyText) => {
@@ -404,6 +483,16 @@ const modelsLoading = ref(false)
 const trendDateLabel = computed(() => formatRangeLabel(dateRange.value, '选择消耗分析日期'))
 const trendDateShortLabel = computed(() => shortRange(dateRange.value, '日期'))
 const logDateShortLabel = computed(() => shortRange(logFilters.value.dateRange, '日期'))
+const trendCalendarDefaultDate = computed(() => toCalendarDefaultDate(dateRange.value))
+const logCalendarDefaultDate = computed(() => toCalendarDefaultDate(logFilters.value.dateRange))
+const trendCalendarCanConfirm = computed(() => {
+  const selected = trendCalendarSelected.value
+  return Array.isArray(selected) && selected[0] && selected[1]
+})
+const logCalendarCanConfirm = computed(() => {
+  const selected = logCalendarSelected.value
+  return Array.isArray(selected) && selected[0] && selected[1]
+})
 
 const modelDropdownOptions = computed(() => [
   { text: '全部模型', value: '' },
@@ -437,10 +526,14 @@ const statusFilterLabel = computed(() => {
 })
 
 const openTrendCalendar = () => {
+  trendCalendarSelected.value = toCalendarDefaultDate(dateRange.value) || null
+  trendCalendarKey.value += 1
   showTrendCalendar.value = true
 }
 
 const openLogCalendar = () => {
+  logCalendarSelected.value = toCalendarDefaultDate(logFilters.value.dateRange) || null
+  logCalendarKey.value += 1
   showLogCalendar.value = true
 }
 
@@ -466,6 +559,14 @@ const onStatusPickerConfirm = ({ selectedValues, selectedOptions }) => {
   handleLogFilterChange()
 }
 
+const onTrendCalendarSelect = (values) => {
+  trendCalendarSelected.value = values
+}
+
+const onLogCalendarSelect = (values) => {
+  logCalendarSelected.value = values
+}
+
 const onTrendCalendarConfirm = (values) => {
   const [start, end] = values
   dateRange.value = [formatDateYMD(start), formatDateYMD(end)]
@@ -473,10 +574,36 @@ const onTrendCalendarConfirm = (values) => {
   handleDateRangeChange(dateRange.value)
 }
 
+const confirmTrendCalendar = () => {
+  if (!trendCalendarCanConfirm.value) return
+  onTrendCalendarConfirm(trendCalendarSelected.value)
+}
+
 const onLogCalendarConfirm = (values) => {
   const [start, end] = values
   logFilters.value.dateRange = [formatDateYMD(start), formatDateYMD(end)]
   showLogCalendar.value = false
+  handleLogFilterChange()
+}
+
+const confirmLogCalendar = () => {
+  if (!logCalendarCanConfirm.value) return
+  onLogCalendarConfirm(logCalendarSelected.value)
+}
+
+const clearTrendDateRange = () => {
+  dateRange.value = null
+  trendCalendarSelected.value = null
+  showTrendCalendar.value = false
+  trendCalendarKey.value += 1
+  handleDateRangeChange()
+}
+
+const clearLogDateRange = () => {
+  logFilters.value.dateRange = null
+  logCalendarSelected.value = null
+  showLogCalendar.value = false
+  logCalendarKey.value += 1
   handleLogFilterChange()
 }
 
@@ -2112,7 +2239,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  max-width: 42%;
+  max-width: 100%;
   height: 36px;
   padding: 0 10px;
   border: 1px solid var(--border-color);
@@ -2120,6 +2247,59 @@ onMounted(() => {
   background: var(--bg-card);
   color: var(--text-primary);
   cursor: pointer;
+}
+
+.mobile-date-btn-wrap,
+.mobile-filter-chip-wrap {
+  position: relative;
+  flex-shrink: 0;
+  max-width: 42%;
+  display: inline-flex;
+  align-items: center;
+}
+
+.mobile-filter-chip-wrap {
+  flex: 1;
+  max-width: none;
+  min-width: 0;
+}
+
+.mobile-filter-chip-wrap .mobile-filter-chip {
+  width: 100%;
+  padding-right: 26px;
+}
+
+.mobile-date-btn-wrap .mobile-date-btn {
+  padding-right: 26px;
+}
+
+.mobile-date-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary, #999);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.usage-calendar-footer {
+  display: flex;
+  gap: 10px;
+  padding: 8px 16px 16px;
+}
+
+.usage-calendar-footer .van-button {
+  flex: 1;
 }
 
 .mobile-date-btn__text {

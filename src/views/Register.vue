@@ -455,4 +455,51 @@ const handleRegister = async () => {
     background-position: 0% 50%;
   }
 }
+
+@media (max-width: 960px) {
+  .auth-page {
+    padding: 56px 20px 24px;
+    align-items: center;
+  }
+
+  .auth-card {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .auth-header {
+    margin-bottom: 28px;
+  }
+
+  .auth-title {
+    font-size: 22px;
+    letter-spacing: 0.25em;
+  }
+
+  .auth-form :deep(.el-form-item) {
+    margin-bottom: 18px;
+  }
+
+  .auth-form :deep(.el-input__wrapper) {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .auth-footer {
+    border-top-color: rgba(99, 102, 241, 0.12);
+  }
+
+  .code-input-wrapper {
+    gap: 8px;
+  }
+
+  .send-code-btn {
+    min-width: 108px;
+    padding: 14px 12px;
+    font-size: 12px;
+  }
+}
 </style>

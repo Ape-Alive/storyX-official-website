@@ -55,6 +55,11 @@ const routes = [
         path: 'register',
         name: 'Register',
         component: () => import('@/views/Register.vue')
+      },
+      {
+        path: 'forgot-password',
+        name: 'ForgotPassword',
+        component: () => import('@/views/ForgotPassword.vue')
       }
     ]
   },
@@ -104,6 +109,10 @@ const routes = [
   {
     path: '/register',
     redirect: '/auth/register'
+  },
+  {
+    path: '/forgot-password',
+    redirect: '/auth/forgot-password'
   }
 ]
 
@@ -124,7 +133,10 @@ router.beforeEach((to, from, next) => {
     })
   }
   // 如果已登录用户访问登录/注册页，重定向到仪表盘
-  else if (token && (to.path === '/auth/login' || to.path === '/auth/register')) {
+  else if (
+    token &&
+    (to.path === '/auth/login' || to.path === '/auth/register' || to.path === '/auth/forgot-password')
+  ) {
     next('/dashboard/usage')
   }
   else {

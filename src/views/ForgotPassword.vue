@@ -3,36 +3,24 @@
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-header">
-          <h2 class="auth-title">用户登录</h2>
-          <p class="auth-subtitle">ACCESS YOUR STUDIO</p>
+          <h2 class="auth-title">找回密码</h2>
+          <p class="auth-subtitle">RESET YOUR PASSWORD</p>
         </div>
 
         <el-form
-          ref="loginFormRef"
-          :model="loginForm"
-          :rules="loginRules"
+          ref="formRef"
+          :model="form"
+          :rules="rules"
           class="auth-form"
-          @submit.prevent="handleLogin"
+          @submit.prevent="handleSubmit"
         >
           <el-form-item prop="email">
             <el-input
-              v-model="loginForm.email"
+              v-model="form.email"
               type="email"
-              placeholder="邮箱账号"
+              placeholder="注册邮箱"
               size="large"
               :prefix-icon="Message"
-              clearable
-            />
-          </el-form-item>
-
-          <el-form-item prop="password">
-            <el-input
-              v-model="loginForm.password"
-              type="password"
-              placeholder="访问密码"
-              size="large"
-              :prefix-icon="Lock"
-              show-password
               clearable
             />
           </el-form-item>
@@ -40,14 +28,13 @@
           <el-form-item prop="captchaCode">
             <div class="captcha-field">
               <el-input
-                v-model="loginForm.captchaCode"
+                v-model="form.captchaCode"
                 class="captcha-input"
-                placeholder="验证码"
+                placeholder="图形验证码"
                 size="large"
                 :prefix-icon="Key"
                 maxlength="4"
                 clearable
-                @keyup.enter="handleLogin"
               />
               <button
                 type="button"
@@ -61,24 +48,70 @@
             </div>
           </el-form-item>
 
+          <el-form-item prop="verificationCode">
+            <div class="code-input-wrapper">
+              <el-input
+                v-model="form.verificationCode"
+                placeholder="邮箱验证码"
+                size="large"
+                :prefix-icon="Key"
+                maxlength="6"
+                clearable
+                @input="handleCodeInput"
+              />
+              <el-button
+                :disabled="codeCountdown > 0 || sendingCode"
+                :loading="sendingCode"
+                :class="['send-code-btn', { 'countdown-active': codeCountdown > 0 }]"
+                @click="handleSendCode"
+              >
+                <template v-if="codeCountdown > 0">{{ codeCountdown }}秒后重试</template>
+                <template v-else>发送验证码</template>
+              </el-button>
+            </div>
+          </el-form-item>
+
+          <el-form-item prop="newPassword">
+            <el-input
+              v-model="form.newPassword"
+              type="password"
+              placeholder="新密码（6-50个字符）"
+              size="large"
+              :prefix-icon="Lock"
+              show-password
+              clearable
+            />
+          </el-form-item>
+
+          <el-form-item prop="confirmPassword">
+            <el-input
+              v-model="form.confirmPassword"
+              type="password"
+              placeholder="确认新密码"
+              size="large"
+              :prefix-icon="Lock"
+              show-password
+              clearable
+              @keyup.enter="handleSubmit"
+            />
+          </el-form-item>
+
           <el-form-item>
             <el-button
               type="primary"
               size="large"
               class="auth-submit-btn"
               :loading="loading"
-              @click="handleLogin"
+              @click="handleSubmit"
             >
-              登录工作台
+              重置密码
             </el-button>
           </el-form-item>
         </el-form>
 
         <div class="auth-footer">
-          <router-link to="/auth/forgot-password" class="forgot-link">忘记密码？</router-link>
-          <span class="auth-footer-sep">·</span>
-          <span class="auth-link-text">还没有账号？</span>
-          <router-link to="/register" class="auth-link">立即注册</router-link>
+          <span class="auth-link-text">想起密码了？</span>
+          <router-link to="/login" class="auth-link">返回登录</router-link>
         </div>
       </div>
     </div>
@@ -90,95 +123,127 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Message, Lock, Key } from '@element-plus/icons-vue'
-import { login, getCaptcha } from '@/api/auth'
-import { saveAuthTokens, setUserInfo } from '@/utils/storage'
+import { sendResetPasswordCode, resetPassword, getCaptcha } from '@/api/auth'
 
 const router = useRouter()
-const loginFormRef = ref(null)
+const formRef = ref(null)
 const loading = ref(false)
+const sendingCode = ref(false)
+const codeCountdown = ref(0)
 const captchaImageUrl = ref('')
 
-const loginForm = reactive({
+const form = reactive({
   email: '',
-  password: '',
   captchaCode: '',
   sessionId: '',
-  deviceFingerprint: '' // 可选，暂时留空
+  verificationCode: '',
+  newPassword: '',
+  confirmPassword: ''
 })
 
-const loginRules = {
+const validateConfirmPassword = (_rule, value, callback) => {
+  if (value !== form.newPassword) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const rules = {
   email: [
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
   ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6个字符', trigger: 'blur' }
-  ],
   captchaCode: [
-    { required: true, message: '请输入验证码', trigger: 'blur' },
-    { len: 4, message: '验证码为4位', trigger: 'blur' }
+    { required: true, message: '请输入图形验证码', trigger: 'blur' },
+    { len: 4, message: '图形验证码为4位', trigger: 'blur' }
+  ],
+  verificationCode: [
+    { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
+    { pattern: /^\d{6}$/, message: '验证码必须是6位数字', trigger: 'blur' }
+  ],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 50, message: '密码长度必须在6-50个字符之间', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    { validator: validateConfirmPassword, trigger: 'blur' }
   ]
+}
+
+const handleCodeInput = (value) => {
+  form.verificationCode = String(value || '').replace(/\D/g, '')
 }
 
 const refreshCaptcha = async () => {
   try {
     captchaImageUrl.value = ''
-    loginForm.captchaCode = ''
+    form.captchaCode = ''
     const response = await getCaptcha()
     if (response.success && response.data) {
       captchaImageUrl.value = response.data.imageUrl
-      loginForm.sessionId = response.data.sessionId
-    } else {
-      ElMessage.error(response.message || '获取验证码失败')
+      form.sessionId = response.data.sessionId
     }
   } catch (error) {
-    console.error('获取验证码失败:', error)
-    ElMessage.error(error.message || '获取验证码失败')
+    ElMessage.error(error.message || '获取图形验证码失败')
   }
 }
 
-const handleLogin = async () => {
-  if (!loginFormRef.value) return
+const handleSendCode = async () => {
+  if (!form.email) {
+    ElMessage.warning('请先输入邮箱地址')
+    return
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(form.email)) {
+    ElMessage.warning('请输入正确的邮箱格式')
+    return
+  }
+  if (!form.captchaCode || form.captchaCode.length !== 4 || !form.sessionId) {
+    ElMessage.warning('请先填写图形验证码')
+    return
+  }
 
-  await loginFormRef.value.validate(async (valid) => {
-    if (!valid) return
-    if (!loginForm.sessionId) {
-      ElMessage.error('验证码已失效，请刷新')
+  try {
+    sendingCode.value = true
+    const response = await sendResetPasswordCode(form.email, form.captchaCode, form.sessionId)
+    if (response.success) {
+      ElMessage.success(response.message || response.data?.message || '若该邮箱已注册，验证码将发送至邮箱')
+      codeCountdown.value = 60
+      const timer = setInterval(() => {
+        codeCountdown.value--
+        if (codeCountdown.value <= 0) clearInterval(timer)
+      }, 1000)
       await refreshCaptcha()
-      return
     }
+  } catch (error) {
+    ElMessage.error(error.message || '发送验证码失败，请稍后重试')
+    await refreshCaptcha()
+  } finally {
+    sendingCode.value = false
+  }
+}
 
+const handleSubmit = async () => {
+  if (!formRef.value) return
+  await formRef.value.validate(async (valid) => {
+    if (!valid) return
     try {
       loading.value = true
-      const response = await login({
-        email: loginForm.email,
-        password: loginForm.password,
-        captchaCode: loginForm.captchaCode,
-        sessionId: loginForm.sessionId,
-        deviceFingerprint: loginForm.deviceFingerprint || undefined
+      const response = await resetPassword({
+        email: form.email,
+        verificationCode: form.verificationCode,
+        newPassword: form.newPassword
       })
-
-      if (response.success && response.data) {
-        saveAuthTokens(response.data)
-        if (response.data.user) {
-          setUserInfo(response.data.user)
-        }
-
-        ElMessage.success('登录成功！')
-
-        const redirect = router.currentRoute.value.query.redirect || '/dashboard/usage'
-        router.replace(redirect).catch(() => {
-          window.location.href = redirect
-        })
+      if (response.success) {
+        ElMessage.success('密码重置成功，请使用新密码登录')
+        router.replace('/auth/login')
       } else {
-        ElMessage.error(response.message || '登录失败，请检查邮箱和密码')
-        await refreshCaptcha()
+        ElMessage.error(response.message || '重置失败，请重试')
       }
     } catch (error) {
-      console.error('登录失败:', error)
-      ElMessage.error(error.message || '登录失败，请检查邮箱和密码')
-      await refreshCaptcha()
+      ElMessage.error(error.message || '重置失败，请检查验证码与密码')
     } finally {
       loading.value = false
     }
@@ -273,22 +338,15 @@ onMounted(() => {
   color: rgba(30, 27, 75, 0.4);
 }
 
-.forgot-link {
-  font-size: 14px;
-  font-weight: 600;
-  color: #4f46e5;
-  text-decoration: none;
-  font-family: 'Inter', sans-serif;
+.code-input-wrapper {
+  width: 100%;
+  display: flex;
+  gap: 10px;
 }
 
-.forgot-link:hover {
-  color: #9333ea;
-  text-decoration: underline;
-}
-
-.auth-footer-sep {
-  margin: 0 6px;
-  color: rgba(30, 27, 75, 0.25);
+.code-input-wrapper :deep(.el-input) {
+  flex: 1;
+  min-width: 0;
 }
 
 .captcha-field {
@@ -309,10 +367,6 @@ onMounted(() => {
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
 }
 
-.captcha-field:hover:not(:focus-within) {
-  border-color: rgba(99, 102, 241, 0.4);
-}
-
 .captcha-input {
   flex: 1;
   min-width: 0;
@@ -325,10 +379,6 @@ onMounted(() => {
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-.captcha-field :deep(.el-input__wrapper.is-focus) {
   box-shadow: none !important;
 }
 
@@ -348,25 +398,6 @@ onMounted(() => {
   justify-content: center;
 }
 
-.captcha-image-btn::after {
-  content: '点击刷新';
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: #fff;
-  background: rgba(30, 27, 75, 0.45);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.captcha-image-btn:hover::after {
-  opacity: 1;
-}
-
 .captcha-image-btn img {
   width: 100%;
   height: 100%;
@@ -379,6 +410,24 @@ onMounted(() => {
   color: rgba(30, 27, 75, 0.4);
 }
 
+.send-code-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 16px;
+  height: 48px;
+  border-radius: 9999px;
+  border: none;
+  background: rgba(99, 102, 241, 0.08);
+  color: #4f46e5;
+}
+
+.send-code-btn.countdown-active {
+  background: rgba(99, 102, 241, 0.1);
+  color: rgba(99, 102, 241, 0.6);
+}
+
 .auth-submit-btn {
   width: 100%;
   height: 48px;
@@ -389,13 +438,7 @@ onMounted(() => {
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.3em;
-  transition: all 0.3s;
   animation: gradientShift 3s ease infinite;
-}
-
-.auth-submit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
 }
 
 .auth-footer {
@@ -407,7 +450,6 @@ onMounted(() => {
 .auth-link-text {
   font-size: 14px;
   color: rgba(30, 27, 75, 0.6);
-  font-family: 'Inter', sans-serif;
 }
 
 .auth-link {
@@ -416,8 +458,6 @@ onMounted(() => {
   color: #4f46e5;
   text-decoration: none;
   margin-left: 8px;
-  transition: all 0.3s;
-  font-family: 'Inter', sans-serif;
 }
 
 .auth-link:hover {
@@ -426,15 +466,9 @@ onMounted(() => {
 }
 
 @keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @media (max-width: 960px) {
@@ -469,20 +503,16 @@ onMounted(() => {
     background: rgba(255, 255, 255, 0.92);
   }
 
-  .captcha-field {
-    background: rgba(255, 255, 255, 0.92);
+  .send-code-btn {
+    min-width: 108px;
+    padding: 0 12px;
+    height: 40px;
   }
 
-  .captcha-image-btn {
-    width: 108px;
-  }
-
-  .captcha-image-btn::after {
-    content: '刷新';
-  }
-
-  .auth-footer {
-    border-top-color: rgba(99, 102, 241, 0.12);
+  .code-input-wrapper :deep(.el-input__wrapper) {
+    min-height: 40px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 </style>

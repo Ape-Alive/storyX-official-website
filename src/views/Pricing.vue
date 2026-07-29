@@ -216,7 +216,7 @@ const checkoutPkg = ref(null);
 const durations = [
   { value: "day", label: "按天" },
   { value: "month", label: "按月" },
-  { value: "year", label: "按年", discount: "省20%" },
+  { value: "year", label: "按年" },
   { value: "permanent", label: "永久" },
 ];
 

@@ -275,7 +275,7 @@ const checkoutOrderType = ref("purchase");
 const durations = [
   { value: "day", label: "按天" },
   { value: "month", label: "按月" },
-  { value: "year", label: "按年", discount: "首 20%" },
+  { value: "year", label: "按年" },
   { value: "permanent", label: "永久" },
 ];
 

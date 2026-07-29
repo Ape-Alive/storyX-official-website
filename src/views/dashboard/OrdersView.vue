@@ -51,12 +51,16 @@
             :key="order.id"
             :title="order.package?.displayName || order.package?.name || order.description || '套餐订单'"
             :label="`${order.orderNo} · ${formatDateTime(order.createdAt)}`"
-            :value="`¥${formatAmount(order.finalAmount ?? order.amount)}`"
           >
-            <template #right-icon>
-              <van-tag :type="statusTagType(order.status)" plain round>
-                {{ statusLabel(order.status) }}
-              </van-tag>
+            <template #value>
+              <div class="mobile-order-value">
+                <div class="mobile-order-amount">
+                  ¥{{ formatAmount(order.finalAmount ?? order.amount) }}
+                </div>
+                <span :class="['mobile-status-tag', statusClass(order.status)]">
+                  {{ statusLabel(order.status) }}
+                </span>
+              </div>
             </template>
           </van-cell>
         </van-cell-group>
@@ -171,12 +175,6 @@ const statusClass = (status) => {
   if (status === 'refunded' || status === 'cancelled' || status === 'expired') return 'is-muted'
   if (status === 'pending') return 'is-pending'
   return ''
-}
-const statusTagType = (status) => {
-  if (status === 'paid') return 'success'
-  if (status === 'pending') return 'warning'
-  if (status === 'refunded' || status === 'cancelled') return 'danger'
-  return 'primary'
 }
 
 const formatAmount = (value) => {
@@ -408,6 +406,53 @@ onMounted(() => {
   color: var(--text-tertiary);
 }
 
+.mobile-order-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  min-width: 76px;
+}
+
+.mobile-order-amount {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.mobile-status-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  letter-spacing: 0;
+  writing-mode: horizontal-tb;
+}
+
+.mobile-status-tag.is-paid {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.mobile-status-tag.is-pending {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.mobile-status-tag.is-muted {
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+}
+
 .pagination-wrapper {
   margin-top: 20px;
   display: flex;
@@ -448,6 +493,16 @@ onMounted(() => {
 
   .orders-list :deep(.van-cell-group--inset) {
     margin: 0;
+  }
+
+  .orders-list :deep(.van-cell__value) {
+    flex: none;
+    min-width: 76px;
+  }
+
+  .orders-list :deep(.van-cell__title) {
+    min-width: 0;
+    padding-right: 12px;
   }
 
   .pagination-wrapper {

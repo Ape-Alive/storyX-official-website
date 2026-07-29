@@ -49,12 +49,24 @@
             />
           </el-form-item>
 
+          <el-form-item prop="activationCode">
+            <el-input
+              v-model="registerForm.activationCode"
+              type="text"
+              placeholder="激活码（选填，有则赠送对应套餐）"
+              size="large"
+              :prefix-icon="Ticket"
+              clearable
+              @input="handleActivationCodeInput"
+            />
+          </el-form-item>
+
           <el-form-item prop="verificationCode">
             <div class="code-input-wrapper">
               <el-input
                 v-model="registerForm.verificationCode"
                 type="text"
-                placeholder="6位验证码"
+                placeholder="邮箱验证码（6位数字）"
                 size="large"
                 :prefix-icon="Key"
                 maxlength="6"
@@ -103,7 +115,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Message, Lock, Key } from '@element-plus/icons-vue'
+import { Message, Lock, Key, Ticket } from '@element-plus/icons-vue'
 import { sendRegisterCode, register } from '@/api/auth'
 import { saveAuthTokens, setUserInfo } from '@/utils/storage'
 
@@ -117,6 +129,7 @@ const registerForm = reactive({
   email: '',
   password: '',
   confirmPassword: '',
+  activationCode: '',
   verificationCode: '',
   deviceFingerprint: '' // 可选，暂时留空
 })
@@ -152,9 +165,14 @@ const registerRules = {
     { required: true, message: '请确认密码', trigger: 'blur' },
     { validator: validateConfirmPassword, trigger: 'blur' }
   ],
+  activationCode: [],
   verificationCode: [
     { validator: validateVerificationCode, trigger: 'blur' }
   ]
+}
+
+const handleActivationCodeInput = (value) => {
+  registerForm.activationCode = String(value || '').toUpperCase().replace(/\s+/g, '')
 }
 
 const handleCodeInput = (value) => {
@@ -207,12 +225,16 @@ const handleRegister = async () => {
 
     try {
       loading.value = true
-      const response = await register({
+      const payload = {
         email: registerForm.email,
         password: registerForm.password,
         verificationCode: registerForm.verificationCode,
         deviceFingerprint: registerForm.deviceFingerprint || undefined
-      })
+      }
+      if (registerForm.activationCode?.trim()) {
+        payload.activationCode = registerForm.activationCode.trim()
+      }
+      const response = await register(payload)
 
       if (response.success && response.data) {
         saveAuthTokens(response.data)

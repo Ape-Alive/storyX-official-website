@@ -18,6 +18,7 @@ export const sendRegisterCode = (email) => {
  * @param {Object} data - 注册数据
  * @param {string} data.email - 邮箱地址
  * @param {string} data.password - 密码（6-50个字符）
+ * @param {string} [data.activationCode] - 激活码（选填，填写则核销并绑定套餐）
  * @param {string} data.verificationCode - 6位数字邮箱验证码
  * @param {string} [data.deviceFingerprint] - 设备指纹（可选）
  * @returns {Promise}

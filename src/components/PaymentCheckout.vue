@@ -29,18 +29,27 @@
         <p class="checkout__label">支付方式</p>
         <div class="checkout__method is-active is-static">
           <span class="checkout__method-name">支付宝</span>
-          <span class="checkout__method-desc">扫码 / 跳转支付</span>
+          <span class="checkout__method-desc">{{
+            isMobile ? '跳转支付宝完成支付' : '扫码 / 跳转支付'
+          }}</span>
         </div>
       </div>
 
       <div v-else-if="step === 'paying'" class="checkout__paying">
-        <template v-if="qrImageSrc">
+        <!-- 移动端：优先跳转，不展示二维码 -->
+        <template v-if="isMobile && jumpPayUrl">
+          <p class="checkout__label">正在跳转支付宝…</p>
+          <a class="checkout__link" :href="jumpPayUrl" rel="noopener noreferrer">
+            若未自动跳转，点击这里继续支付
+          </a>
+        </template>
+        <template v-else-if="!isMobile && qrImageSrc">
           <p class="checkout__label">请使用支付宝扫码支付</p>
           <img class="checkout__qr" :src="qrImageSrc" alt="支付二维码" />
         </template>
-        <template v-else-if="payUrl">
+        <template v-else-if="jumpPayUrl">
           <p class="checkout__label">已打开支付宝支付页面，请完成支付</p>
-          <a class="checkout__link" :href="payUrl" target="_blank" rel="noopener noreferrer">
+          <a class="checkout__link" :href="jumpPayUrl" target="_blank" rel="noopener noreferrer">
             若未自动跳转，点击这里继续支付
           </a>
         </template>
@@ -126,9 +135,37 @@ let pollTimer = null
 
 const qrImageSrc = computed(() => {
   const url = qrCodeUrl.value || ''
-  if (/^https?:\/\//i.test(url) || url.startsWith('data:image')) return url
+  // 仅把明确是图片的地址当二维码；支付宝跳转链不当图片展示
+  if (url.startsWith('data:image')) return url
+  if (/^https?:\/\//i.test(url) && /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(url)) return url
+  if (/^https?:\/\/[^/]*zpayz\.cn\/qrcode\//i.test(url)) return url
   return ''
 })
+
+/** 可跳转的支付链接（移动端优先） */
+const jumpPayUrl = computed(() => {
+  const url = payUrl.value || ''
+  if (/^https?:\/\//i.test(url) || /^alipays?:\/\//i.test(url)) return url
+  // 有时渠道把跳转链放在 qrcode 字段
+  const fallback = qrCodeUrl.value || ''
+  if (
+    (/^https?:\/\//i.test(fallback) || /^alipays?:\/\//i.test(fallback)) &&
+    !qrImageSrc.value
+  ) {
+    return fallback
+  }
+  return ''
+})
+
+const openPayJump = (url) => {
+  if (!url) return
+  if (isMobile.value) {
+    // 移动端同页跳转，更易唤起支付宝；返回页靠 returnUrl / 轮询兜底
+    window.location.href = url
+    return
+  }
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
 
 const payableAmount = computed(() => getPackagePayableAmount(props.pkg || {}))
 const discountInfo = computed(() => getPackageDiscountInfo(props.pkg || {}))
@@ -265,7 +302,7 @@ const startPay = async () => {
     const payRes = await createPayment(order.id, {
       paymentMethod: PAYMENT_METHOD,
       returnUrl: returnUrl(),
-      device: 'pc'
+      device: isMobile.value ? 'mobile' : 'pc'
     })
     const payment = payRes?.data
     if (!payment?.id) throw new Error(payRes?.message || '发起支付失败')
@@ -276,8 +313,11 @@ const startPay = async () => {
     persistPending()
     step.value = 'paying'
 
-    if (payUrl.value && !qrImageSrc.value) {
-      window.open(payUrl.value, '_blank', 'noopener,noreferrer')
+    const jump = payUrl.value || (!qrImageSrc.value ? qrCodeUrl.value : '') || ''
+    if (isMobile.value) {
+      if (jump) openPayJump(jump)
+    } else if (jump && !qrImageSrc.value) {
+      openPayJump(jump)
     }
 
     startPoll()

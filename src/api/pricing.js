@@ -5,10 +5,9 @@ import request from '@/utils/request'
 
 /**
  * 获取可订阅的套餐列表
- * @param {Object} params - 查询参数
- * @param {string} [params.type] - 套餐类型筛选：free（免费套餐）、paid（付费套餐）、trial（试用套餐）
- * @param {string} [params.durationUnit] - 有效期单位筛选：day/month/year/permanent
- * @returns {Promise}
+ * 后端仅返回 isActive && showOnWebsite 的套餐；官网再按周期筛选。
+ * @param {string} [type] - free | paid | trial
+ * @param {string} [durationUnit] - day | month | year | permanent
  */
 export const getAvailablePackages = (type, durationUnit) => {
     const params = {}

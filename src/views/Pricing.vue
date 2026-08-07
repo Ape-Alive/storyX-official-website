@@ -228,16 +228,19 @@ const loading = ref(true);
 const filteredPackages = computed(() => {
   return packages.value
     .filter((pkg) => {
+      // 兜底：仅展示标记为官网可见的套餐（后端也会过滤）
+      if (pkg.showOnWebsite === false) return false
       if (selectedDuration.value === "permanent") {
         return !pkg.durationUnit;
       }
       return pkg.durationUnit === selectedDuration.value;
     })
-    .map((pkg, index) => {
+    .map((pkg, index, list) => {
       const info = getPackageDiscountInfo(pkg);
+      const anyRecommend = list.some((p) => p.isRecommend);
       return {
         ...pkg,
-        isRecommended: index === 1,
+        isRecommended: anyRecommend ? Boolean(pkg.isRecommend) : index === 1,
         displayPrice: info.payable,
         originalPrice: info.original,
         hasDiscount: info.hasDiscount,

@@ -25,29 +25,6 @@
             />
           </el-form-item>
 
-          <el-form-item prop="captchaCode">
-            <div class="captcha-field">
-              <el-input
-                v-model="form.captchaCode"
-                class="captcha-input"
-                placeholder="图形验证码"
-                size="large"
-                :prefix-icon="Key"
-                maxlength="4"
-                clearable
-              />
-              <button
-                type="button"
-                class="captcha-image-btn"
-                title="点击刷新"
-                @click="refreshCaptcha"
-              >
-                <img v-if="captchaImageUrl" :src="captchaImageUrl" alt="验证码" />
-                <span v-else class="captcha-loading">刷新</span>
-              </button>
-            </div>
-          </el-form-item>
-
           <el-form-item prop="verificationCode">
             <div class="code-input-wrapper">
               <el-input
@@ -94,6 +71,29 @@
               clearable
               @keyup.enter="handleSubmit"
             />
+          </el-form-item>
+
+          <el-form-item prop="captchaCode">
+            <div class="captcha-field">
+              <el-input
+                v-model="form.captchaCode"
+                class="captcha-input"
+                placeholder="图形验证码"
+                size="large"
+                :prefix-icon="Key"
+                maxlength="4"
+                clearable
+              />
+              <button
+                type="button"
+                class="captcha-image-btn"
+                title="点击刷新"
+                @click="refreshCaptcha"
+              >
+                <img v-if="captchaImageUrl" :src="captchaImageUrl" alt="验证码" />
+                <span v-else class="captcha-loading">刷新</span>
+              </button>
+            </div>
           </el-form-item>
 
           <el-form-item>

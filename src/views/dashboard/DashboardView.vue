@@ -79,17 +79,7 @@
             <h3 class="section-title">活跃套餐监控</h3>
             <p class="section-desc">{{ statusDesc }}</p>
           </div>
-          <van-button
-            v-if="isMobile"
-            type="primary"
-            size="small"
-            round
-            icon="plus"
-            to="/dashboard/plans"
-          >
-            购买
-          </van-button>
-          <router-link v-else to="/dashboard/plans" class="buy-btn">
+          <router-link v-if="!isMobile" to="/dashboard/plans" class="buy-btn">
             <el-icon :size="16"><Plus /></el-icon>
             购买新额度
           </router-link>
@@ -125,6 +115,7 @@
                 <van-tag v-else type="success" plain round>使用中</van-tag>
               </div>
               <van-progress
+                v-if="!plan.unlimited"
                 :percentage="planPercentage(plan)"
                 :stroke-width="8"
                 :color="plan.status === 'warning' ? '#f59e0b' : '#9333ea'"
@@ -132,8 +123,13 @@
                 pivot-text=""
               />
               <div class="mobile-plan-stats">
-                <span>已用 {{ formatQuota(plan.used) }}</span>
-                <span>剩余 {{ formatQuota(plan.remaining ?? Math.max((plan.limit || 0) - (plan.used || 0), 0)) }}</span>
+                <template v-if="plan.unlimited">
+                  <span class="unlimited-quota">无限积分</span>
+                </template>
+                <template v-else>
+                  <span>已用 {{ formatQuota(plan.used) }}</span>
+                  <span>剩余 {{ formatQuota(plan.remaining ?? Math.max((plan.limit || 0) - (plan.used || 0), 0)) }}</span>
+                </template>
               </div>
             </div>
           </template>
@@ -519,6 +515,11 @@ onMounted(() => {
   font-size: 11px;
   color: var(--text-tertiary);
   font-weight: 600;
+}
+
+.unlimited-quota {
+  color: #9333ea;
+  font-weight: 700;
 }
 
 .empty-plans {

@@ -3,9 +3,6 @@
     <section v-if="isMobile" class="mobile-active-plans" v-loading="activePlansLoading">
       <div class="mobile-active-plans__header">
         <h2 class="mobile-active-plans__title">活跃套餐</h2>
-        <van-button type="primary" size="small" round icon="plus" @click="scrollToBuy">
-          购买
-        </van-button>
       </div>
 
       <van-empty
@@ -35,6 +32,7 @@
           <van-tag v-else type="success" plain round>使用中</van-tag>
         </div>
         <van-progress
+          v-if="!plan.unlimited"
           :percentage="planPercentage(plan)"
           :stroke-width="8"
           :color="plan.status === 'warning' ? '#f59e0b' : '#9333ea'"
@@ -42,8 +40,13 @@
           pivot-text=""
         />
         <div class="mobile-active-plan-card__stats">
-          <span>已用 {{ formatQuota(plan.used) }}</span>
-          <span>剩余 {{ formatQuota(plan.remaining ?? Math.max((plan.limit || 0) - (plan.used || 0), 0)) }}</span>
+          <template v-if="plan.unlimited">
+            <span class="unlimited-quota">无限积分</span>
+          </template>
+          <template v-else>
+            <span>已用 {{ formatQuota(plan.used) }}</span>
+            <span>剩余 {{ formatQuota(plan.remaining ?? Math.max((plan.limit || 0) - (plan.used || 0), 0)) }}</span>
+          </template>
         </div>
       </div>
     </section>
@@ -397,29 +400,38 @@ const loadPackages = async () => {
 // 格式化价格
 const formatPrice = (price) => formatPackagePrice(price);
 
-// 获取套餐特性列表：优先权限文案
+/** quota 为 null/空 = 无限积分 */
+const getQuotaFeatureLabel = (pkg) => {
+  if (pkg.quota == null || pkg.quota === "") return "无限积分";
+  const quotaNum =
+    typeof pkg.quota === "string" ? parseFloat(pkg.quota) : Number(pkg.quota);
+  if (!Number.isFinite(quotaNum)) return "无限积分";
+  if (quotaNum >= 1000) {
+    return `积分额度 ${(quotaNum / 1000).toFixed(0)}K点`;
+  }
+  return `积分额度 ${quotaNum}点`;
+};
+
+// 获取套餐特性列表：积分额度始终置顶展示（null = 无限）
 const getPackageFeatures = (pkg) => {
+  const quotaLabel = getQuotaFeatureLabel(pkg);
   const texts =
     (Array.isArray(pkg.effectivePermissionTexts) && pkg.effectivePermissionTexts) ||
     (Array.isArray(pkg.permissionTexts) && pkg.permissionTexts) ||
     (Array.isArray(pkg.clientRole?.permissionTexts) &&
       pkg.clientRole.permissionTexts) ||
     [];
-  const labels = texts.map((item) => String(item || "").trim()).filter(Boolean);
-  if (labels.length > 0) return labels;
+  // 去掉笼统的「套餐积分额度内调用」，避免与具体额度重复
+  const labels = texts
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .filter((label) => !/套餐积分额度内调用|积分额度内调用/.test(label));
 
-  const features = [];
-  if (pkg.quota != null && pkg.quota !== "") {
-    const quotaNum =
-      typeof pkg.quota === "string" ? parseFloat(pkg.quota) : pkg.quota;
-    if (Number.isFinite(quotaNum)) {
-      if (quotaNum >= 1000) {
-        features.push(`积分额度 ${(quotaNum / 1000).toFixed(0)}K点`);
-      } else {
-        features.push(`积分额度 ${quotaNum}点`);
-      }
-    }
+  if (labels.length > 0) {
+    return [quotaLabel, ...labels];
   }
+
+  const features = [quotaLabel];
 
   if (pkg.maxDevices) {
     features.push(`多端登录 ${pkg.maxDevices}台`);
@@ -431,7 +443,7 @@ const getPackageFeatures = (pkg) => {
     features.push(pkg.description);
   }
 
-  return features.length > 0 ? features : ["标准功能", "API 接入", "技术支持"];
+  return features;
 };
 
 // 格式化价格单位
@@ -1166,6 +1178,11 @@ onUnmounted(() => {
     font-size: 11px;
     color: var(--text-tertiary);
     font-weight: 600;
+  }
+
+  .unlimited-quota {
+    color: #9333ea;
+    font-weight: 700;
   }
 
   .plans-title {

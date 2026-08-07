@@ -14,12 +14,6 @@
             </div>
             <a class="mobile-info-text" href="mailto:vip@huihuo.ai">vip@huihuo.ai</a>
           </div>
-          <div class="mobile-info-item">
-            <div class="mobile-info-icon">
-              <van-icon name="chat-o" size="18" />
-            </div>
-            <span class="mobile-info-text">在线实时聊天（标准工时）</span>
-          </div>
         </div>
         <div class="mobile-support-footer">服务可用率：99.9% / SLA 已激活</div>
       </div>
@@ -88,12 +82,6 @@
             </div>
             <span class="info-text">vip@huihuo.ai</span>
           </div>
-          <div class="info-item">
-            <div class="info-icon">
-              <el-icon :size="20"><ChatLineRound /></el-icon>
-            </div>
-            <span class="info-text">在线实时聊天 (标准工时)</span>
-          </div>
         </div>
         <div class="contact-footer">
           服务可用率: 99.9% / SLA 已激活
@@ -136,7 +124,7 @@
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { Message, ChatLineRound } from '@element-plus/icons-vue'
+import { Message } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { showSuccessToast, showFailToast } from 'vant'
 import { useDevice } from '@/utils/device'

@@ -25,6 +25,7 @@
 
       <div class="site-header__actions">
         <button
+          v-if="!isMobile"
           type="button"
           class="site-header__download"
           :title="downloadInfo.label"

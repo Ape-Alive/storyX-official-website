@@ -1,11 +1,11 @@
 <template>
-  <div class="plan-card" :class="{ 'plan-warning': plan.status === 'warning' }">
-    <div v-if="plan.status === 'warning'" class="warning-badge">额度将尽</div>
+  <div class="plan-card" :class="{ 'plan-warning': plan.status === 'warning' && !plan.unlimited }">
+    <div v-if="plan.status === 'warning' && !plan.unlimited" class="warning-badge">额度将尽</div>
     <div class="plan-header">
       <div>
         <h4 class="plan-name">{{ plan.name }}</h4>
         <p class="plan-expiry">
-          有效期至: 
+          有效期至:
           <template v-if="plan.expiry">
             {{ plan.expiry }} ({{ plan.price === 0 || plan.price === null ? '永久' : '自动续费中' }})
           </template>
@@ -15,11 +15,17 @@
         </p>
       </div>
       <div class="plan-percentage">
-        <span class="percentage-value">{{ percentage }}%</span>
-        <span class="percentage-label">消耗率</span>
+        <template v-if="plan.unlimited">
+          <span class="percentage-value unlimited">无限</span>
+          <span class="percentage-label">积分</span>
+        </template>
+        <template v-else>
+          <span class="percentage-value">{{ percentage }}%</span>
+          <span class="percentage-label">消耗率</span>
+        </template>
       </div>
     </div>
-    <div class="plan-progress-bar">
+    <div v-if="!plan.unlimited" class="plan-progress-bar">
       <div
         class="progress-fill"
         :class="{ 'progress-warning': plan.status === 'warning' }"
@@ -27,8 +33,13 @@
       ></div>
     </div>
     <div class="plan-stats">
-      <span class="stat-text">已消耗 {{ (plan.used / 1000).toFixed(1) }}k 积分</span>
-      <span class="stat-text">剩余 {{ ((plan.limit - plan.used) / 1000).toFixed(1) }}k 积分</span>
+      <template v-if="plan.unlimited">
+        <span class="stat-text unlimited-text">无限积分 · 不限用量</span>
+      </template>
+      <template v-else>
+        <span class="stat-text">已消耗 {{ formatUsed(plan.used) }} 积分</span>
+        <span class="stat-text">剩余 {{ formatUsed(Math.max((plan.limit || 0) - (plan.used || 0), 0)) }} 积分</span>
+      </template>
     </div>
   </div>
 </template>
@@ -39,13 +50,23 @@ import { computed } from 'vue'
 const props = defineProps({
   plan: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const percentage = computed(() => {
-  return Math.round((props.plan.used / props.plan.limit) * 100)
+  if (props.plan.unlimited) return 0
+  const limit = Number(props.plan.limit) || 0
+  const used = Number(props.plan.used) || 0
+  if (limit <= 0) return 0
+  return Math.min(100, Math.round((used / limit) * 100))
 })
+
+function formatUsed(n) {
+  const num = Number(n) || 0
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}k`
+  return String(num)
+}
 </script>
 
 <style scoped>
@@ -125,6 +146,10 @@ const percentage = computed(() => {
   transition: color 0.3s ease;
 }
 
+.percentage-value.unlimited {
+  color: #9333ea;
+}
+
 .percentage-label {
   font-size: 12px;
   color: var(--text-tertiary);
@@ -164,5 +189,10 @@ const percentage = computed(() => {
   color: var(--text-tertiary);
   font-family: 'Inter', sans-serif;
   transition: color 0.3s ease;
+}
+
+.unlimited-text {
+  color: #9333ea;
+  letter-spacing: 0.08em;
 }
 </style>

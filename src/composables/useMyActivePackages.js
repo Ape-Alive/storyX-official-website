@@ -2,13 +2,21 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getMyPackages } from '@/api/pricing'
 
+/** package.quota / remaining 为 null 表示无限 */
+export function isUnlimitedQuota(value) {
+  return value === null || value === undefined || value === ''
+}
+
 export function formatQuota(n) {
-  const num = Number(n) || 0
+  if (isUnlimitedQuota(n)) return '无限'
+  const num = Number(n)
+  if (!Number.isFinite(num)) return '无限'
   if (num >= 1000) return `${(num / 1000).toFixed(1)}k`
   return String(num)
 }
 
 export function planPercentage(plan) {
+  if (plan?.unlimited) return 0
   const total = Number(plan.limit) || 0
   const used = Number(plan.used) || 0
   if (total <= 0) return 0
@@ -26,26 +34,44 @@ const formatDate = (dateString) => {
 
 const transformPlanData = (myPackage) => {
   const pkg = myPackage.package || {}
-  const quotaInfo = myPackage.quotaInfo || {}
-  const total = Number(quotaInfo.total) || 0
-  const used = Number(quotaInfo.used) || 0
+  const quotaInfo = myPackage.quotaInfo
+  // 套餐 quota 为 null = 无限积分（与后台「无限积分」开关一致）
+  const unlimited = isUnlimitedQuota(pkg.quota)
+
+  if (unlimited) {
+    return {
+      id: myPackage.id,
+      name: pkg.displayName || pkg.name || '未知套餐',
+      status: 'active',
+      unlimited: true,
+      limit: null,
+      used: null,
+      remaining: null,
+      expiry: myPackage.expiresAt ? formatDate(myPackage.expiresAt) : '',
+      price: pkg.price ?? 0,
+      isCurrent: myPackage.status === 'active',
+    }
+  }
+
+  const info = quotaInfo || {}
+  const total = Number(info.total) || 0
+  const used = Number(info.used) || 0
   // 与后台口径一致：可用 = available + frozen（优先 remaining）
   const remaining =
-    quotaInfo.remaining != null
-      ? Number(quotaInfo.remaining) || 0
-      : Math.max(total - used, 0)
+    info.remaining != null ? Number(info.remaining) || 0 : Math.max(total - used, 0)
   const percentage = total > 0 ? Math.round(((total - remaining) / total) * 100) : 0
 
   return {
     id: myPackage.id,
     name: pkg.displayName || pkg.name || '未知套餐',
     status: percentage >= 80 ? 'warning' : 'active',
+    unlimited: false,
     limit: total,
     used,
     remaining,
     expiry: myPackage.expiresAt ? formatDate(myPackage.expiresAt) : '',
-    price: pkg.price || 0,
-    isCurrent: myPackage.status === 'active'
+    price: pkg.price ?? 0,
+    isCurrent: myPackage.status === 'active',
   }
 }
 
@@ -91,6 +117,6 @@ export function useMyActivePackages({ immediate = true } = {}) {
     statusDesc,
     loadMyPackages,
     formatQuota,
-    planPercentage
+    planPercentage,
   }
 }

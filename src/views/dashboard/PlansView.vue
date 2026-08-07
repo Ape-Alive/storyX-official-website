@@ -100,9 +100,15 @@
         <van-tag v-if="plan.current" class="mobile-current-tag" type="success" plain round>当前套餐</van-tag>
         <h3 class="mobile-plan-name">{{ plan.name }}</h3>
         <p v-if="plan.desc" class="mobile-plan-desc">{{ plan.desc }}</p>
-        <div class="mobile-plan-price">
-          <span class="price-value">¥{{ plan.price }}</span>
-          <span class="price-unit">{{ getPriceUnit() }}</span>
+        <div class="mobile-plan-price-row">
+          <div class="mobile-plan-price">
+            <span class="price-value">¥{{ plan.price }}</span>
+            <span class="price-unit">{{ getPriceUnit() }}</span>
+          </div>
+          <div class="mobile-plan-quota">
+            <span class="quota-value">{{ plan.quotaValue }}</span>
+            <span class="quota-label">{{ plan.quotaLabel }}</span>
+          </div>
         </div>
         <div v-if="plan.hasDiscount" class="mobile-plan-discount">
           <span class="price-original">¥{{ plan.originalPrice }}</span>
@@ -171,9 +177,15 @@
               <div v-if="plan.current" class="current-badge">当前套餐</div>
             </div>
             <p class="plan-desc">{{ plan.desc }}</p>
-            <div class="plan-price">
-              <span class="price-value">¥{{ plan.price }}</span>
-              <span class="price-unit">{{ getPriceUnit() }}</span>
+            <div class="plan-price-row">
+              <div class="plan-price">
+                <span class="price-value">¥{{ plan.price }}</span>
+                <span class="price-unit">{{ getPriceUnit() }}</span>
+              </div>
+              <div class="plan-quota">
+                <span class="quota-value">{{ plan.quotaValue }}</span>
+                <span class="quota-label">{{ plan.quotaLabel }}</span>
+              </div>
             </div>
             <div v-if="plan.hasDiscount" class="plan-discount">
               <span class="price-original">¥{{ plan.originalPrice }}</span>
@@ -369,6 +381,7 @@ const loadPackages = async () => {
         }
 
         const info = getPackageDiscountInfo(pkg);
+        const quota = getQuotaDisplay(pkg);
 
         return {
           id: pkg.id,
@@ -379,6 +392,8 @@ const loadPackages = async () => {
           discountLabel: formatDiscountLabel(info.discount),
           savedAmount: formatPrice(info.saved),
           desc: pkg.description || "",
+          quotaValue: quota.value,
+          quotaLabel: quota.label,
           features: getPackageFeatures(pkg),
           current: myPackage?.status === "active", // 当前正在使用的套餐
           popular: pkg.priority > 0, // 可以根据优先级判断
@@ -400,50 +415,50 @@ const loadPackages = async () => {
 // 格式化价格
 const formatPrice = (price) => formatPackagePrice(price);
 
-/** quota 为 null/空 = 无限积分 */
-const getQuotaFeatureLabel = (pkg) => {
-  if (pkg.quota == null || pkg.quota === "") return "无限积分";
+/** quota 为 null/空 = 无限积分；供价格旁大字展示 */
+const getQuotaDisplay = (pkg) => {
+  if (pkg.quota == null || pkg.quota === "") {
+    return { value: "无限", label: "积分额度" };
+  }
   const quotaNum =
     typeof pkg.quota === "string" ? parseFloat(pkg.quota) : Number(pkg.quota);
-  if (!Number.isFinite(quotaNum)) return "无限积分";
-  if (quotaNum >= 1000) {
-    return `积分额度 ${(quotaNum / 1000).toFixed(0)}K点`;
+  if (!Number.isFinite(quotaNum)) {
+    return { value: "无限", label: "积分额度" };
   }
-  return `积分额度 ${quotaNum}点`;
+  if (quotaNum >= 1000) {
+    return { value: `${(quotaNum / 1000).toFixed(0)}K点`, label: "积分额度" };
+  }
+  return { value: `${quotaNum}点`, label: "积分额度" };
 };
 
-// 获取套餐特性列表：积分额度始终置顶展示（null = 无限）
+// 获取套餐特性列表（积分额度已在价格旁单独展示）
 const getPackageFeatures = (pkg) => {
-  const quotaLabel = getQuotaFeatureLabel(pkg);
   const texts =
     (Array.isArray(pkg.effectivePermissionTexts) && pkg.effectivePermissionTexts) ||
     (Array.isArray(pkg.permissionTexts) && pkg.permissionTexts) ||
     (Array.isArray(pkg.clientRole?.permissionTexts) &&
       pkg.clientRole.permissionTexts) ||
     [];
-  // 去掉笼统的「套餐积分额度内调用」，避免与具体额度重复
   const labels = texts
     .map((item) => String(item || "").trim())
     .filter(Boolean)
-    .filter((label) => !/套餐积分额度内调用|积分额度内调用/.test(label));
+    .filter(
+      (label) =>
+        !/套餐积分额度内调用|积分额度内调用|^积分额度|^无限积分/.test(label),
+    );
 
-  if (labels.length > 0) {
-    return [quotaLabel, ...labels];
-  }
+  if (labels.length > 0) return labels;
 
-  const features = [quotaLabel];
-
+  const features = [];
   if (pkg.maxDevices) {
     features.push(`多端登录 ${pkg.maxDevices}台`);
   } else {
     features.push("多端登录 不限制");
   }
-
   if (pkg.description) {
     features.push(pkg.description);
   }
-
-  return features;
+  return features.length > 0 ? features : ["标准功能", "API 接入", "技术支持"];
 };
 
 // 格式化价格单位
@@ -910,6 +925,36 @@ onUnmounted(() => {
   gap: 4px;
 }
 
+.plan-price-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.plan-quota {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.15;
+  flex-shrink: 0;
+}
+
+.plan-quota .quota-value {
+  font-size: 28px;
+  font-weight: 900;
+  color: #9333ea;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.plan-quota .quota-label {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+
 .plan-discount,
 .mobile-plan-discount {
   display: flex;
@@ -1265,11 +1310,19 @@ onUnmounted(() => {
     line-height: 1.5;
   }
 
+  .mobile-plan-price-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
   .mobile-plan-price {
     display: flex;
     align-items: baseline;
     gap: 4px;
-    margin-bottom: 12px;
+    margin-bottom: 0;
   }
 
   .mobile-plan-price .price-value {
@@ -1281,6 +1334,28 @@ onUnmounted(() => {
 
   .mobile-plan-price .price-unit {
     font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  .mobile-plan-quota {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.15;
+    flex-shrink: 0;
+  }
+
+  .mobile-plan-quota .quota-value {
+    font-size: 26px;
+    font-weight: 900;
+    color: #9333ea;
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  .mobile-plan-quota .quota-label {
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 700;
     color: var(--text-tertiary);
   }
 

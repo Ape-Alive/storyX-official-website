@@ -57,6 +57,9 @@ export function formatChangePercent(percent) {
  */
 export function mapDashboardStats(data = {}) {
   const safe = data && typeof data === 'object' ? data : {}
+  const hasUnlimitedQuota =
+    safe.hasUnlimitedQuota === true || safe.totalAvailablePoints === null
+
   return dashboardStatMeta.map((meta) => {
     let trend = ''
     if (meta.key === 'totalAvailablePoints') {
@@ -69,9 +72,16 @@ export function mapDashboardStats(data = {}) {
       trend = '累计消耗'
     }
 
+    let value
+    if (meta.key === 'totalAvailablePoints' && hasUnlimitedQuota) {
+      value = '无限'
+    } else {
+      value = formatDashboardNumber(safe[meta.key] ?? 0)
+    }
+
     return {
       label: meta.label,
-      value: formatDashboardNumber(safe[meta.key] ?? 0),
+      value,
       trend,
       icon: meta.icon,
       color: meta.color,

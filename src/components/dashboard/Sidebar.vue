@@ -36,7 +36,9 @@ const isActive = (path) => isDashboardNavActive(route.path, path)
 
 <style scoped>
 .dashboard-sidebar {
-  position: relative;
+  position: sticky;
+  top: 80px; /* 顶栏 64px + 内间距 16px */
+  align-self: flex-start;
   width: 288px;
   flex-shrink: 0;
   background: var(--bg-primary);

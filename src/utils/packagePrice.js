@@ -17,10 +17,13 @@ function parseDiscount(pkg) {
 }
 
 /**
- * 应付金额（已应用套餐折扣）
- * @param {{ price?: number|string, discount?: number|string|null }} pkg
+ * 应付金额：优先用库内 finalPrice（实付），否则原价×折扣
+ * @param {{ price?: number|string, finalPrice?: number|string|null, discount?: number|string|null }} pkg
  */
 export function getPackagePayableAmount(pkg) {
+  if (pkg?.finalPrice != null && pkg.finalPrice !== '') {
+    return toPriceNumber(pkg.finalPrice)
+  }
   const amount = toPriceNumber(pkg?.price)
   const discount = parseDiscount(pkg)
   if (discount != null) {
@@ -29,8 +32,11 @@ export function getPackagePayableAmount(pkg) {
   return amount
 }
 
-/** 是否有实际折扣（小于 100 折） */
+/** 是否有实际折扣（实付低于原价） */
 export function hasPackageDiscount(pkg) {
+  const original = toPriceNumber(pkg?.price)
+  const payable = getPackagePayableAmount(pkg)
+  if (original > 0 && payable < original - 0.005) return true
   const discount = parseDiscount(pkg)
   return discount != null && discount < 100
 }
@@ -41,9 +47,12 @@ export function hasPackageDiscount(pkg) {
  */
 export function getPackageDiscountInfo(pkg) {
   const original = toPriceNumber(pkg?.price)
-  const discount = parseDiscount(pkg)
   const payable = getPackagePayableAmount(pkg)
-  const hasDiscount = discount != null && discount < 100
+  const hasDiscount = original > 0 && payable < original - 0.005
+  let discount = parseDiscount(pkg)
+  if (hasDiscount && discount == null && original > 0) {
+    discount = Number(((payable / original) * 100).toFixed(2))
+  }
   return {
     original,
     payable,

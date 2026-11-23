@@ -61,6 +61,18 @@
             />
           </el-form-item>
 
+          <el-form-item prop="inviteCode">
+            <el-input
+              v-model="registerForm.inviteCode"
+              type="text"
+              placeholder="邀请码（选填，好友邀请注册）"
+              size="large"
+              :prefix-icon="Ticket"
+              clearable
+              @input="handleInviteCodeInput"
+            />
+          </el-form-item>
+
           <el-form-item prop="verificationCode">
             <div class="code-input-wrapper">
               <el-input
@@ -112,8 +124,8 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Message, Lock, Key, Ticket } from '@element-plus/icons-vue'
 import { sendRegisterCode, register } from '@/api/auth'
@@ -121,6 +133,7 @@ import { saveAuthTokens, setUserInfo } from '@/utils/storage'
 import { promptSubscribePackage } from '@/utils/request'
 
 const router = useRouter()
+const route = useRoute()
 const registerFormRef = ref(null)
 const loading = ref(false)
 const sendingCode = ref(false)
@@ -131,8 +144,16 @@ const registerForm = reactive({
   password: '',
   confirmPassword: '',
   activationCode: '',
+  inviteCode: '',
   verificationCode: '',
   deviceFingerprint: '' // 可选，暂时留空
+})
+
+onMounted(() => {
+  const fromQuery = route.query.invite || route.query.inviteCode
+  if (fromQuery) {
+    registerForm.inviteCode = String(fromQuery).toUpperCase().replace(/\s+/g, '')
+  }
 })
 
 const validateConfirmPassword = (rule, value, callback) => {
@@ -174,6 +195,10 @@ const registerRules = {
 
 const handleActivationCodeInput = (value) => {
   registerForm.activationCode = String(value || '').toUpperCase().replace(/\s+/g, '')
+}
+
+function handleInviteCodeInput(value) {
+  registerForm.inviteCode = String(value || '').toUpperCase().replace(/\s+/g, '')
 }
 
 const handleCodeInput = (value) => {
@@ -234,6 +259,9 @@ const handleRegister = async () => {
       }
       if (registerForm.activationCode?.trim()) {
         payload.activationCode = registerForm.activationCode.trim()
+      }
+      if (registerForm.inviteCode?.trim()) {
+        payload.inviteCode = registerForm.inviteCode.trim()
       }
       const response = await register(payload)
 

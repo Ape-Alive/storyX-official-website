@@ -5,17 +5,21 @@ import request from '@/utils/request'
 
 /**
  * 获取可订阅的套餐列表
- * 后端仅返回 isActive && showOnWebsite 的套餐；官网再按周期筛选。
+ * 后端仅返回 isActive && showOnWebsite 的套餐；官网再按周期/角色筛选。
  * @param {string} [type] - free | paid | trial
  * @param {string} [durationUnit] - day | month | year | permanent
+ * @param {string} [roleKey] - 套餐绑定的客户端角色标识，如 custom_base_user
  */
-export const getAvailablePackages = (type, durationUnit) => {
+export const getAvailablePackages = (type, durationUnit, roleKey) => {
     const params = {}
     if (type) {
         params.type = type
     }
     if (durationUnit) {
         params.durationUnit = durationUnit
+    }
+    if (roleKey) {
+        params.roleKey = roleKey
     }
     return request({
         url: '/user/packages/available',

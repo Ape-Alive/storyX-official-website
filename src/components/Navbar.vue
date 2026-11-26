@@ -146,8 +146,8 @@ const navItems = [
   {
     id: 'pricing',
     to: '/pricing',
-    label: '订阅方案',
-    shortLabel: '订阅',
+    label: '定价',
+    shortLabel: '定价',
     icon: Ticket,
     isActive: isPricingActive
   }

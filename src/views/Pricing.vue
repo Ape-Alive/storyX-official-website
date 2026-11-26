@@ -71,7 +71,7 @@
 
             <div class="card-top">
               <h3 class="card-name">{{ slot.pkg.cardTitle }}</h3>
-              <p class="card-desc">{{ slot.pkg.description || slot.fallbackDesc }}</p>
+              <p class="card-desc">{{ slot.pkg.cardDesc }}</p>
             </div>
 
             <div class="card-price-block">
@@ -82,10 +82,6 @@
               <div v-if="slot.pkg.hasDiscount" class="card-discount">
                 <span class="price-original">¥{{ formatPrice(slot.pkg.originalPrice) }}</span>
                 <span class="discount-chip">{{ slot.pkg.discountLabel }}</span>
-              </div>
-              <div class="card-meta">
-                <span>积分 {{ formatQuota(slot.pkg.quota) }}</span>
-                <span>{{ deviceLimitText(slot.pkg) }}</span>
               </div>
             </div>
 
@@ -98,15 +94,36 @@
               立即购买
             </button>
 
-            <ul class="card-features">
+            <!-- 赠送积分（参考图二结构，积分取套餐额度） -->
+            <div class="gift-quota">
+              <div class="gift-quota__head">
+                <span class="gift-quota__title">赠送积分</span>
+                <span class="gift-quota__note">会员过期清空</span>
+              </div>
+              <div class="gift-quota__amount">
+                <span class="gift-quota__value">{{ formatGiftQuota(slot.pkg.quota) }}</span>
+                <span class="gift-quota__unit">积分</span>
+              </div>
+              <div class="gift-quota__usage">
+                <div class="gift-quota__usage-label">可用于</div>
+                <div class="gift-quota__tags">
+                  <span
+                    v-for="tag in QUOTA_USAGE_TAGS"
+                    :key="tag"
+                    class="gift-quota__tag"
+                  >{{ tag }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 权限文案：仅取后台 permissionTexts / effectivePermissionTexts -->
+            <ul v-if="slot.pkg.features.length" class="card-features">
               <li
                 v-for="feature in slot.pkg.features"
                 :key="feature.label"
-                :class="{ 'is-off': !feature.included }"
               >
                 <span class="feature-mark" aria-hidden="true">
-                  <el-icon v-if="feature.included" :size="12"><Select /></el-icon>
-                  <span v-else class="feature-dash" />
+                  <el-icon :size="12"><Select /></el-icon>
                 </span>
                 <span>{{ feature.label }}</span>
               </li>
@@ -244,6 +261,16 @@ const checkoutVisible = ref(false);
 const checkoutPkg = ref(null);
 const checkoutPriceUnit = ref("/月");
 
+/** 客户端结论：套餐积分可用于的主要 AI 创作能力（展示标签） */
+const QUOTA_USAGE_TAGS = [
+  "封面生成",
+  "绘火 Agent",
+  "剧本分镜",
+  "角色定妆",
+  "场景视频",
+  "AI 画布",
+];
+
 const enrichPackage = (pkg) => {
   const info = getPackageDiscountInfo(pkg);
   return {
@@ -255,6 +282,7 @@ const enrichPackage = (pkg) => {
     savedAmount: info.saved,
     features: getPackageFeatures(pkg),
     cardTitle: resolveCardTitle(pkg),
+    cardDesc: buildCardDesc(pkg),
   };
 };
 
@@ -294,6 +322,35 @@ const resolveCardTitle = (pkg) => {
   const found = DURATION_SLOTS.find((s) => s.key === slot);
   if (found) return found.label;
   return pkg.displayName || pkg.name || "套餐";
+};
+
+const buildValidityText = (pkg) => {
+  const unit = pkg.durationUnit;
+  const duration = Number(pkg.duration) || 0;
+  if (!unit || !duration) return "";
+  if (unit === "day") return `有效期 ${duration} 天`;
+  if (unit === "month") return `有效期 ${duration} 个月`;
+  if (unit === "year") return `有效期 ${duration} 年`;
+  return "";
+};
+
+const buildCardDesc = (pkg) => {
+  const title = resolveCardTitle(pkg);
+  const raw = String(pkg.description || "").trim();
+  const isUseless =
+    !raw ||
+    raw === title ||
+    raw === pkg.displayName ||
+    raw === pkg.name;
+
+  const devicePart = pkg.maxDevices
+    ? `最多仅限 ${pkg.maxDevices} 台设备同时使用`
+    : "设备数量不限制";
+  const validity = buildValidityText(pkg);
+
+  if (!isUseless) return raw;
+  if (validity) return `${validity}，${devicePart}`;
+  return devicePart;
 };
 
 const pickBestForSlot = (list) => {
@@ -350,24 +407,24 @@ const extractFeatureLabels = (pkg) => {
     (Array.isArray(pkg.clientRole?.permissionTexts) &&
       pkg.clientRole.permissionTexts) ||
     [];
-  return texts.map((item) => String(item || "").trim()).filter(Boolean);
+  return texts
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    // 积分额度已在「赠送积分」区块展示，不再重复进权限列表
+    .filter(
+      (label) =>
+        !/套餐积分额度内调用|积分额度内调用|^积分额度|^无限积分|^套餐积分额度/.test(
+          label,
+        ),
+    );
 };
 
+/** 黄框：仅展示后台配置的权限文案，不做额度/描述兜底 */
 const getPackageFeatures = (pkg) => {
-  const labels = extractFeatureLabels(pkg);
-  if (labels.length > 0) {
-    return labels.map((label) => ({ label, included: true }));
-  }
-
-  const fallback = [];
-  if (pkg.maxDevices) {
-    fallback.push(`多端登录 ${pkg.maxDevices} 台`);
-  } else {
-    fallback.push("多端登录不限制");
-  }
-  fallback.push(pkg.quota == null || pkg.quota === "" ? "无限积分额度" : "套餐积分额度");
-  if (pkg.description) fallback.push(pkg.description);
-  return fallback.map((label) => ({ label, included: true }));
+  return extractFeatureLabels(pkg).map((label) => ({
+    label,
+    included: true,
+  }));
 };
 
 const compareRows = computed(() => {
@@ -383,21 +440,6 @@ const compareRows = computed(() => {
         labelSet.add(label);
       }
     }
-    // 无权限文案时用额度/设备兜底，保证表格有内容
-    if (labels.size === 0 && pkgs.length > 0) {
-      const sample = pkgs[0];
-      const quotaLabel =
-        sample.quota == null || sample.quota === ""
-          ? "无限积分额度"
-          : `积分额度 ${formatQuota(sample.quota)}`;
-      labels.add(quotaLabel);
-      labelSet.add(quotaLabel);
-      const deviceLabel = sample.maxDevices
-        ? `多端登录 ${sample.maxDevices} 台`
-        : "多端登录不限制";
-      labels.add(deviceLabel);
-      labelSet.add(deviceLabel);
-    }
     byTierLabels[tier.roleKey] = labels;
   }
 
@@ -411,17 +453,14 @@ const compareRows = computed(() => {
 
 const formatPrice = (price) => formatPackagePrice(price);
 
-const formatQuota = (quota) => {
+const formatGiftQuota = (quota) => {
   if (quota === null || quota === undefined || quota === "") return "无限";
   const quotaNum = typeof quota === "string" ? parseFloat(quota) : Number(quota);
   if (!Number.isFinite(quotaNum)) return "无限";
-  if (quotaNum >= 1000) return `${(quotaNum / 1000).toFixed(0)}K`;
-  return String(quotaNum);
-};
-
-const deviceLimitText = (pkg) => {
-  if (!pkg?.maxDevices) return "设备不限";
-  return `限 ${pkg.maxDevices} 台设备`;
+  if (Number.isInteger(quotaNum) || Math.abs(quotaNum - Math.round(quotaNum)) < 1e-9) {
+    return String(Math.round(quotaNum));
+  }
+  return parseFloat(quotaNum.toFixed(2)).toString();
 };
 
 const handleTierChange = async (roleKey) => {
@@ -644,7 +683,7 @@ onMounted(() => {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 420px;
+  min-height: 520px;
   padding: 28px 22px 24px;
   border-radius: 18px;
   background: var(--pricing-card);
@@ -756,19 +795,9 @@ onMounted(() => {
   font-weight: 700;
 }
 
-.card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  margin-top: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--pricing-muted);
-}
-
 .buy-btn {
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   padding: 14px 16px;
   border: none;
   border-radius: 12px;
@@ -800,6 +829,94 @@ onMounted(() => {
   transform: none;
 }
 
+.gift-quota {
+  margin-bottom: 16px;
+  padding: 14px 14px 12px;
+  border-radius: 14px;
+  background: rgba(28, 25, 23, 0.035);
+  border: 1px solid var(--pricing-line);
+}
+
+.gift-quota__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-bottom: 8px;
+}
+
+.gift-quota__title {
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--pricing-accent);
+}
+
+.gift-quota__note {
+  font-size: 12px;
+  color: var(--pricing-muted);
+}
+
+.gift-quota__note::before {
+  content: "(";
+}
+
+.gift-quota__note::after {
+  content: ")";
+}
+
+.gift-quota__amount {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.gift-quota__value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-family: "Space Grotesk", sans-serif;
+  color: var(--pricing-ink);
+}
+
+.gift-quota__unit {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--pricing-muted);
+}
+
+.gift-quota__usage {
+  padding-top: 12px;
+  border-top: 1px solid var(--pricing-line);
+}
+
+.gift-quota__usage-label {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pricing-muted);
+}
+
+.gift-quota__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gift-quota__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: rgba(255, 253, 249, 0.9);
+  border: 1px solid var(--pricing-line);
+  font-size: 11px;
+  font-weight: 650;
+  color: rgba(28, 25, 23, 0.78);
+  line-height: 1.3;
+}
+
 .card-features {
   list-style: none;
   margin: 0;
@@ -821,11 +938,6 @@ onMounted(() => {
   line-height: 1.45;
 }
 
-.card-features li.is-off {
-  color: rgba(28, 25, 23, 0.35);
-  text-decoration: line-through;
-}
-
 .feature-mark {
   flex-shrink: 0;
   width: 18px;
@@ -837,14 +949,6 @@ onMounted(() => {
   justify-content: center;
   background: var(--pricing-accent-soft);
   color: var(--pricing-accent);
-}
-
-.feature-dash {
-  display: block;
-  width: 8px;
-  height: 1.5px;
-  border-radius: 1px;
-  background: rgba(28, 25, 23, 0.35);
 }
 
 .empty-packages {

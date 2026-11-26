@@ -6,10 +6,11 @@
         <p class="pricing-subtitle">按版本挑选周卡到年卡，权益即时生效</p>
       </header>
 
-      <!-- 图一结构：会员计划 | 版本切换 | 采购咨询 -->
+      <!-- 图一结构：会员计划 | 版本切换 | 采购咨询；侧栏胶囊样式参考图二 -->
       <div class="plan-toolbar">
-        <button type="button" class="toolbar-side is-active" aria-current="page">
-          会员计划
+        <button type="button" class="toolbar-pill is-active" aria-current="page">
+          <span class="toolbar-pill__dot" aria-hidden="true" />
+          <span>会员计划</span>
         </button>
 
         <div class="tier-switch" role="tablist" aria-label="会员版本">
@@ -27,8 +28,9 @@
           </button>
         </div>
 
-        <button type="button" class="toolbar-side" @click="handleProcurement">
-          采购咨询
+        <button type="button" class="toolbar-pill is-action" @click="handleProcurement">
+          <span>采购咨询</span>
+          <span class="toolbar-pill__chevron" aria-hidden="true">›</span>
         </button>
       </div>
 
@@ -91,7 +93,7 @@
               :disabled="checkoutVisible && checkoutPkg?.id === slot.pkg.id"
               @click="handleSubscribe(slot.pkg)"
             >
-              立即购买
+              {{ buyButtonText }}
             </button>
 
             <!-- 赠送积分（参考图二结构，积分取套餐额度） -->
@@ -208,6 +210,7 @@ import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { Select, Loading } from "@element-plus/icons-vue";
 import { getToken } from "@/utils/storage";
+import { useUserStore } from "@/stores";
 import { getAvailablePackages } from "@/api/pricing";
 import PaymentCheckout from "@/components/PaymentCheckout.vue";
 import {
@@ -218,6 +221,11 @@ import {
 
 const router = useRouter();
 const route = useRoute();
+const userStore = useUserStore();
+const isLoggedIn = computed(() => !!userStore.token || !!getToken());
+const buyButtonText = computed(() =>
+  isLoggedIn.value ? "立即购买" : "登录并购买",
+);
 
 const tiers = [
   { label: "基础版", roleKey: "custom_base_user" },
@@ -601,33 +609,75 @@ onMounted(() => {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   margin-bottom: 40px;
 }
 
-.toolbar-side {
-  min-height: 44px;
-  padding: 10px 18px;
-  border-radius: 12px;
-  border: 1px solid var(--pricing-line);
-  background: rgba(255, 253, 249, 0.7);
-  color: var(--pricing-muted);
-  font-size: 14px;
-  font-weight: 700;
+/* 左右侧胶囊：统一轨道色与圆角，弱化实心黑块 */
+.toolbar-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: rgba(28, 25, 23, 0.06);
+  color: rgba(28, 25, 23, 0.72);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.toolbar-side:hover {
+.toolbar-pill:hover {
+  background: rgba(28, 25, 23, 0.09);
   color: var(--pricing-ink);
-  border-color: rgba(28, 25, 23, 0.2);
 }
 
-.toolbar-side.is-active {
-  background: var(--pricing-ink);
-  border-color: var(--pricing-ink);
+.toolbar-pill.is-active {
+  background: rgba(28, 25, 23, 0.88);
   color: #faf7f2;
+  box-shadow: 0 6px 16px rgba(28, 25, 23, 0.12);
+}
+
+.toolbar-pill.is-action {
+  padding-right: 12px;
+}
+
+.toolbar-pill.is-action:hover {
+  border-color: rgba(42, 92, 255, 0.22);
+  color: var(--pricing-accent);
+  background: rgba(42, 92, 255, 0.08);
+}
+
+.toolbar-pill__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 253, 249, 0.28);
+  box-shadow: inset 0 0 0 3px rgba(255, 253, 249, 0.55);
+  flex-shrink: 0;
+}
+
+.toolbar-pill.is-active .toolbar-pill__dot {
+  background: #fffdf9;
+  box-shadow: inset 0 0 0 3px rgba(28, 25, 23, 0.35);
+}
+
+.toolbar-pill__chevron {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 500;
+  opacity: 0.75;
+  transform: translateY(-0.5px);
 }
 
 .tier-switch {
@@ -635,22 +685,22 @@ onMounted(() => {
   justify-self: center;
   width: min(420px, 100%);
   padding: 4px;
-  border-radius: 14px;
+  border-radius: 999px;
   background: rgba(28, 25, 23, 0.06);
-  border: 1px solid var(--pricing-line);
+  border: 1px solid transparent;
   gap: 4px;
 }
 
 .tier-btn {
   flex: 1;
   min-width: 0;
-  padding: 11px 10px;
+  padding: 10px 12px;
   border: none;
-  border-radius: 10px;
+  border-radius: 999px;
   background: transparent;
   color: var(--pricing-muted);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 650;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -1135,11 +1185,12 @@ onMounted(() => {
 
   .plan-toolbar {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
   }
 
-  .toolbar-side {
+  .toolbar-pill {
     width: 100%;
+    min-height: 40px;
   }
 
   .tier-switch {

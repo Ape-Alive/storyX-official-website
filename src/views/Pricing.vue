@@ -706,7 +706,8 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
-  align-items: start;
+  align-items: stretch;
+  min-height: 480px;
   margin-bottom: 72px;
   border-top: 1px solid var(--pricing-line);
 }
@@ -715,6 +716,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 480px;
   padding: 28px 20px 8px;
   background: transparent;
   border: none;
@@ -1131,6 +1133,11 @@ onMounted(() => {
 @media (max-width: 1100px) {
   .plan-matrix {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 420px;
+  }
+
+  .plan-col {
+    min-height: 420px;
   }
 
   .plan-col:nth-child(2n) {
@@ -1179,9 +1186,11 @@ onMounted(() => {
 @media (max-width: 640px) {
   .plan-matrix {
     grid-template-columns: 1fr;
+    min-height: 0;
   }
 
   .plan-col {
+    min-height: 360px;
     border-right: none;
     border-top: 1px solid var(--pricing-line);
     padding-left: 0;

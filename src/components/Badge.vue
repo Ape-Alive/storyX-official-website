@@ -16,7 +16,7 @@
   padding: 10px 24px;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(42, 92, 255, 0.2);
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
@@ -36,7 +36,7 @@
 }
 
 .badge-text {
-  background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
+  background: linear-gradient(to right, #60a5fa, #93b4ff, #e8a87c);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

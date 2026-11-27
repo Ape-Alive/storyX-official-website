@@ -675,8 +675,8 @@ const chartOption = computed(() => {
   const textColor = isDark.value ? '#ffffff' : 'rgba(26, 26, 26, 0.85)'
   const textSecondaryColor = isDark.value ? 'rgba(255, 255, 255, 0.9)' : 'rgba(26, 26, 26, 0.75)'
   const gridColor = isDark.value ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)'
-  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#9333ea'
-  const pinkColor = '#ec4899'
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#2a5cff'
+  const pinkColor = '#c45c3a'
   
   // 深色主题下的背景色
   const backgroundColor = isDark.value ? 'transparent' : 'transparent'
@@ -805,7 +805,7 @@ const chartOption = computed(() => {
         label: {
           show: true,
           position: 'top',
-          color: isDark.value ? pinkColor : '#c026d3',
+          color: isDark.value ? pinkColor : '#c45c3a',
           fontSize: 10,
           fontFamily: 'Inter, sans-serif',
           fontWeight: 700,
@@ -820,7 +820,7 @@ const chartOption = computed(() => {
             borderColor: isDark.value ? '#ffffff' : pinkColor,
             borderWidth: 3,
             shadowBlur: 8,
-            shadowColor: isDark.value ? 'rgba(236, 72, 153, 0.5)' : 'rgba(236, 72, 153, 0.3)'
+            shadowColor: isDark.value ? 'rgba(196, 92, 58, 0.5)' : 'rgba(196, 92, 58, 0.3)'
           }
         }
       }
@@ -1497,7 +1497,7 @@ onMounted(() => {
 }
 
 .legend-line-count {
-  background: #ec4899;
+  background: #c45c3a;
 }
 
 .legend-bar-cost {
@@ -1646,7 +1646,7 @@ onMounted(() => {
 
 .filter-select :deep(.el-select-dropdown__item.is-selected) {
   color: var(--accent-color) !important;
-  background: rgba(147, 51, 234, 0.1) !important;
+  background: rgba(42, 92, 255, 0.1) !important;
   font-weight: 600;
 }
 
@@ -1854,7 +1854,7 @@ onMounted(() => {
   transition: color 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  background: rgba(147, 51, 234, 0.1);
+  background: rgba(42, 92, 255, 0.1);
   border-radius: 9999px;
   border: none;
   cursor: pointer;
@@ -1863,7 +1863,7 @@ onMounted(() => {
 }
 
 .export-btn:hover {
-  background: rgba(147, 51, 234, 0.15);
+  background: rgba(42, 92, 255, 0.15);
 }
 
 .logs-table-wrapper {
@@ -2083,9 +2083,9 @@ onMounted(() => {
 }
 
 .custom-pagination :deep(.el-select-dropdown__item.is-selected) {
-  color: #9333ea !important;
-  background-color: rgba(147, 51, 234, 0.1) !important;
-  background: rgba(147, 51, 234, 0.1) !important;
+  color: #2a5cff !important;
+  background-color: rgba(42, 92, 255, 0.1) !important;
+  background: rgba(42, 92, 255, 0.1) !important;
   font-weight: 600;
 }
 
@@ -2094,9 +2094,9 @@ onMounted(() => {
 :root:not(.dark-theme) .custom-pagination :deep(.el-select-dropdown__item.is-selected),
 :root.light-theme .el-select-dropdown__item.is-selected,
 :root:not(.dark-theme) .el-select-dropdown__item.is-selected {
-  color: #9333ea !important;
-  background-color: rgba(147, 51, 234, 0.1) !important;
-  background: rgba(147, 51, 234, 0.1) !important;
+  color: #2a5cff !important;
+  background-color: rgba(42, 92, 255, 0.1) !important;
+  background: rgba(42, 92, 255, 0.1) !important;
   font-weight: 600;
 }
 
@@ -2202,11 +2202,11 @@ onMounted(() => {
 
 .bg-yellow-50 { background: #fefce8; }
 .bg-green-50 { background: #f0fdf4; }
-.bg-purple-50 { background: #faf5ff; }
+.bg-purple-50 { background: #eef3ff; }
 .bg-blue-50 { background: #eff6ff; }
 .text-yellow-500 { color: #eab308; }
 .text-green-500 { color: #22c55e; }
-.text-purple-600 { color: #9333ea; }
+.text-purple-600 { color: #2a5cff; }
 .text-blue-500 { color: #3b82f6; }
 
 .mobile-header-controls {

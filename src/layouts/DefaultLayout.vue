@@ -32,7 +32,7 @@ const route = useRoute()
 const userStore = useUserStore()
 const isHome = computed(() => route.name === 'Home')
 const isLoggedIn = computed(() => !!userStore.token || !!getToken())
-const primaryLabel = computed(() => (isLoggedIn.value ? '控制台' : '登录'))
+const primaryLabel = computed(() => (isLoggedIn.value ? '控制台' : '登录/注册'))
 const isAuthOpen = ref(false)
 /** 首页加载特效期间隐藏顶栏（进入首页先藏，避免闪一下） */
 const hideChrome = ref(route.name === 'Home')

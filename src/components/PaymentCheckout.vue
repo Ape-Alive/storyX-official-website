@@ -385,8 +385,8 @@ defineExpose({ PENDING_KEY })
   display: inline-flex;
   padding: 2px 8px;
   border-radius: 9999px;
-  background: rgba(236, 72, 153, 0.12);
-  color: #db2777;
+  background: rgba(196, 92, 58, 0.12);
+  color: #c45c3a;
   font-size: 11px;
   font-weight: 700;
 }
@@ -394,7 +394,7 @@ defineExpose({ PENDING_KEY })
 .checkout__saved {
   font-size: 12px;
   font-weight: 600;
-  color: #db2777;
+  color: #c45c3a;
 }
 
 .checkout__amount {

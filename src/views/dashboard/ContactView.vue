@@ -429,8 +429,8 @@ const handleSubmit = async () => {
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: rgba(147, 51, 234, 0.08);
-  color: #9333ea;
+  background: rgba(42, 92, 255, 0.08);
+  color: #2a5cff;
   display: flex;
   align-items: center;
   justify-content: center;

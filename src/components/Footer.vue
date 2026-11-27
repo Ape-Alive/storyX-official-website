@@ -114,7 +114,7 @@
 }
 
 .footer-link:nth-child(1):hover {
-  color: #a78bfa;
+  color: #93b4ff;
 }
 
 .footer-link:nth-child(2):hover {
@@ -122,7 +122,7 @@
 }
 
 .footer-link:nth-child(3):hover {
-  color: #f472b6;
+  color: #e8a87c;
 }
 
 .footer-link:nth-child(4):hover {

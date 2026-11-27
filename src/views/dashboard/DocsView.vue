@@ -152,7 +152,7 @@ onMounted(() => {
 }
 
 .code-comment {
-  color: rgba(147, 51, 234, 0.8);
+  color: rgba(42, 92, 255, 0.8);
   letter-spacing: -0.01em;
   margin: 0;
 }
@@ -169,7 +169,7 @@ onMounted(() => {
 }
 
 .code-keyword {
-  color: #ec4899;
+  color: #c45c3a;
   font-weight: 700;
 }
 
@@ -195,7 +195,7 @@ onMounted(() => {
 
 .doc-link-card:hover {
   background: var(--bg-hover);
-  border-color: rgba(147, 51, 234, 0.3);
+  border-color: rgba(42, 92, 255, 0.3);
 }
 
 .doc-link-icon {

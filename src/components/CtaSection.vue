@@ -41,7 +41,7 @@ defineEmits(['cta-click', 'custom-click'])
   right: 0;
   width: 50%;
   height: 50%;
-  background: #e9d5ff;
+  background: #dbe7ff;
   filter: blur(150px);
   opacity: 0.3;
   border-radius: 50%;
@@ -87,7 +87,7 @@ defineEmits(['cta-click', 'custom-click'])
 .cta-title-gradient {
   display: inline-block;
   margin-top: 0.2em;
-  background: linear-gradient(120deg, #2563eb, #9333ea, #db2777, #ec4899);
+  background: linear-gradient(120deg, #2563eb, #2a5cff, #c45c3a, #c45c3a);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -175,7 +175,7 @@ defineEmits(['cta-click', 'custom-click'])
 }
 
 .cta-secondary-btn:hover {
-  border-bottom-color: #9333ea;
+  border-bottom-color: #2a5cff;
   color: black;
   transform: translateY(-2px);
 }

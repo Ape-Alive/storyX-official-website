@@ -6,12 +6,15 @@
 }
 
 :root {
-  --color-blue: #3b82f6;
-  --color-purple: #a855f7;
-  --color-pink: #ec4899;
+  --color-blue: #2a5cff;
+  --color-accent: #2a5cff;
+  --color-accent-soft: #5b8def;
+  --color-warm: #c45c3a;
   --color-black: #020205;
   --color-dark: #050507;
   --color-white: #ffffff;
+  /* Element Plus 主色 */
+  --el-color-primary: #2a5cff;
 }
 
 /* 浅色主题（默认）- 参考图片 */
@@ -31,12 +34,13 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
-  /* 强调色 */
-  --accent-color: #9333ea;
-  --accent-color-light: #a855f7;
-  --accent-gradient: linear-gradient(to right, #9333ea, #ec4899);
+  /* 强调色：定价页同款蓝 */
+  --accent-color: #2a5cff;
+  --accent-color-light: #5b8def;
+  --accent-gradient: linear-gradient(135deg, #2a5cff, #5b8def);
+  --warm-accent: #c45c3a;
   /* 柔和的渐变（用于联系页面等） */
-  --soft-gradient: linear-gradient(to bottom right, #8b7fb8, #a892b8);
+  --soft-gradient: linear-gradient(to bottom right, #7a8bb0, #8a9ab8);
 }
 
 /* 深色主题 - 参考图二 */
@@ -58,12 +62,14 @@
   /* 深色主题特殊颜色 */
   --warning-bg: #3d2e00;
   --warning-text: #fbbf24;
-  /* 强调色 - 使用更亮的蓝色/青色替代紫色 */
-  --accent-color: #60a5fa;
-  --accent-color-light: #3b82f6;
-  --accent-gradient: linear-gradient(to right, #3b82f6, #06b6d4);
+  /* 强调色 - 与浅色主题同色系 */
+  --accent-color: #5b8def;
+  --accent-color-light: #93b4ff;
+  --accent-gradient: linear-gradient(135deg, #5b8def, #93b4ff);
+  --warm-accent: #e8a87c;
   /* 柔和的渐变（用于联系页面等） */
   --soft-gradient: linear-gradient(to bottom right, #4a5568, #5a6578);
+  --el-color-primary: #5b8def;
 }
 
 html, body {
@@ -105,7 +111,7 @@ body {
 }
 
 ::selection {
-  background-color: var(--color-purple);
+  background-color: var(--color-accent);
   color: var(--color-white);
 }
 
@@ -196,10 +202,10 @@ body {
 
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 20px rgba(91, 141, 239, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(168, 85, 247, 0.6);
+    box-shadow: 0 0 40px rgba(91, 141, 239, 0.6);
   }
 }
 
@@ -241,26 +247,29 @@ body {
 }
 
 /* 工具类 */
-.text-gradient-blue-purple-pink {
-  background: linear-gradient(to right, #60a5fa, #a78bfa, #f472b6);
+.text-gradient-blue-purple-pink,
+.text-gradient-accent {
+  background: linear-gradient(to right, #2a5cff, #5b8def, #93b4ff);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-purple {
-  background: linear-gradient(to right, #a855f7, #ec4899);
+  background: linear-gradient(to right, #2a5cff, #5b8def);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.bg-gradient-blue-purple-pink {
-  background: linear-gradient(to right, #2563eb, #9333ea, #db2777);
+.bg-gradient-blue-purple-pink,
+.bg-gradient-accent {
+  background: linear-gradient(to right, #2a5cff, #5b8def);
 }
 
-.bg-gradient-blue-purple-pink-light {
-  background: linear-gradient(to right, #bfdbfe, #e9d5ff);
+.bg-gradient-blue-purple-pink-light,
+.bg-gradient-accent-light {
+  background: linear-gradient(to right, #bfdbfe, #dbe7ff);
 }
 
 .backdrop-blur {
@@ -654,9 +663,9 @@ body {
 :root.light-theme .el-select-dropdown .el-select-dropdown__item.is-selected,
 :root:not(.dark-theme) .el-select-dropdown .el-select-dropdown__item.is-selected,
 .el-select-dropdown__item.is-selected:not(:root.dark-theme *) {
-  color: #9333ea !important;
-  background-color: rgba(147, 51, 234, 0.1) !important;
-  background: rgba(147, 51, 234, 0.1) !important;
+  color: #2a5cff !important;
+  background-color: rgba(42, 92, 255, 0.1) !important;
+  background: rgba(42, 92, 255, 0.1) !important;
   font-weight: 600;
 }
 
@@ -672,14 +681,14 @@ body {
 :root.light-theme .el-select-dropdown__item.is-selected[style*="background"],
 :root:not(.dark-theme) .el-select-dropdown__item.is-selected[style*="background"],
 .el-select-dropdown__item.is-selected[style*="background"]:not(:root.dark-theme *) {
-  background-color: rgba(147, 51, 234, 0.1) !important;
-  background: rgba(147, 51, 234, 0.1) !important;
+  background-color: rgba(42, 92, 255, 0.1) !important;
+  background: rgba(42, 92, 255, 0.1) !important;
 }
 
 :root.light-theme .el-select-dropdown__item.is-selected[style*="color"],
 :root:not(.dark-theme) .el-select-dropdown__item.is-selected[style*="color"],
 .el-select-dropdown__item.is-selected[style*="color"]:not(:root.dark-theme *) {
-  color: #9333ea !important;
+  color: #2a5cff !important;
 }
 
 /* 深色主题下Element Plus分页器样式 */

@@ -17,7 +17,7 @@
     <div class="feature-footer">
       <div class="feature-link">
         探索技术细节
-        <el-icon :size="16" color="#a855f7">
+        <el-icon :size="16" color="#5b8def">
           <ArrowRight />
         </el-icon>
       </div>
@@ -63,7 +63,7 @@ const glowClass = `glow-${props.color}`
 .feature-card {
   position: relative;
   border-radius: 40px;
-  border: 1px solid rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(42, 92, 255, 0.1);
   background: rgba(255, 255, 255, 0.4);
   overflow: hidden;
   padding: 48px;
@@ -75,7 +75,7 @@ const glowClass = `glow-${props.color}`
 
 .feature-card:hover {
   background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(42, 92, 255, 0.3);
 }
 
 .feature-card-glow {
@@ -95,19 +95,19 @@ const glowClass = `glow-${props.color}`
 }
 
 .glow-blue {
-  background: #2563eb;
+  background: #2a5cff;
 }
 
 .glow-purple {
-  background: #9333ea;
+  background: #5b8def;
 }
 
 .glow-pink {
-  background: #db2777;
+  background: #c45c3a;
 }
 
 .glow-indigo {
-  background: #4f46e5;
+  background: #1f4de6;
 }
 
 .feature-card-header {
@@ -124,11 +124,11 @@ const glowClass = `glow-${props.color}`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  color: #4f46e5;
+  background: rgba(42, 92, 255, 0.1);
+  border: 1px solid rgba(42, 92, 255, 0.2);
+  color: #2a5cff;
   transition: all 0.5s;
-  box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 25px 50px -12px rgba(42, 92, 255, 0.15);
 }
 
 .feature-card:hover .feature-icon-wrapper {
@@ -140,7 +140,7 @@ const glowClass = `glow-${props.color}`
 }
 
 .feature-card:hover .feature-icon {
-  color: #a78bfa;
+  color: #93b4ff;
 }
 
 .feature-label {
@@ -200,7 +200,7 @@ const glowClass = `glow-${props.color}`
   gap: 8px;
   font-size: 12px;
   font-weight: 700;
-  color: #4f46e5;
+  color: #2a5cff;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   cursor: pointer;

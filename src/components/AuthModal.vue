@@ -144,7 +144,7 @@ const handleOverlayTouchMove = (e) => {
   transform: translateX(-50%);
   width: 160px;
   height: 4px;
-  background: linear-gradient(to right, #3b82f6, #a855f7, #ec4899);
+  background: linear-gradient(to right, #3b82f6, #5b8def, #c45c3a);
   filter: blur(4px);
 }
 
@@ -193,12 +193,12 @@ const handleOverlayTouchMove = (e) => {
 }
 
 .auth-input:focus {
-  border-bottom-color: #a855f7;
+  border-bottom-color: #5b8def;
 }
 
 .auth-submit-btn {
   width: 100%;
-  background: linear-gradient(to right, #2563eb, #9333ea, #db2777);
+  background: linear-gradient(to right, #2563eb, #2a5cff, #c45c3a);
   color: white;
   font-weight: 900;
   padding: 16px;
@@ -212,7 +212,7 @@ const handleOverlayTouchMove = (e) => {
 }
 
 .auth-submit-btn:hover {
-  box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 30px rgba(91, 141, 239, 0.4);
 }
 
 .auth-submit-btn:active {

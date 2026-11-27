@@ -37,7 +37,8 @@
         aria-live="polite"
       >
         <div class="dashboard-boot-panel">
-          <van-loading type="spinner" color="#4f46e5" size="36px" vertical>
+          <van-loading type="spinner" color="#2a5cff" size="36px" vertical>
+
             加载中
           </van-loading>
         </div>
@@ -245,12 +246,12 @@ const openDesktopApp = async () => {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: linear-gradient(to top right, #9333ea, #ec4899);
+  background: linear-gradient(135deg, #2a5cff, #5b8def);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 30px rgba(147, 51, 234, 0.3);
+  box-shadow: 0 8px 30px rgba(42, 92, 255, 0.3);
   transition: all 0.3s;
   border: none;
   cursor: pointer;
@@ -258,7 +259,7 @@ const openDesktopApp = async () => {
 }
 
 .app-btn:hover {
-  box-shadow: 0 12px 40px rgba(147, 51, 234, 0.5);
+  box-shadow: 0 12px 40px rgba(42, 92, 255, 0.5);
   transform: scale(1.1);
 }
 

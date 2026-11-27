@@ -198,7 +198,7 @@ const handleLogout = () => {
 }
 
 .logo-x {
-  color: #2a5cff;
+  color: #111111;
 }
 
 .header-title {

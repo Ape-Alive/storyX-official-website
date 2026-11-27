@@ -130,9 +130,9 @@ const faq = { hero: faqHero, items: faqs }
 .resources-page {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 12% 0%, rgba(196, 92, 58, 0.07), transparent 42%),
-    radial-gradient(ellipse at 88% 12%, rgba(91, 141, 239, 0.08), transparent 46%),
-    #f3eee6;
+    radial-gradient(ellipse at 12% 0%, rgba(17, 17, 17, 0.06), transparent 42%),
+    radial-gradient(ellipse at 88% 12%, rgba(82, 82, 82, 0.06), transparent 46%),
+    #f5f5f4;
   color: #1c1917;
   padding: 0 0 96px;
 }

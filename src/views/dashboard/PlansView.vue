@@ -35,7 +35,7 @@
           v-if="!plan.unlimited"
           :percentage="planPercentage(plan)"
           :stroke-width="8"
-          :color="plan.status === 'warning' ? '#c45c3a' : '#2a5cff'"
+          :color="plan.status === 'warning' ? '#a16207' : '#111111'"
           track-color="rgba(28,25,23,0.06)"
           pivot-text=""
         />
@@ -222,20 +222,28 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in compareRows" :key="row.label">
-                <th scope="row">{{ row.label }}</th>
+              <tr v-for="row in compareRows" :key="row.featureKey || row.name">
+                <th scope="row">{{ row.name }}</th>
                 <td
                   v-for="tier in tiers"
                   :key="tier.roleKey"
                   :class="{ 'is-current': selectedTier === tier.roleKey }"
                 >
-                  <span
-                    v-if="row.byTier[tier.roleKey]"
-                    class="compare-yes"
-                    aria-label="支持"
-                  >
-                    <el-icon :size="14"><Select /></el-icon>
-                  </span>
+                  <template v-if="row.byTier[tier.roleKey]?.included">
+                    <div
+                      v-if="row.byTier[tier.roleKey].quotas?.length"
+                      class="compare-quota"
+                    >
+                      <span
+                        v-for="q in row.byTier[tier.roleKey].quotas"
+                        :key="q.key"
+                        class="compare-quota__item"
+                      >{{ q.display }}</span>
+                    </div>
+                    <span v-else class="compare-yes" aria-label="支持">
+                      <el-icon :size="14"><Select /></el-icon>
+                    </span>
+                  </template>
                   <span v-else class="compare-no" aria-label="不支持">—</span>
                 </td>
               </tr>
@@ -263,7 +271,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Select, Loading } from '@element-plus/icons-vue'
-import { getAvailablePackages, getMyPackages } from '@/api/pricing'
+import { getAvailablePackages, getMyPackages, getFeatureCompare } from '@/api/pricing'
 import PaymentCheckout from '@/components/PaymentCheckout.vue'
 import { useDevice } from '@/utils/device'
 import { useMyActivePackages } from '@/composables/useMyActivePackages'
@@ -324,7 +332,7 @@ const DURATION_SLOTS = [
 const selectedTier = ref('custom_base_user')
 const packages = ref([])
 const myPackages = ref([])
-const compareByTier = ref({})
+const compareRows = ref([])
 const loading = ref(true)
 const compareLoading = ref(true)
 
@@ -501,30 +509,6 @@ const hasAnyPackage = computed(() =>
   durationCards.value.some((slot) => Boolean(slot.pkg)),
 )
 
-const compareRows = computed(() => {
-  const labelSet = new Set()
-  const byTierLabels = {}
-
-  for (const tier of tiers) {
-    const pkgs = compareByTier.value[tier.roleKey] || []
-    const labels = new Set()
-    for (const pkg of pkgs) {
-      for (const label of extractFeatureLabels(pkg)) {
-        labels.add(label)
-        labelSet.add(label)
-      }
-    }
-    byTierLabels[tier.roleKey] = labels
-  }
-
-  return [...labelSet].map((label) => ({
-    label,
-    byTier: Object.fromEntries(
-      tiers.map((tier) => [tier.roleKey, byTierLabels[tier.roleKey]?.has(label) || false]),
-    ),
-  }))
-})
-
 const formatPrice = (price) => formatPackagePrice(price)
 
 const formatGiftQuota = (quota) => {
@@ -572,18 +556,15 @@ const loadPackages = async () => {
 const loadCompareData = async () => {
   try {
     compareLoading.value = true
-    const results = await Promise.all(
-      tiers.map((tier) => getAvailablePackages('paid', undefined, tier.roleKey)),
-    )
-    const next = {}
-    tiers.forEach((tier, index) => {
-      const res = results[index]
-      next[tier.roleKey] = res?.success && Array.isArray(res.data) ? res.data : []
-    })
-    compareByTier.value = next
+    const response = await getFeatureCompare(tiers.map((t) => t.roleKey))
+    if (response.success && response.data?.rows) {
+      compareRows.value = Array.isArray(response.data.rows) ? response.data.rows : []
+    } else {
+      compareRows.value = []
+    }
   } catch (error) {
     console.error('加载版本对比失败:', error)
-    compareByTier.value = {}
+    compareRows.value = []
   } finally {
     compareLoading.value = false
   }
@@ -640,9 +621,9 @@ onMounted(() => {
   --pricing-muted: rgba(28, 25, 23, 0.58);
   --pricing-line: rgba(28, 25, 23, 0.1);
   --pricing-card: #fffdf9;
-  --pricing-accent: #2a5cff;
-  --pricing-accent-soft: rgba(42, 92, 255, 0.12);
-  --pricing-warm: #c45c3a;
+  --pricing-accent: #111111;
+  --pricing-accent-soft: rgba(17, 17, 17, 0.12);
+  --pricing-warm: #57534e;
 
   animation: fadeInSlide 0.5s ease-out;
   padding-top: 8px;
@@ -692,7 +673,7 @@ onMounted(() => {
 }
 
 .mobile-active-plan-card.is-warning {
-  border-color: rgba(196, 92, 58, 0.35);
+  border-color: rgba(161, 98, 7, 0.35);
 }
 
 .mobile-active-plan-card__top {
@@ -795,9 +776,9 @@ onMounted(() => {
 }
 
 .toolbar-pill.is-action:hover {
-  border-color: rgba(42, 92, 255, 0.22);
+  border-color: rgba(17, 17, 17, 0.22);
   color: var(--pricing-accent);
-  background: rgba(42, 92, 255, 0.08);
+  background: rgba(17, 17, 17, 0.08);
 }
 
 .toolbar-pill__dot {
@@ -890,8 +871,8 @@ onMounted(() => {
 }
 
 .duration-card.is-recommended {
-  border-color: rgba(42, 92, 255, 0.45);
-  box-shadow: 0 0 0 1px rgba(42, 92, 255, 0.12);
+  border-color: rgba(17, 17, 17, 0.45);
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.12);
 }
 
 .duration-card.is-current:not(.is-recommended) {
@@ -992,7 +973,7 @@ onMounted(() => {
   display: inline-flex;
   padding: 2px 8px;
   border-radius: 6px;
-  background: rgba(196, 92, 58, 0.12);
+  background: rgba(87, 83, 78, 0.12);
   color: var(--pricing-warm);
   font-size: 11px;
   font-weight: 700;
@@ -1021,7 +1002,7 @@ onMounted(() => {
 }
 
 .buy-btn.is-primary:hover:not(:disabled) {
-  background: #1f4de6;
+  background: #000000;
 }
 
 .buy-btn.is-current,
@@ -1218,7 +1199,7 @@ onMounted(() => {
 }
 
 .compare-table .is-current {
-  background: rgba(42, 92, 255, 0.05);
+  background: rgba(17, 17, 17, 0.05);
 }
 
 .compare-yes {
@@ -1230,6 +1211,20 @@ onMounted(() => {
   border-radius: 50%;
   background: var(--pricing-accent-soft);
   color: var(--pricing-accent);
+}
+
+.compare-quota {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.compare-quota__item {
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(28, 25, 23, 0.82);
+  line-height: 1.35;
 }
 
 .compare-no {

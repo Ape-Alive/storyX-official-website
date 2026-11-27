@@ -118,7 +118,7 @@
                 v-if="!plan.unlimited"
                 :percentage="planPercentage(plan)"
                 :stroke-width="8"
-                :color="plan.status === 'warning' ? '#f59e0b' : '#2a5cff'"
+                :color="plan.status === 'warning' ? '#f59e0b' : '#111111'"
                 track-color="rgba(28,25,23,0.06)"
                 pivot-text=""
               />
@@ -295,12 +295,12 @@ onMounted(() => {
 
 .bg-yellow-50 { background: #fefce8; }
 .bg-green-50 { background: #f0fdf4; }
-.bg-purple-50 { background: #eef3ff; }
-.bg-blue-50 { background: #eff6ff; }
+.bg-purple-50 { background: #f5f5f4; }
+.bg-blue-50 { background: #f5f5f4; }
 .text-yellow-500 { color: #eab308; }
 .text-green-500 { color: #22c55e; }
-.text-purple-600 { color: #2a5cff; }
-.text-blue-500 { color: #3b82f6; }
+.text-purple-600 { color: #111111; }
+.text-blue-500 { color: #404040; }
 
 .hero-banner {
   position: relative;
@@ -398,7 +398,7 @@ onMounted(() => {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #2a5cff, #3b82f6);
+  background: linear-gradient(135deg, #111111, #404040);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -518,7 +518,7 @@ onMounted(() => {
 }
 
 .unlimited-quota {
-  color: #2a5cff;
+  color: #111111;
   font-weight: 700;
 }
 
@@ -563,7 +563,7 @@ onMounted(() => {
 }
 
 .upgrade-card:hover {
-  border-color: rgba(42, 92, 255, 0.3);
+  border-color: rgba(17, 17, 17, 0.3);
   transform: translateY(-2px);
 }
 
@@ -571,7 +571,7 @@ onMounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 16px;
-  background: rgba(42, 92, 255, 0.1);
+  background: rgba(17, 17, 17, 0.1);
   color: var(--accent-color);
   display: flex;
   align-items: center;

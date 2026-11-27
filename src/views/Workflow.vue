@@ -130,9 +130,9 @@ const phases = [
 .workflow-page {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(124, 108, 240, 0.08), transparent 50%),
-    radial-gradient(ellipse at 90% 20%, rgba(91, 141, 239, 0.08), transparent 45%),
-    #f3eee6;
+    radial-gradient(ellipse at 20% 0%, rgba(17, 17, 17, 0.06), transparent 50%),
+    radial-gradient(ellipse at 90% 20%, rgba(82, 82, 82, 0.06), transparent 45%),
+    #f5f5f4;
   color: #1c1917;
   padding: 0 0 96px;
 }

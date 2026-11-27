@@ -675,8 +675,8 @@ const chartOption = computed(() => {
   const textColor = isDark.value ? '#ffffff' : 'rgba(26, 26, 26, 0.85)'
   const textSecondaryColor = isDark.value ? 'rgba(255, 255, 255, 0.9)' : 'rgba(26, 26, 26, 0.75)'
   const gridColor = isDark.value ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.06)'
-  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#2a5cff'
-  const pinkColor = '#c45c3a'
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#111111'
+  const pinkColor = '#737373'
   
   // 深色主题下的背景色
   const backgroundColor = isDark.value ? 'transparent' : 'transparent'
@@ -805,7 +805,7 @@ const chartOption = computed(() => {
         label: {
           show: true,
           position: 'top',
-          color: isDark.value ? pinkColor : '#c45c3a',
+          color: isDark.value ? pinkColor : '#737373',
           fontSize: 10,
           fontFamily: 'Inter, sans-serif',
           fontWeight: 700,
@@ -820,7 +820,7 @@ const chartOption = computed(() => {
             borderColor: isDark.value ? '#ffffff' : pinkColor,
             borderWidth: 3,
             shadowBlur: 8,
-            shadowColor: isDark.value ? 'rgba(196, 92, 58, 0.5)' : 'rgba(196, 92, 58, 0.3)'
+            shadowColor: isDark.value ? 'rgba(115, 115, 115, 0.5)' : 'rgba(115, 115, 115, 0.3)'
           }
         }
       }
@@ -1312,7 +1312,7 @@ onMounted(() => {
 
 /* 深色主题下选中范围的特殊处理 */
 :root.dark-theme .date-picker :deep(.el-date-table td.in-range) {
-  background: rgba(96, 165, 250, 0.4) !important;
+  background: rgba(115, 115, 115, 0.4) !important;
 }
 
 :root.dark-theme .date-picker :deep(.el-date-table td.in-range div) {
@@ -1335,7 +1335,7 @@ onMounted(() => {
 
 /* 深色主题下选中范围的优化 - 使用半透明蓝色背景，纯白色文字 */
 .date-picker :deep(.el-date-table td.in-range:not(.start-date):not(.end-date)) {
-  background: rgba(96, 165, 250, 0.4) !important;
+  background: rgba(115, 115, 115, 0.4) !important;
 }
 
 .date-picker :deep(.el-date-table td.in-range:not(.start-date):not(.end-date) div) {
@@ -1497,7 +1497,7 @@ onMounted(() => {
 }
 
 .legend-line-count {
-  background: #c45c3a;
+  background: #737373;
 }
 
 .legend-bar-cost {
@@ -1646,7 +1646,7 @@ onMounted(() => {
 
 .filter-select :deep(.el-select-dropdown__item.is-selected) {
   color: var(--accent-color) !important;
-  background: rgba(42, 92, 255, 0.1) !important;
+  background: rgba(17, 17, 17, 0.1) !important;
   font-weight: 600;
 }
 
@@ -1792,7 +1792,7 @@ onMounted(() => {
 }
 
 .filter-date-picker :deep(.el-date-table td.in-range) {
-  background-color: rgba(96, 165, 250, 0.4) !important;
+  background-color: rgba(115, 115, 115, 0.4) !important;
 }
 
 .filter-date-picker :deep(.el-date-table td.in-range div) {
@@ -1801,7 +1801,7 @@ onMounted(() => {
 }
 
 .filter-date-picker :deep(.el-date-table td.in-range:not(.start-date):not(.end-date)) {
-  background-color: rgba(96, 165, 250, 0.4) !important;
+  background-color: rgba(115, 115, 115, 0.4) !important;
 }
 
 .filter-date-picker :deep(.el-date-table td.in-range:not(.start-date):not(.end-date) div) {
@@ -1854,7 +1854,7 @@ onMounted(() => {
   transition: color 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  background: rgba(42, 92, 255, 0.1);
+  background: rgba(17, 17, 17, 0.1);
   border-radius: 9999px;
   border: none;
   cursor: pointer;
@@ -1863,7 +1863,7 @@ onMounted(() => {
 }
 
 .export-btn:hover {
-  background: rgba(42, 92, 255, 0.15);
+  background: rgba(17, 17, 17, 0.15);
 }
 
 .logs-table-wrapper {
@@ -2083,9 +2083,9 @@ onMounted(() => {
 }
 
 .custom-pagination :deep(.el-select-dropdown__item.is-selected) {
-  color: #2a5cff !important;
-  background-color: rgba(42, 92, 255, 0.1) !important;
-  background: rgba(42, 92, 255, 0.1) !important;
+  color: #111111 !important;
+  background-color: rgba(17, 17, 17, 0.1) !important;
+  background: rgba(17, 17, 17, 0.1) !important;
   font-weight: 600;
 }
 
@@ -2094,9 +2094,9 @@ onMounted(() => {
 :root:not(.dark-theme) .custom-pagination :deep(.el-select-dropdown__item.is-selected),
 :root.light-theme .el-select-dropdown__item.is-selected,
 :root:not(.dark-theme) .el-select-dropdown__item.is-selected {
-  color: #2a5cff !important;
-  background-color: rgba(42, 92, 255, 0.1) !important;
-  background: rgba(42, 92, 255, 0.1) !important;
+  color: #111111 !important;
+  background-color: rgba(17, 17, 17, 0.1) !important;
+  background: rgba(17, 17, 17, 0.1) !important;
   font-weight: 600;
 }
 
@@ -2104,8 +2104,8 @@ onMounted(() => {
 :root.dark-theme .custom-pagination :deep(.el-select-dropdown__item.is-selected),
 :root.dark-theme .el-select-dropdown__item.is-selected {
   color: var(--accent-color) !important;
-  background-color: rgba(96, 165, 250, 0.1) !important;
-  background: rgba(96, 165, 250, 0.1) !important;
+  background-color: rgba(115, 115, 115, 0.1) !important;
+  background: rgba(115, 115, 115, 0.1) !important;
 }
 
 .mobile-only {
@@ -2202,12 +2202,12 @@ onMounted(() => {
 
 .bg-yellow-50 { background: #fefce8; }
 .bg-green-50 { background: #f0fdf4; }
-.bg-purple-50 { background: #eef3ff; }
-.bg-blue-50 { background: #eff6ff; }
+.bg-purple-50 { background: #f5f5f4; }
+.bg-blue-50 { background: #f5f5f4; }
 .text-yellow-500 { color: #eab308; }
 .text-green-500 { color: #22c55e; }
-.text-purple-600 { color: #2a5cff; }
-.text-blue-500 { color: #3b82f6; }
+.text-purple-600 { color: #111111; }
+.text-blue-500 { color: #404040; }
 
 .mobile-header-controls {
   display: flex;

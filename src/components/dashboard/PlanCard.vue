@@ -81,7 +81,7 @@ function formatUsed(n) {
 }
 
 .plan-card:hover {
-  border-color: rgba(42, 92, 255, 0.2);
+  border-color: rgba(17, 17, 17, 0.2);
 }
 
 .plan-warning {
@@ -147,7 +147,7 @@ function formatUsed(n) {
 }
 
 .percentage-value.unlimited {
-  color: #2a5cff;
+  color: #111111;
 }
 
 .percentage-label {
@@ -192,7 +192,7 @@ function formatUsed(n) {
 }
 
 .unlimited-text {
-  color: #2a5cff;
+  color: #111111;
   letter-spacing: 0.08em;
 }
 </style>

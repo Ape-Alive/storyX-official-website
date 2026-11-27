@@ -43,3 +43,21 @@ export const getMyPackages = (params = {}) => {
         params
     })
 }
+
+/**
+ * 各版本功能比较（公开接口，数据来自后台功能点）
+ * @param {string|string[]} [roleKeys]
+ */
+export const getFeatureCompare = (roleKeys) => {
+    const params = {}
+    if (Array.isArray(roleKeys) && roleKeys.length) {
+        params.roleKeys = roleKeys.join(',')
+    } else if (typeof roleKeys === 'string' && roleKeys.trim()) {
+        params.roleKeys = roleKeys.trim()
+    }
+    return request({
+        url: '/public/feature-compare',
+        method: 'get',
+        params
+    })
+}

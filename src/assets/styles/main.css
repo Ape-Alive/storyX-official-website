@@ -6,18 +6,18 @@
 }
 
 :root {
-  --color-blue: #2a5cff;
-  --color-accent: #2a5cff;
-  --color-accent-soft: #5b8def;
-  --color-warm: #c45c3a;
+  --color-accent: #111111;
+  --color-accent-soft: #525252;
+  --color-accent-muted: #a3a3a3;
+  --color-warm: #57534e;
   --color-black: #020205;
   --color-dark: #050507;
   --color-white: #ffffff;
   /* Element Plus 主色 */
-  --el-color-primary: #2a5cff;
+  --el-color-primary: #111111;
 }
 
-/* 浅色主题（默认）- 参考图片 */
+/* 浅色主题（默认） */
 :root.light-theme,
 :root {
   --bg-primary: #f7f7f4;
@@ -34,16 +34,15 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
-  /* 强调色：定价页同款蓝 */
-  --accent-color: #2a5cff;
-  --accent-color-light: #5b8def;
-  --accent-gradient: linear-gradient(135deg, #2a5cff, #5b8def);
-  --warm-accent: #c45c3a;
-  /* 柔和的渐变（用于联系页面等） */
-  --soft-gradient: linear-gradient(to bottom right, #7a8bb0, #8a9ab8);
+  /* 强调色：黑 / 浅灰 */
+  --accent-color: #111111;
+  --accent-color-light: #525252;
+  --accent-gradient: linear-gradient(135deg, #111111, #404040);
+  --warm-accent: #57534e;
+  --soft-gradient: linear-gradient(to bottom right, #78716c, #a8a29e);
 }
 
-/* 深色主题 - 参考图二 */
+/* 深色主题 */
 :root.dark-theme {
   --bg-primary: #0d0d0d;
   --bg-secondary: #1a1a1a;
@@ -59,17 +58,15 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-  /* 深色主题特殊颜色 */
   --warning-bg: #3d2e00;
   --warning-text: #fbbf24;
-  /* 强调色 - 与浅色主题同色系 */
-  --accent-color: #5b8def;
-  --accent-color-light: #93b4ff;
-  --accent-gradient: linear-gradient(135deg, #5b8def, #93b4ff);
-  --warm-accent: #e8a87c;
-  /* 柔和的渐变（用于联系页面等） */
-  --soft-gradient: linear-gradient(to bottom right, #4a5568, #5a6578);
-  --el-color-primary: #5b8def;
+  /* 深色主题强调色：浅灰 */
+  --accent-color: #e5e5e5;
+  --accent-color-light: #a3a3a3;
+  --accent-gradient: linear-gradient(135deg, #f5f5f5, #a3a3a3);
+  --warm-accent: #a3a3a3;
+  --soft-gradient: linear-gradient(to bottom right, #525252, #737373);
+  --el-color-primary: #e5e5e5;
 }
 
 html, body {
@@ -202,10 +199,10 @@ body {
 
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(91, 141, 239, 0.3);
+    box-shadow: 0 0 20px rgba(82, 82, 82, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(91, 141, 239, 0.6);
+    box-shadow: 0 0 40px rgba(82, 82, 82, 0.6);
   }
 }
 
@@ -249,14 +246,14 @@ body {
 /* 工具类 */
 .text-gradient-blue-purple-pink,
 .text-gradient-accent {
-  background: linear-gradient(to right, #2a5cff, #5b8def, #93b4ff);
+  background: linear-gradient(to right, #111111, #525252, #a3a3a3);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-purple {
-  background: linear-gradient(to right, #2a5cff, #5b8def);
+  background: linear-gradient(to right, #111111, #525252);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -264,12 +261,12 @@ body {
 
 .bg-gradient-blue-purple-pink,
 .bg-gradient-accent {
-  background: linear-gradient(to right, #2a5cff, #5b8def);
+  background: linear-gradient(to right, #111111, #525252);
 }
 
 .bg-gradient-blue-purple-pink-light,
 .bg-gradient-accent-light {
-  background: linear-gradient(to right, #bfdbfe, #dbe7ff);
+  background: linear-gradient(to right, #e7e5e4, #e7e5e4);
 }
 
 .backdrop-blur {
@@ -386,14 +383,14 @@ body {
 }
 
 .logout-confirm-dialog .el-message-box__btns .el-button--primary {
-  background: #3b82f6;
+  background: #404040;
   color: white;
-  border-color: #3b82f6;
+  border-color: #404040;
 }
 
 .logout-confirm-dialog .el-message-box__btns .el-button--primary:hover {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: #262626;
+  border-color: #262626;
 }
 
 /* 深色主题下的 MessageBox */
@@ -516,7 +513,7 @@ body {
 }
 
 :root.dark-theme .el-date-table td.in-range {
-  background-color: rgba(96, 165, 250, 0.4) !important;
+  background-color: rgba(115, 115, 115, 0.4) !important;
 }
 
 :root.dark-theme .el-date-table td.in-range div {
@@ -525,7 +522,7 @@ body {
 }
 
 :root.dark-theme .el-date-table td.in-range:not(.start-date):not(.end-date) {
-  background-color: rgba(96, 165, 250, 0.4) !important;
+  background-color: rgba(115, 115, 115, 0.4) !important;
 }
 
 :root.dark-theme .el-date-table td.in-range:not(.start-date):not(.end-date) div {
@@ -663,17 +660,17 @@ body {
 :root.light-theme .el-select-dropdown .el-select-dropdown__item.is-selected,
 :root:not(.dark-theme) .el-select-dropdown .el-select-dropdown__item.is-selected,
 .el-select-dropdown__item.is-selected:not(:root.dark-theme *) {
-  color: #2a5cff !important;
-  background-color: rgba(42, 92, 255, 0.1) !important;
-  background: rgba(42, 92, 255, 0.1) !important;
+  color: #111111 !important;
+  background-color: rgba(17, 17, 17, 0.1) !important;
+  background: rgba(17, 17, 17, 0.1) !important;
   font-weight: 600;
 }
 
 :root.dark-theme .el-select-dropdown__item.is-selected,
 :root.dark-theme .el-select-dropdown .el-select-dropdown__item.is-selected {
   color: var(--accent-color) !important;
-  background-color: rgba(96, 165, 250, 0.1) !important;
-  background: rgba(96, 165, 250, 0.1) !important;
+  background-color: rgba(115, 115, 115, 0.1) !important;
+  background: rgba(115, 115, 115, 0.1) !important;
   font-weight: 600;
 }
 
@@ -681,14 +678,14 @@ body {
 :root.light-theme .el-select-dropdown__item.is-selected[style*="background"],
 :root:not(.dark-theme) .el-select-dropdown__item.is-selected[style*="background"],
 .el-select-dropdown__item.is-selected[style*="background"]:not(:root.dark-theme *) {
-  background-color: rgba(42, 92, 255, 0.1) !important;
-  background: rgba(42, 92, 255, 0.1) !important;
+  background-color: rgba(17, 17, 17, 0.1) !important;
+  background: rgba(17, 17, 17, 0.1) !important;
 }
 
 :root.light-theme .el-select-dropdown__item.is-selected[style*="color"],
 :root:not(.dark-theme) .el-select-dropdown__item.is-selected[style*="color"],
 .el-select-dropdown__item.is-selected[style*="color"]:not(:root.dark-theme *) {
-  color: #2a5cff !important;
+  color: #111111 !important;
 }
 
 /* 深色主题下Element Plus分页器样式 */

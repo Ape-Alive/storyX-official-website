@@ -63,7 +63,7 @@ import { Lightning, Grid, VideoPlay, Link } from '@element-plus/icons-vue'
 <style scoped>
 .workflow-section {
   padding: 192px 32px;
-  border-top: 1px solid rgba(42, 92, 255, 0.1);
+  border-top: 1px solid rgba(17, 17, 17, 0.1);
   background: linear-gradient(to bottom, transparent, rgba(250, 245, 255, 0.5));
   z-index: 10;
   position: relative;
@@ -103,7 +103,7 @@ import { Lightning, Grid, VideoPlay, Link } from '@element-plus/icons-vue'
   color: #1e1b4b;
   font-style: italic;
   text-decoration: underline;
-  text-decoration-color: rgba(91, 141, 239, 0.4);
+  text-decoration-color: rgba(82, 82, 82, 0.4);
   text-decoration-thickness: 6px;
   text-underline-offset: 12px;
   font-family: 'Space Grotesk', sans-serif;
@@ -133,7 +133,7 @@ import { Lightning, Grid, VideoPlay, Link } from '@element-plus/icons-vue'
 .indicator {
   width: 48px;
   height: 4px;
-  background: rgba(42, 92, 255, 0.1);
+  background: rgba(17, 17, 17, 0.1);
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -141,7 +141,7 @@ import { Lightning, Grid, VideoPlay, Link } from '@element-plus/icons-vue'
 .indicator-bar {
   height: 100%;
   width: 33.333%;
-  background: #5b8def;
+  background: #525252;
   animation: pulse 2s ease-in-out infinite;
 }
 

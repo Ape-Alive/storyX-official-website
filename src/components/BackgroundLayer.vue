@@ -30,7 +30,7 @@
   left: -10%;
   width: 60%;
   height: 60%;
-  background: rgba(37, 99, 235, 0.1);
+  background: rgba(17, 17, 17, 0.08);
   animation: pulse 8s ease-in-out infinite;
 }
 
@@ -39,7 +39,7 @@
   right: -10%;
   width: 60%;
   height: 60%;
-  background: rgba(42, 92, 255, 0.1);
+  background: rgba(82, 82, 82, 0.08);
   animation: pulse 8s ease-in-out infinite;
   animation-delay: 2s;
 }
@@ -50,7 +50,7 @@
   transform: translate(-50%, -50%);
   width: 50%;
   height: 40%;
-  background: rgba(196, 92, 58, 0.06);
+  background: rgba(163, 163, 163, 0.06);
 }
 
 .bg-grid {

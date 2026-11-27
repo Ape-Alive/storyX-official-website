@@ -51,7 +51,7 @@ defineEmits(['play-click'])
 .preview-glow {
   position: absolute;
   inset: -4px;
-  background: linear-gradient(to right, #3b82f6, #5b8def, #c45c3a);
+  background: linear-gradient(to right, #404040, #525252, #737373);
   border-radius: 64px;
   filter: blur(4px);
   opacity: 0.1;
@@ -61,7 +61,7 @@ defineEmits(['play-click'])
 .preview-content {
   position: relative;
   border-radius: 56px;
-  border: 1px solid rgba(42, 92, 255, 0.2);
+  border: 1px solid rgba(17, 17, 17, 0.2);
   background: rgba(255, 255, 255, 0.4);
   padding: 24px;
   backdrop-filter: blur(40px);
@@ -104,7 +104,7 @@ defineEmits(['play-click'])
   content: '';
   width: 100%;
   height: 1px;
-  background: linear-gradient(to right, transparent, #3b82f6, transparent);
+  background: linear-gradient(to right, transparent, #404040, transparent);
 }
 
 .preview-grid::after {
@@ -112,7 +112,7 @@ defineEmits(['play-click'])
   position: absolute;
   height: 100%;
   width: 1px;
-  background: linear-gradient(to bottom, transparent, #c45c3a, transparent);
+  background: linear-gradient(to bottom, transparent, #737373, transparent);
 }
 
 .preview-center {
@@ -140,14 +140,14 @@ defineEmits(['play-click'])
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 0 50px rgba(91, 141, 239, 0.2);
+  box-shadow: 0 0 50px rgba(82, 82, 82, 0.2);
   transition: all 0.3s;
   cursor: pointer;
 }
 
 .preview-wrapper:hover .play-button {
   background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 80px rgba(91, 141, 239, 0.4);
+  box-shadow: 0 0 80px rgba(82, 82, 82, 0.4);
 }
 
 .play-button svg {

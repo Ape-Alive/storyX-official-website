@@ -2,7 +2,7 @@
   <section class="hero-section">
     <div class="hero-container">
       <Badge>
-        <el-icon :size="12" color="#60a5fa" style="margin-right: 8px;">
+        <el-icon :size="12" color="#737373" style="margin-right: 8px;">
           <Star />
         </el-icon>
         聚合全球顶尖 AI 模型矩阵
@@ -92,14 +92,14 @@ defineEmits(['download-click'])
 .hero-title-gradient {
   display: inline-block;
   margin-top: 0.2em;
-  background: linear-gradient(120deg, #60a5fa, #93b4ff, #c45c3a, #e8a87c);
+  background: linear-gradient(120deg, #737373, #a3a3a3, #737373, #a3a3a3);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 300;
   font-style: italic;
-  filter: drop-shadow(0 10px 30px rgba(91, 141, 239, 0.4));
+  filter: drop-shadow(0 10px 30px rgba(82, 82, 82, 0.4));
   animation: gradientShift 3s ease infinite, fadeInUp 1.2s ease-out 0.2s both;
 }
 
@@ -142,7 +142,7 @@ defineEmits(['download-click'])
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.3em;
-  box-shadow: 0 20px 50px rgba(42, 92, 255, 0.3);
+  box-shadow: 0 20px 50px rgba(17, 17, 17, 0.3);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   border: none;
   cursor: pointer;
@@ -154,14 +154,14 @@ defineEmits(['download-click'])
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, #2563eb, #2a5cff, #c45c3a, #c45c3a);
+  background: linear-gradient(120deg, #262626, #111111, #737373, #737373);
   background-size: 200% 200%;
   animation: gradientShift 3s ease infinite;
 }
 
 .hero-primary-btn:hover {
   transform: translateY(-4px) scale(1.08);
-  box-shadow: 0 30px 60px rgba(42, 92, 255, 0.4);
+  box-shadow: 0 30px 60px rgba(17, 17, 17, 0.4);
 }
 
 .hero-primary-btn:active {
@@ -202,7 +202,7 @@ defineEmits(['download-click'])
 
 .platform-item:hover {
   color: #1e1b4b;
-  background: rgba(42, 92, 255, 0.1);
+  background: rgba(17, 17, 17, 0.1);
   transform: translateY(-2px);
 }
 </style>

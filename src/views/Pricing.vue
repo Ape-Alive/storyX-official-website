@@ -169,20 +169,28 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in compareRows" :key="row.label">
-                <th scope="row">{{ row.label }}</th>
+              <tr v-for="row in compareRows" :key="row.featureKey || row.name">
+                <th scope="row">{{ row.name }}</th>
                 <td
                   v-for="tier in tiers"
                   :key="tier.roleKey"
                   :class="{ 'is-current': selectedTier === tier.roleKey }"
                 >
-                  <span
-                    v-if="row.byTier[tier.roleKey]"
-                    class="compare-yes"
-                    aria-label="支持"
-                  >
-                    <el-icon :size="14"><Select /></el-icon>
-                  </span>
+                  <template v-if="row.byTier[tier.roleKey]?.included">
+                    <div
+                      v-if="row.byTier[tier.roleKey].quotas?.length"
+                      class="compare-quota"
+                    >
+                      <span
+                        v-for="q in row.byTier[tier.roleKey].quotas"
+                        :key="q.key"
+                        class="compare-quota__item"
+                      >{{ q.display }}</span>
+                    </div>
+                    <span v-else class="compare-yes" aria-label="支持">
+                      <el-icon :size="14"><Select /></el-icon>
+                    </span>
+                  </template>
                   <span v-else class="compare-no" aria-label="不支持">—</span>
                 </td>
               </tr>
@@ -211,7 +219,7 @@ import { ElMessage } from "element-plus";
 import { Select, Loading } from "@element-plus/icons-vue";
 import { getToken } from "@/utils/storage";
 import { useUserStore } from "@/stores";
-import { getAvailablePackages } from "@/api/pricing";
+import { getAvailablePackages, getFeatureCompare } from "@/api/pricing";
 import PaymentCheckout from "@/components/PaymentCheckout.vue";
 import {
   getPackageDiscountInfo,
@@ -262,7 +270,7 @@ const DURATION_SLOTS = [
 
 const selectedTier = ref("custom_base_user");
 const packages = ref([]);
-const compareByTier = ref({});
+const compareRows = ref([]);
 const loading = ref(true);
 const compareLoading = ref(true);
 const checkoutVisible = ref(false);
@@ -435,30 +443,6 @@ const getPackageFeatures = (pkg) => {
   }));
 };
 
-const compareRows = computed(() => {
-  const labelSet = new Set();
-  const byTierLabels = {};
-
-  for (const tier of tiers) {
-    const pkgs = compareByTier.value[tier.roleKey] || [];
-    const labels = new Set();
-    for (const pkg of pkgs) {
-      for (const label of extractFeatureLabels(pkg)) {
-        labels.add(label);
-        labelSet.add(label);
-      }
-    }
-    byTierLabels[tier.roleKey] = labels;
-  }
-
-  return [...labelSet].map((label) => ({
-    label,
-    byTier: Object.fromEntries(
-      tiers.map((tier) => [tier.roleKey, byTierLabels[tier.roleKey]?.has(label) || false]),
-    ),
-  }));
-});
-
 const formatPrice = (price) => formatPackagePrice(price);
 
 const formatGiftQuota = (quota) => {
@@ -502,19 +486,17 @@ const loadPackages = async () => {
 const loadCompareData = async () => {
   try {
     compareLoading.value = true;
-    const results = await Promise.all(
-      tiers.map((tier) => getAvailablePackages("paid", undefined, tier.roleKey)),
-    );
-    const next = {};
-    tiers.forEach((tier, index) => {
-      const res = results[index];
-      next[tier.roleKey] =
-        res?.success && Array.isArray(res.data) ? res.data : [];
-    });
-    compareByTier.value = next;
+    const response = await getFeatureCompare(tiers.map((t) => t.roleKey));
+    if (response.success && response.data?.rows) {
+      compareRows.value = Array.isArray(response.data.rows)
+        ? response.data.rows
+        : [];
+    } else {
+      compareRows.value = [];
+    }
   } catch (error) {
     console.error("加载版本对比失败:", error);
-    compareByTier.value = {};
+    compareRows.value = [];
   } finally {
     compareLoading.value = false;
   }
@@ -561,15 +543,15 @@ onMounted(() => {
   --pricing-muted: rgba(28, 25, 23, 0.58);
   --pricing-line: rgba(28, 25, 23, 0.1);
   --pricing-card: rgba(255, 253, 249, 0.88);
-  --pricing-accent: #2a5cff;
-  --pricing-accent-soft: rgba(42, 92, 255, 0.12);
-  --pricing-warm: #c45c3a;
+  --pricing-accent: #111111;
+  --pricing-accent-soft: rgba(17, 17, 17, 0.12);
+  --pricing-warm: #57534e;
 
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 12% 0%, rgba(42, 92, 255, 0.07), transparent 46%),
-    radial-gradient(ellipse at 88% 8%, rgba(196, 92, 58, 0.08), transparent 40%),
-    linear-gradient(180deg, #f6f1ea 0%, #efe8de 48%, #f7f3ec 100%);
+    radial-gradient(ellipse at 12% 0%, rgba(17, 17, 17, 0.06), transparent 46%),
+    radial-gradient(ellipse at 88% 8%, rgba(82, 82, 82, 0.05), transparent 40%),
+    linear-gradient(180deg, #f7f7f4 0%, #f2f1ed 48%, #f7f7f4 100%);
   color: var(--pricing-ink);
   padding-top: 88px;
   position: relative;
@@ -653,9 +635,9 @@ onMounted(() => {
 }
 
 .toolbar-pill.is-action:hover {
-  border-color: rgba(42, 92, 255, 0.22);
+  border-color: rgba(17, 17, 17, 0.22);
   color: var(--pricing-accent);
-  background: rgba(42, 92, 255, 0.08);
+  background: rgba(17, 17, 17, 0.08);
 }
 
 .toolbar-pill__dot {
@@ -748,10 +730,10 @@ onMounted(() => {
 }
 
 .duration-card.is-recommended {
-  border-color: rgba(42, 92, 255, 0.45);
+  border-color: rgba(17, 17, 17, 0.45);
   box-shadow:
-    0 0 0 1px rgba(42, 92, 255, 0.18),
-    0 18px 40px rgba(42, 92, 255, 0.1);
+    0 0 0 1px rgba(17, 17, 17, 0.18),
+    0 18px 40px rgba(17, 17, 17, 0.1);
 }
 
 .duration-card.is-empty {
@@ -839,7 +821,7 @@ onMounted(() => {
   display: inline-flex;
   padding: 2px 8px;
   border-radius: 6px;
-  background: rgba(196, 92, 58, 0.12);
+  background: rgba(87, 83, 78, 0.12);
   color: var(--pricing-warm);
   font-size: 11px;
   font-weight: 700;
@@ -870,7 +852,7 @@ onMounted(() => {
 }
 
 .buy-btn.is-primary:hover:not(:disabled) {
-  background: #1f4de6;
+  background: #000000;
 }
 
 .buy-btn:disabled {
@@ -1067,7 +1049,7 @@ onMounted(() => {
 }
 
 .compare-table .is-current {
-  background: rgba(42, 92, 255, 0.05);
+  background: rgba(17, 17, 17, 0.05);
 }
 
 .compare-yes {
@@ -1079,6 +1061,20 @@ onMounted(() => {
   border-radius: 50%;
   background: var(--pricing-accent-soft);
   color: var(--pricing-accent);
+}
+
+.compare-quota {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.compare-quota__item {
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(28, 25, 23, 0.82);
+  line-height: 1.35;
 }
 
 .compare-no {

@@ -1347,7 +1347,7 @@ onUnmounted(() => {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #5b8def, #5b8def);
+  background: linear-gradient(90deg, #525252, #525252);
   width: 0;
   transition: width 0.15s linear;
 }

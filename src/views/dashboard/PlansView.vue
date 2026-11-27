@@ -2,16 +2,16 @@
   <div class="plans-view" :class="{ 'is-mobile': isMobile }">
     <section v-if="isMobile" class="mobile-active-plans" v-loading="activePlansLoading">
       <div class="mobile-active-plans__header">
-        <h2 class="mobile-active-plans__title">活跃套餐</h2>
+        <h2 class="mobile-active-plans__title">活跃会员</h2>
       </div>
 
       <van-empty
         v-if="!activePlansLoading && activePlans.length === 0"
         image="search"
-        description="暂无活跃套餐"
+        description="暂无活跃会员"
       >
         <van-button round type="primary" size="small" @click="scrollToBuy">
-          立即购买套餐
+          立即开通会员
         </van-button>
       </van-empty>
 
@@ -35,7 +35,7 @@
           v-if="!plan.unlimited"
           :percentage="planPercentage(plan)"
           :stroke-width="8"
-          :color="plan.status === 'warning' ? '#f59e0b' : '#9333ea'"
+          :color="plan.status === 'warning' ? '#c45c3a' : '#2a5cff'"
           track-color="rgba(28,25,23,0.06)"
           pivot-text=""
         />
@@ -51,912 +51,930 @@
       </div>
     </section>
 
-    <div class="plans-header">
-      <h2 class="plans-title">选择您的算力规模</h2>
-      <p class="plans-desc">
-        根据您的制片强度选择合适的配额，支持随时横向扩展。
-      </p>
-    </div>
+    <div class="plans-pricing">
+      <header class="pricing-hero">
+        <h2 class="pricing-title">选择你最合适的计划</h2>
+        <p class="pricing-subtitle">按版本挑选周卡到年卡，权益即时生效</p>
+      </header>
 
-    <div class="duration-selector-wrapper">
-      <van-tabs
-        v-if="isMobile"
-        v-model:active="selectedDuration"
-        shrink
-        type="card"
-        class="mobile-duration-tabs"
-        @change="handleDurationChange"
-      >
-        <van-tab
-          v-for="duration in durations"
-          :key="duration.value"
-          :name="duration.value"
-          :title="duration.discount ? `${duration.label} ${duration.discount}` : duration.label"
-        />
-      </van-tabs>
-      <div v-else class="duration-selector">
-        <button
-          v-for="duration in durations"
-          :key="duration.value"
-          type="button"
-          :class="['duration-btn', { active: selectedDuration === duration.value }]"
-          @click="handleDurationChange(duration.value)"
-        >
-          <span>{{ duration.label }}</span>
-          <span v-if="duration.discount" class="discount-badge">{{ duration.discount }}</span>
+      <div class="plan-toolbar" ref="buyAnchorRef">
+        <button type="button" class="toolbar-pill is-active" aria-current="page">
+          <span class="toolbar-pill__dot" aria-hidden="true" />
+          <span>会员计划</span>
         </button>
-      </div>
-    </div>
 
-    <div v-if="isMobile" class="mobile-plans" v-loading="loading">
-      <van-empty v-if="!loading && plans.length === 0" description="当前周期暂无可用套餐" />
-      <div
-        v-for="(plan, idx) in plans"
-        :key="plan.id || idx"
-        class="mobile-plan-card"
-        :class="{ popular: plan.popular, current: plan.current }"
-      >
-        <van-tag v-if="plan.popular" class="mobile-popular-tag" type="primary" round>最受欢迎</van-tag>
-        <van-tag v-if="plan.current" class="mobile-current-tag" type="success" plain round>当前套餐</van-tag>
-        <h3 class="mobile-plan-name">{{ plan.name }}</h3>
-        <p v-if="plan.desc" class="mobile-plan-desc">{{ plan.desc }}</p>
-        <div class="mobile-plan-price-row">
-          <div class="mobile-plan-price">
-            <span class="price-value">¥{{ plan.price }}</span>
-            <span class="price-unit">{{ getPriceUnit() }}</span>
-          </div>
-          <div class="mobile-plan-quota">
-            <span class="quota-value">{{ plan.quotaValue }}</span>
-            <span class="quota-label">{{ plan.quotaLabel }}</span>
-          </div>
-        </div>
-        <div v-if="plan.hasDiscount" class="mobile-plan-discount">
-          <span class="price-original">¥{{ plan.originalPrice }}</span>
-          <span class="discount-badge-inline">{{ plan.discountLabel }}</span>
-          <span class="discount-saved">省¥{{ plan.savedAmount }}</span>
-        </div>
-        <div class="mobile-plan-features">
-          <div v-for="(feature, i) in plan.features" :key="i" class="mobile-feature">
-            <van-icon name="arrow" color="#9333ea" />
-            <span>{{ feature }}</span>
-          </div>
-        </div>
-        <van-button
-          block
-          round
-          type="primary"
-          class="mobile-plan-btn"
-          :disabled="plan.buttonStatus?.disabled"
-          @click="handleSelectPlan(plan)"
-        >
-          {{ plan.buttonStatus?.text || '立即选择' }}
-        </van-button>
-      </div>
-
-      <div class="mobile-custom-card" @click="handleContact">
-        <div class="mobile-custom-icon">
-          <van-icon name="plus" size="22" color="#9333ea" />
-        </div>
-        <div class="mobile-custom-body">
-          <h4>定制方案</h4>
-          <p>需要算力集群或独立服务器部署？</p>
-        </div>
-        <van-icon name="arrow" color="#9333ea" />
-      </div>
-    </div>
-
-    <div v-else class="plans-container" v-loading="loading">
-      <button
-        v-if="totalCardsCount > 1"
-        class="nav-btn nav-btn-left"
-        type="button"
-        @click="scrollLeft"
-        :disabled="!canScrollLeft"
-      >
-        <el-icon :size="20"><ArrowLeft /></el-icon>
-      </button>
-
-      <div
-        class="plans-grid"
-        ref="plansGridRef"
-        :class="{
-          'single-plan': totalCardsCount === 1,
-          'centered-plans': totalCardsCount <= 2,
-        }"
-      >
-        <div
-          v-for="(plan, idx) in plans"
-          :key="idx"
-          class="plan-card"
-          :class="{ popular: plan.popular, current: plan.current }"
-        >
-          <div v-if="plan.popular" class="popular-badge">最受欢迎</div>
-          <div class="plan-header">
-            <div class="plan-title-wrapper">
-              <h3 class="plan-title">{{ plan.name }}</h3>
-              <div v-if="plan.current" class="current-badge">当前套餐</div>
-            </div>
-            <p class="plan-desc">{{ plan.desc }}</p>
-            <div class="plan-price-row">
-              <div class="plan-price">
-                <span class="price-value">¥{{ plan.price }}</span>
-                <span class="price-unit">{{ getPriceUnit() }}</span>
-              </div>
-              <div class="plan-quota">
-                <span class="quota-value">{{ plan.quotaValue }}</span>
-                <span class="quota-label">{{ plan.quotaLabel }}</span>
-              </div>
-            </div>
-            <div v-if="plan.hasDiscount" class="plan-discount">
-              <span class="price-original">¥{{ plan.originalPrice }}</span>
-              <span class="discount-badge-inline">{{ plan.discountLabel }}</span>
-              <span class="discount-saved">省¥{{ plan.savedAmount }}</span>
-            </div>
-          </div>
-          <div class="plan-features">
-            <div v-for="(feature, i) in plan.features" :key="i" class="feature-item">
-              <div class="feature-icon">
-                <el-icon :size="12"><ArrowRight /></el-icon>
-              </div>
-              {{ feature }}
-            </div>
-          </div>
+        <div class="tier-switch" role="tablist" aria-label="会员版本">
           <button
+            v-for="tier in tiers"
+            :key="tier.roleKey"
             type="button"
-            :class="['plan-btn', { disabled: plan.buttonStatus?.disabled }]"
-            :disabled="plan.buttonStatus?.disabled"
-            @click="handleSelectPlan(plan)"
+            role="tab"
+            :aria-selected="selectedTier === tier.roleKey"
+            :disabled="loading"
+            :class="['tier-btn', { active: selectedTier === tier.roleKey }]"
+            @click="handleTierChange(tier.roleKey)"
           >
-            {{ plan.buttonStatus?.text || "立即选择" }}
+            {{ tier.label }}
           </button>
         </div>
 
-        <div v-if="plans.length < 3" class="plan-card custom-plan-card">
-          <div class="custom-plan-content">
-            <div class="custom-plan-icon">
-              <el-icon :size="24" color="var(--accent-color)"><Plus /></el-icon>
-            </div>
-            <h3 class="custom-plan-title">定制方案</h3>
-            <p class="custom-plan-desc">
-              需要算力算集群<br />
-              或独立服务器部署?
-            </p>
-            <a href="#" class="custom-plan-link" @click.prevent="handleContact">
-              联系我们 >
-            </a>
-          </div>
+        <button type="button" class="toolbar-pill is-action" @click="handleContact">
+          <span>采购咨询</span>
+          <span class="toolbar-pill__chevron" aria-hidden="true">›</span>
+        </button>
+      </div>
+
+      <div
+        v-if="loading"
+        class="duration-grid"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <div v-for="n in 4" :key="n" class="duration-card skeleton-card">
+          <div class="skeleton-line skeleton-title" />
+          <div class="skeleton-line skeleton-desc" />
+          <div class="skeleton-line skeleton-price" />
+          <div class="skeleton-line" />
+          <div class="skeleton-line skeleton-short" />
+          <div class="skeleton-btn" />
+        </div>
+        <div class="loading-overlay">
+          <el-icon class="is-loading" :size="28"><Loading /></el-icon>
+          <span>正在加载会员计划...</span>
         </div>
       </div>
 
-      <button
-        v-if="totalCardsCount > 1"
-        class="nav-btn nav-btn-right"
-        type="button"
-        @click="scrollRight"
-        :disabled="!canScrollRight"
-      >
-        <el-icon :size="20"><ArrowRight /></el-icon>
-      </button>
+      <div v-else class="duration-grid">
+        <article
+          v-for="slot in durationCards"
+          :key="slot.key"
+          :class="[
+            'duration-card',
+            {
+              'is-recommended': slot.pkg?.isRecommended,
+              'is-current': slot.pkg?.isCurrent,
+              'is-empty': !slot.pkg,
+            },
+          ]"
+        >
+          <template v-if="slot.pkg">
+            <div v-if="slot.pkg.isRecommended" class="recommend-tag">推荐</div>
+            <div v-else-if="slot.pkg.isCurrent" class="current-tag">当前会员</div>
+
+            <div class="card-top">
+              <h3 class="card-name">{{ slot.pkg.cardTitle }}</h3>
+              <p class="card-desc">{{ slot.pkg.cardDesc }}</p>
+            </div>
+
+            <div class="card-price-block">
+              <div class="card-price">
+                <span class="price-amount">¥{{ formatPrice(slot.pkg.displayPrice) }}</span>
+                <span class="price-unit">/{{ slot.unitLabel }}</span>
+              </div>
+              <div v-if="slot.pkg.hasDiscount" class="card-discount">
+                <span class="price-original">¥{{ formatPrice(slot.pkg.originalPrice) }}</span>
+                <span class="discount-chip">{{ slot.pkg.discountLabel }}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              :class="[
+                'buy-btn',
+                {
+                  'is-primary': slot.pkg.isRecommended && !slot.pkg.buttonStatus?.disabled,
+                  'is-current': slot.pkg.buttonStatus?.disabled,
+                },
+              ]"
+              :disabled="slot.pkg.buttonStatus?.disabled || (checkoutVisible && checkoutPkg?.id === slot.pkg.id)"
+              @click="handleSelectPlan(slot.pkg)"
+            >
+              {{ slot.pkg.buttonStatus?.text || '立即购买' }}
+            </button>
+
+            <div class="gift-quota">
+              <div class="gift-quota__head">
+                <span class="gift-quota__title">赠送积分</span>
+                <span class="gift-quota__note">会员过期清空</span>
+              </div>
+              <div class="gift-quota__amount">
+                <span class="gift-quota__value">{{ formatGiftQuota(slot.pkg.quota) }}</span>
+                <span class="gift-quota__unit">积分</span>
+              </div>
+              <div class="gift-quota__usage">
+                <div class="gift-quota__usage-label">可用于</div>
+                <div class="gift-quota__tags">
+                  <span
+                    v-for="tag in QUOTA_USAGE_TAGS"
+                    :key="tag"
+                    class="gift-quota__tag"
+                  >{{ tag }}</span>
+                </div>
+              </div>
+            </div>
+
+            <ul v-if="slot.pkg.features.length" class="card-features">
+              <li
+                v-for="feature in slot.pkg.features"
+                :key="feature.label"
+              >
+                <span class="feature-mark" aria-hidden="true">
+                  <el-icon :size="12"><Select /></el-icon>
+                </span>
+                <span>{{ feature.label }}</span>
+              </li>
+            </ul>
+          </template>
+
+          <template v-else>
+            <h3 class="card-name">{{ slot.label }}</h3>
+            <p class="card-desc empty-hint">该版本暂未上架此周期套餐</p>
+            <button type="button" class="buy-btn" disabled>暂不可购</button>
+          </template>
+        </article>
+      </div>
+
+      <div v-if="!loading && !hasAnyPackage" class="empty-packages">
+        当前版本暂无可用会员计划
+      </div>
+
+      <section class="compare-section" aria-labelledby="compare-heading">
+        <h2 id="compare-heading" class="compare-title">各版本功能比较</h2>
+
+        <div v-if="compareLoading" class="compare-loading">
+          <el-icon class="is-loading" :size="22"><Loading /></el-icon>
+          <span>加载对比信息...</span>
+        </div>
+
+        <div v-else class="compare-table-wrap">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th scope="col">功能</th>
+                <th
+                  v-for="tier in tiers"
+                  :key="tier.roleKey"
+                  scope="col"
+                  :class="{ 'is-current': selectedTier === tier.roleKey }"
+                >
+                  {{ tier.label }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in compareRows" :key="row.label">
+                <th scope="row">{{ row.label }}</th>
+                <td
+                  v-for="tier in tiers"
+                  :key="tier.roleKey"
+                  :class="{ 'is-current': selectedTier === tier.roleKey }"
+                >
+                  <span
+                    v-if="row.byTier[tier.roleKey]"
+                    class="compare-yes"
+                    aria-label="支持"
+                  >
+                    <el-icon :size="14"><Select /></el-icon>
+                  </span>
+                  <span v-else class="compare-no" aria-label="不支持">—</span>
+                </td>
+              </tr>
+              <tr v-if="!compareRows.length">
+                <td colspan="4" class="compare-empty">暂无对比数据，请稍后再试</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
     <PaymentCheckout
       v-model:visible="checkoutVisible"
       :pkg="checkoutPkg"
       :order-type="checkoutOrderType"
-      :price-unit="getPriceUnit()"
+      :price-unit="checkoutPriceUnit"
       @success="onCheckoutSuccess"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { useRouter } from "vue-router";
-import { ArrowRight, ArrowLeft, Plus } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
-import { getAvailablePackages, getMyPackages } from "@/api/pricing";
-import PaymentCheckout from "@/components/PaymentCheckout.vue";
-import { useDevice } from "@/utils/device";
-import { useMyActivePackages } from "@/composables/useMyActivePackages";
-import { useDashboardPageBoot } from "@/composables/useDashboardPageBoot";
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Select, Loading } from '@element-plus/icons-vue'
+import { getAvailablePackages, getMyPackages } from '@/api/pricing'
+import PaymentCheckout from '@/components/PaymentCheckout.vue'
+import { useDevice } from '@/utils/device'
+import { useMyActivePackages } from '@/composables/useMyActivePackages'
+import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
 import {
   getPackagePayableAmount,
   getPackageDiscountInfo,
   formatPackagePrice,
   formatDiscountLabel,
-} from "@/utils/packagePrice";
+} from '@/utils/packagePrice'
 
-const router = useRouter();
-const { isMobile } = useDevice();
-const { runPageBoot } = useDashboardPageBoot();
+const router = useRouter()
+const { isMobile } = useDevice()
+const { runPageBoot } = useDashboardPageBoot()
 const {
   plans: activePlans,
   loading: activePlansLoading,
   formatQuota,
   planPercentage,
   loadMyPackages: loadActivePackages,
-} = useMyActivePackages({ immediate: false });
+} = useMyActivePackages({ immediate: false })
+
+const buyAnchorRef = ref(null)
+const checkoutVisible = ref(false)
+const checkoutPkg = ref(null)
+const checkoutOrderType = ref('purchase')
+const checkoutPriceUnit = ref('/月')
+
+const tiers = [
+  { label: '基础版', roleKey: 'custom_base_user' },
+  { label: '高级版', roleKey: 'custom_pro_user' },
+  { label: '至尊版', roleKey: 'custom_super_user' },
+]
+
+const DURATION_SLOTS = [
+  {
+    key: 'week',
+    label: '周卡',
+    unitLabel: '周',
+  },
+  {
+    key: 'month',
+    label: '月卡',
+    unitLabel: '月',
+  },
+  {
+    key: 'quarter',
+    label: '季卡',
+    unitLabel: '季',
+  },
+  {
+    key: 'year',
+    label: '年卡',
+    unitLabel: '年',
+  },
+]
+
+const selectedTier = ref('custom_base_user')
+const packages = ref([])
+const myPackages = ref([])
+const compareByTier = ref({})
+const loading = ref(true)
+const compareLoading = ref(true)
+
+const QUOTA_USAGE_TAGS = [
+  '封面生成',
+  '绘火 Agent',
+  '剧本分镜',
+  '角色定妆',
+  '场景视频',
+  'AI 画布',
+]
 
 const scrollToBuy = () => {
-  document
-    .querySelector(".duration-selector-wrapper")
-    ?.scrollIntoView({ behavior: "smooth", block: "start" });
-};
-const checkoutVisible = ref(false);
-const checkoutPkg = ref(null);
-const checkoutOrderType = ref("purchase");
+  buyAnchorRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
-// 时长选项
-const durations = [
-  { value: "day", label: "按天" },
-  { value: "month", label: "按月" },
-  { value: "year", label: "按年" },
-  { value: "permanent", label: "永久" },
-];
+const resolveDurationSlot = (pkg) => {
+  const name = `${pkg.displayName || ''} ${pkg.name || ''}`
+  if (/周卡|周会员|weekly/i.test(name)) return 'week'
+  if (/季卡|季度|quarter/i.test(name)) return 'quarter'
+  if (/年卡|年度|yearly|annual/i.test(name)) return 'year'
+  if (/月卡|月度|monthly/i.test(name)) return 'month'
 
-const selectedDuration = ref("month");
-const packages = ref([]);
-const loading = ref(false);
-const myPackages = ref([]); // 用户已购买的套餐列表
-
-// 处理时长切换
-const handleDurationChange = (duration) => {
-  selectedDuration.value = duration;
-  loadPackages();
-};
-
-// 加载我的套餐列表
-const loadMyPackages = async () => {
-  try {
-    const response = await getMyPackages({ activeOnly: false });
-    if (response.success && response.data) {
-      myPackages.value = response.data;
-    }
-  } catch (error) {
-    console.error("加载我的套餐失败:", error);
-    // 不显示错误提示，避免影响用户体验
+  const unit = pkg.durationUnit
+  const duration = Number(pkg.duration) || 0
+  if (!unit) return null
+  if (unit === 'year') return 'year'
+  if (unit === 'month') {
+    if (duration >= 12) return 'year'
+    if (duration >= 3) return 'quarter'
+    return 'month'
   }
-};
-
-// 加载套餐数据
-const loadPackages = async () => {
-  try {
-    loading.value = true;
-
-    // 先加载我的套餐列表（如果还没有加载）
-    if (myPackages.value.length === 0) {
-      await loadMyPackages();
-    }
-
-    // 根据选中的时长确定 durationUnit 参数
-    let durationUnit = null;
-    if (selectedDuration.value === "permanent") {
-      durationUnit = "permanent";
-    } else {
-      durationUnit = selectedDuration.value;
-    }
-
-    const availableResponse = await getAvailablePackages("paid", durationUnit);
-
-    if (availableResponse.success && availableResponse.data) {
-      // 根据 durationUnit 再次筛选套餐（双重保险）
-      let filtered = availableResponse.data;
-      if (selectedDuration.value === "permanent") {
-        filtered = availableResponse.data.filter((pkg) => !pkg.durationUnit);
-      } else {
-        filtered = availableResponse.data.filter(
-          (pkg) => pkg.durationUnit === selectedDuration.value,
-        );
-      }
-
-      // 转换为组件需要的格式，并匹配用户已购买的套餐
-      plans.value = filtered.map((pkg) => {
-        // 查找用户是否已购买此套餐
-        const myPackage = myPackages.value.find(
-          (mp) => mp.packageId === pkg.id,
-        );
-
-        let buttonStatus = {
-          disabled: false,
-          text: "立即选择",
-        };
-
-        if (myPackage) {
-          // 如果套餐状态是 active，说明已购买且未失效，禁用按钮
-          if (myPackage.status === "active") {
-            buttonStatus = {
-              disabled: true,
-              text: "当前已选择套餐",
-            };
-          } else if (
-            myPackage.status === "expired" ||
-            myPackage.status === "no_quota"
-          ) {
-            // 如果套餐已过期或积分用完，可以复购
-            buttonStatus = {
-              disabled: false,
-              text: "复购",
-            };
-          }
-        }
-
-        const info = getPackageDiscountInfo(pkg);
-        const quota = getQuotaDisplay(pkg);
-
-        return {
-          id: pkg.id,
-          name: pkg.displayName || pkg.name,
-          price: formatPrice(info.payable),
-          originalPrice: formatPrice(info.original),
-          hasDiscount: info.hasDiscount,
-          discountLabel: formatDiscountLabel(info.discount),
-          savedAmount: formatPrice(info.saved),
-          desc: pkg.description || "",
-          quotaValue: quota.value,
-          quotaLabel: quota.label,
-          features: getPackageFeatures(pkg),
-          current: myPackage?.status === "active", // 当前正在使用的套餐
-          popular: pkg.priority > 0, // 可以根据优先级判断
-          buttonStatus, // 按钮状态
-          // 保存原始套餐信息，用于复购
-          originalPackage: pkg,
-          myPackageId: myPackage?.id, // 用户套餐ID，用于复购
-        };
-      });
-    }
-  } catch (error) {
-    console.error("加载套餐失败:", error);
-    ElMessage.error("加载套餐信息失败，请稍后重试");
-  } finally {
-    loading.value = false;
+  if (unit === 'day') {
+    if (duration >= 360) return 'year'
+    if (duration >= 80) return 'quarter'
+    if (duration >= 25) return 'month'
+    if (duration >= 5) return 'week'
   }
-};
+  return null
+}
 
-// 格式化价格
-const formatPrice = (price) => formatPackagePrice(price);
+const resolveCardTitle = (pkg) => {
+  const slot = resolveDurationSlot(pkg)
+  const found = DURATION_SLOTS.find((s) => s.key === slot)
+  if (found) return found.label
+  return pkg.displayName || pkg.name || '会员'
+}
 
-/** quota 为 null/空 = 无限积分；供价格旁大字展示 */
-const getQuotaDisplay = (pkg) => {
-  if (pkg.quota == null || pkg.quota === "") {
-    return { value: "无限", label: "积分额度" };
-  }
-  const quotaNum =
-    typeof pkg.quota === "string" ? parseFloat(pkg.quota) : Number(pkg.quota);
-  if (!Number.isFinite(quotaNum)) {
-    return { value: "无限", label: "积分额度" };
-  }
-  if (quotaNum >= 1000) {
-    return { value: `${(quotaNum / 1000).toFixed(0)}K点`, label: "积分额度" };
-  }
-  return { value: `${quotaNum}点`, label: "积分额度" };
-};
+const buildValidityText = (pkg) => {
+  const unit = pkg.durationUnit
+  const duration = Number(pkg.duration) || 0
+  if (!unit || !duration) return ''
+  if (unit === 'day') return `有效期 ${duration} 天`
+  if (unit === 'month') return `有效期 ${duration} 个月`
+  if (unit === 'year') return `有效期 ${duration} 年`
+  return ''
+}
 
-// 获取套餐特性列表（积分额度已在价格旁单独展示）
-const getPackageFeatures = (pkg) => {
+const buildCardDesc = (pkg) => {
+  const title = resolveCardTitle(pkg)
+  const raw = String(pkg.description || '').trim()
+  const isUseless =
+    !raw ||
+    raw === title ||
+    raw === pkg.displayName ||
+    raw === pkg.name
+
+  const devicePart = pkg.maxDevices
+    ? `最多仅限 ${pkg.maxDevices} 台设备同时使用`
+    : '设备数量不限制'
+  const validity = buildValidityText(pkg)
+
+  if (!isUseless) return raw
+  if (validity) return `${validity}，${devicePart}`
+  return devicePart
+}
+
+const extractFeatureLabels = (pkg) => {
   const texts =
     (Array.isArray(pkg.effectivePermissionTexts) && pkg.effectivePermissionTexts) ||
     (Array.isArray(pkg.permissionTexts) && pkg.permissionTexts) ||
-    (Array.isArray(pkg.clientRole?.permissionTexts) &&
-      pkg.clientRole.permissionTexts) ||
-    [];
-  const labels = texts
-    .map((item) => String(item || "").trim())
+    (Array.isArray(pkg.clientRole?.permissionTexts) && pkg.clientRole.permissionTexts) ||
+    []
+  return texts
+    .map((item) => String(item || '').trim())
     .filter(Boolean)
     .filter(
       (label) =>
-        !/套餐积分额度内调用|积分额度内调用|^积分额度|^无限积分/.test(label),
-    );
+        !/套餐积分额度内调用|积分额度内调用|^积分额度|^无限积分|^套餐积分额度/.test(label),
+    )
+}
 
-  if (labels.length > 0) return labels;
+const getPackageFeatures = (pkg) =>
+  extractFeatureLabels(pkg).map((label) => ({
+    label,
+    included: true,
+  }))
 
-  const features = [];
-  if (pkg.maxDevices) {
-    features.push(`多端登录 ${pkg.maxDevices}台`);
-  } else {
-    features.push("多端登录 不限制");
+const resolveButtonStatus = (pkg) => {
+  const myPackage = myPackages.value.find((mp) => mp.packageId === pkg.id)
+  if (!myPackage) {
+    return { disabled: false, text: '立即购买', isCurrent: false, orderType: 'purchase' }
   }
-  if (pkg.description) {
-    features.push(pkg.description);
+  if (myPackage.status === 'active') {
+    return { disabled: true, text: '当前已选择', isCurrent: true, orderType: 'purchase' }
   }
-  return features.length > 0 ? features : ["标准功能", "API 接入", "技术支持"];
-};
+  if (myPackage.status === 'expired' || myPackage.status === 'no_quota') {
+    return { disabled: false, text: '复购', isCurrent: false, orderType: 'renewal' }
+  }
+  return { disabled: false, text: '立即购买', isCurrent: false, orderType: 'purchase' }
+}
 
-// 格式化价格单位
-const getPriceUnit = () => {
-  const unitMap = {
-    day: "/天",
-    month: "/月",
-    year: "/年",
-    permanent: "一次性",
-  };
-  return unitMap[selectedDuration.value] || "/月";
-};
+const enrichPackage = (pkg) => {
+  const info = getPackageDiscountInfo(pkg)
+  const buttonStatus = resolveButtonStatus(pkg)
+  return {
+    ...pkg,
+    displayPrice: info.payable,
+    originalPrice: info.original,
+    hasDiscount: info.hasDiscount,
+    discountLabel: formatDiscountLabel(info.discount),
+    savedAmount: info.saved,
+    features: getPackageFeatures(pkg),
+    cardTitle: resolveCardTitle(pkg),
+    cardDesc: buildCardDesc(pkg),
+    buttonStatus,
+    isCurrent: buttonStatus.isCurrent,
+  }
+}
 
-const plans = ref([]);
-const plansGridRef = ref(null);
-const canScrollLeft = ref(false);
-const canScrollRight = ref(false);
+const pickBestForSlot = (list) => {
+  if (!list.length) return null
+  const recommended = list.find((p) => p.isRecommend)
+  if (recommended) return recommended
+  return [...list].sort((a, b) => (b.priority || 0) - (a.priority || 0))[0]
+}
 
-// 计算总卡片数（包括定制方案卡片）
-const totalCardsCount = computed(() => {
-  const planCount = plans.value.length;
-  const customCardCount = planCount < 3 ? 1 : 0;
-  return planCount + customCardCount;
-});
+const durationCards = computed(() => {
+  const enriched = packages.value
+    .filter((pkg) => pkg.showOnWebsite !== false)
+    .map((pkg) => enrichPackage(pkg))
 
-// 检查滚动状态
-const checkScrollButtons = () => {
-  if (!plansGridRef.value) return;
+  const grouped = {
+    week: [],
+    month: [],
+    quarter: [],
+    year: [],
+  }
 
-  const container = plansGridRef.value;
-  canScrollLeft.value = container.scrollLeft > 0;
-  canScrollRight.value =
-    container.scrollLeft < container.scrollWidth - container.clientWidth - 10;
-};
+  for (const pkg of enriched) {
+    const slot = resolveDurationSlot(pkg)
+    if (slot && grouped[slot]) grouped[slot].push(pkg)
+  }
 
-// 向左滚动
-const scrollLeft = () => {
-  if (!plansGridRef.value) return;
-  const container = plansGridRef.value;
-  const cardWidth = 320; // 卡片宽度
-  const gap = 32; // 间距
-  const scrollAmount = cardWidth + gap;
+  const picked = DURATION_SLOTS.map((slot) => ({
+    ...slot,
+    pkg: pickBestForSlot(grouped[slot.key]),
+  }))
 
-  container.scrollBy({
-    left: -scrollAmount,
-    behavior: "smooth",
-  });
+  const backendRecommended = picked.some((slot) => slot.pkg?.isRecommend)
+  return picked.map((slot) => {
+    if (!slot.pkg) return slot
+    const isRecommended = backendRecommended
+      ? Boolean(slot.pkg.isRecommend)
+      : slot.key === 'quarter'
+    return {
+      ...slot,
+      pkg: { ...slot.pkg, isRecommended },
+    }
+  })
+})
 
-  // 延迟检查滚动状态
-  setTimeout(checkScrollButtons, 300);
-};
+const hasAnyPackage = computed(() =>
+  durationCards.value.some((slot) => Boolean(slot.pkg)),
+)
 
-// 向右滚动
-const scrollRight = () => {
-  if (!plansGridRef.value) return;
-  const container = plansGridRef.value;
-  const cardWidth = 320; // 卡片宽度
-  const gap = 32; // 间距
-  const scrollAmount = cardWidth + gap;
+const compareRows = computed(() => {
+  const labelSet = new Set()
+  const byTierLabels = {}
 
-  container.scrollBy({
-    left: scrollAmount,
-    behavior: "smooth",
-  });
+  for (const tier of tiers) {
+    const pkgs = compareByTier.value[tier.roleKey] || []
+    const labels = new Set()
+    for (const pkg of pkgs) {
+      for (const label of extractFeatureLabels(pkg)) {
+        labels.add(label)
+        labelSet.add(label)
+      }
+    }
+    byTierLabels[tier.roleKey] = labels
+  }
 
-  // 延迟检查滚动状态
-  setTimeout(checkScrollButtons, 300);
-};
+  return [...labelSet].map((label) => ({
+    label,
+    byTier: Object.fromEntries(
+      tiers.map((tier) => [tier.roleKey, byTierLabels[tier.roleKey]?.has(label) || false]),
+    ),
+  }))
+})
 
-// 监听卡片数量变化，更新滚动状态
-watch(
-  () => plans.value.length,
-  () => {
-    nextTick(() => {
-      checkScrollButtons();
-    });
-  },
-);
+const formatPrice = (price) => formatPackagePrice(price)
 
-// 处理联系我们
+const formatGiftQuota = (quota) => {
+  if (quota === null || quota === undefined || quota === '') return '无限'
+  const quotaNum = typeof quota === 'string' ? parseFloat(quota) : Number(quota)
+  if (!Number.isFinite(quotaNum)) return '无限'
+  if (Number.isInteger(quotaNum) || Math.abs(quotaNum - Math.round(quotaNum)) < 1e-9) {
+    return String(Math.round(quotaNum))
+  }
+  return parseFloat(quotaNum.toFixed(2)).toString()
+}
+
+const loadMyPackagesList = async () => {
+  try {
+    const response = await getMyPackages({ activeOnly: false })
+    if (response.success && response.data) {
+      myPackages.value = response.data
+    }
+  } catch (error) {
+    console.error('加载我的会员失败:', error)
+  }
+}
+
+const loadPackages = async () => {
+  try {
+    loading.value = true
+    if (myPackages.value.length === 0) {
+      await loadMyPackagesList()
+    }
+    const response = await getAvailablePackages('paid', undefined, selectedTier.value)
+    if (response.success && response.data) {
+      packages.value = Array.isArray(response.data) ? response.data : []
+    } else {
+      packages.value = []
+    }
+  } catch (error) {
+    console.error('加载会员计划失败:', error)
+    packages.value = []
+    ElMessage.error('加载会员计划失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadCompareData = async () => {
+  try {
+    compareLoading.value = true
+    const results = await Promise.all(
+      tiers.map((tier) => getAvailablePackages('paid', undefined, tier.roleKey)),
+    )
+    const next = {}
+    tiers.forEach((tier, index) => {
+      const res = results[index]
+      next[tier.roleKey] = res?.success && Array.isArray(res.data) ? res.data : []
+    })
+    compareByTier.value = next
+  } catch (error) {
+    console.error('加载版本对比失败:', error)
+    compareByTier.value = {}
+  } finally {
+    compareLoading.value = false
+  }
+}
+
+const handleTierChange = async (roleKey) => {
+  if (loading.value || selectedTier.value === roleKey) return
+  selectedTier.value = roleKey
+  await loadPackages()
+}
+
 const handleContact = () => {
-  router.push("/dashboard/contact");
-};
+  router.push('/dashboard/contact')
+}
 
-// 处理套餐选择/复购
-const handleSelectPlan = (plan) => {
-  if (plan.buttonStatus?.disabled) {
-    return;
-  }
+const handleSelectPlan = (pkg) => {
+  if (pkg.buttonStatus?.disabled) return
 
-  const pkg = plan.originalPackage || {
-    id: plan.id,
-    displayName: plan.name,
-    name: plan.name,
-    price: plan.price,
-    displayPrice: plan.price,
-  };
-
-  const payable = getPackagePayableAmount(pkg);
+  const payable = getPackagePayableAmount(pkg)
+  const slot = resolveDurationSlot(pkg)
+  const unit = DURATION_SLOTS.find((s) => s.key === slot)?.unitLabel || '期'
+  checkoutPriceUnit.value = `/${unit}`
   checkoutPkg.value = {
     ...pkg,
-    displayName: pkg.displayName || plan.name,
+    displayName: pkg.displayName || pkg.cardTitle || pkg.name,
     displayPrice: payable,
-  };
-  checkoutOrderType.value =
-    plan.buttonStatus?.text === "复购" ? "renewal" : "purchase";
-  checkoutVisible.value = true;
-};
+  }
+  checkoutOrderType.value = pkg.buttonStatus?.orderType || 'purchase'
+  checkoutVisible.value = true
+}
 
-const onCheckoutSuccess = () => {
-  loadPackages();
-};
+const onCheckoutSuccess = async () => {
+  await loadMyPackagesList()
+  await loadPackages()
+  if (isMobile.value) {
+    await loadActivePackages()
+  }
+}
 
-// 窗口大小变化处理
-const handleResize = () => {
-  nextTick(() => {
-    checkScrollButtons();
-  });
-};
-
-// 初始化
 onMounted(() => {
   runPageBoot(() =>
     Promise.allSettled([
       isMobile.value ? loadActivePackages() : Promise.resolve(),
-      loadPackages(),
-    ])
-  );
-  // 初始化滚动状态检查
-  nextTick(() => {
-    if (plansGridRef.value) {
-      plansGridRef.value.addEventListener("scroll", checkScrollButtons);
-      checkScrollButtons();
-    }
-  });
-
-  // 监听窗口大小变化
-  window.addEventListener("resize", handleResize);
-});
-
-// 组件卸载时移除事件监听
-onUnmounted(() => {
-  if (plansGridRef.value) {
-    plansGridRef.value.removeEventListener("scroll", checkScrollButtons);
-  }
-  window.removeEventListener("resize", handleResize);
-});
+      loadMyPackagesList().then(() => loadPackages()),
+      loadCompareData(),
+    ]),
+  )
+})
 </script>
 
 <style scoped>
 .plans-view {
+  --pricing-ink: #1c1917;
+  --pricing-muted: rgba(28, 25, 23, 0.58);
+  --pricing-line: rgba(28, 25, 23, 0.1);
+  --pricing-card: #fffdf9;
+  --pricing-accent: #2a5cff;
+  --pricing-accent-soft: rgba(42, 92, 255, 0.12);
+  --pricing-warm: #c45c3a;
+
   animation: fadeInSlide 0.5s ease-out;
-  padding-top: 24px;
+  padding-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 48px;
-  color: var(--text-primary);
-  transition: color 0.3s ease;
+  gap: 28px;
+  color: var(--pricing-ink);
   width: 100%;
   max-width: 100%;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-.plans-header {
-  text-align: center;
-  max-width: 640px;
-  margin: 0 auto 10px;
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.plans-title {
-  font-size: 40px;
-  font-weight: 900;
-  margin: 0 0 16px 0;
-  color: var(--text-primary);
-  transition: color 0.3s ease;
-  font-family: "Space Grotesk", sans-serif;
+.mobile-active-plans {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.plans-desc {
-  color: var(--text-secondary);
+.mobile-active-plans__header {
+  padding: 0 2px;
+}
+
+.mobile-active-plans__title {
   margin: 0;
-  font-family: "Inter", sans-serif;
-  transition: color 0.3s ease;
+  font-size: 16px;
+  font-weight: 750;
+  color: var(--pricing-ink);
 }
 
-/* 时长选择器 */
-.duration-selector-wrapper {
+.mobile-active-plan-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--pricing-card);
+  border: 1px solid var(--pricing-line);
+}
+
+.mobile-active-plan-card.is-warning {
+  border-color: rgba(196, 92, 58, 0.35);
+}
+
+.mobile-active-plan-card__top {
   display: flex;
-  justify-content: center;
-  margin-bottom: 0px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-.duration-selector {
-  background: var(--bg-card);
-  padding: 6px;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.duration-btn {
-  position: relative;
-  padding: 12px 28px;
-  border-radius: 9999px;
-  font-size: 12px;
+.mobile-active-plan-card__name {
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: none;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: "Inter", sans-serif;
-  flex-shrink: 0;
 }
 
-.duration-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+.mobile-active-plan-card__expiry {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--pricing-muted);
 }
 
-.duration-btn.active {
-  background: var(--accent-color);
-  color: white;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
-  transform: scale(1.02);
+.mobile-active-plan-card__stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--pricing-muted);
+  font-weight: 600;
 }
 
-.discount-badge {
-  position: absolute;
-  top: -10px;
-  right: -4px;
-  background: #ec4899;
-  color: white;
-  font-size: 9px;
-  font-weight: 900;
-  padding: 2px 6px;
-  border-radius: 9999px;
-  box-shadow: 0 2px 4px rgba(236, 72, 153, 0.3);
-  white-space: nowrap;
+.unlimited-quota {
+  color: var(--pricing-accent);
 }
 
-/* 套餐容器 */
-.plans-container {
-  position: relative;
+.plans-pricing {
   width: 100%;
-  max-width: 100%;
-  display: flex;
-  align-items: flex-start; /* 改为 flex-start，允许标签超出 */
-  gap: 16px;
-  margin: 0 auto;
-  box-sizing: border-box;
-  padding: 20px 60px 0; /* 顶部留出空间给标签 */
-  overflow: visible; /* 改为 visible，允许标签显示 */
 }
 
-/* 响应式宽度调整 - 确保容器宽度随窗口变化 */
-@media (min-width: 768px) {
-  .plans-container {
-    padding: 20px 60px 0;
-  }
+.pricing-hero {
+  text-align: center;
+  margin-bottom: 28px;
 }
 
-@media (min-width: 1200px) {
-  .plans-container {
-    padding: 20px 60px 0;
-  }
+.pricing-title {
+  margin: 0 0 8px;
+  font-family: 'Space Grotesk', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: clamp(24px, 3.2vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
 }
 
-/* 导航按钮 */
-.nav-btn {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  cursor: pointer;
-  display: flex;
+.pricing-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--pricing-muted);
+  font-weight: 500;
+}
+
+.plan-toolbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.toolbar-pill {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-sm);
-  z-index: 10;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: rgba(28, 25, 23, 0.06);
+  color: rgba(28, 25, 23, 0.72);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-.nav-btn:hover:not(:disabled) {
-  background: var(--bg-hover);
-  border-color: var(--accent-color);
-  color: var(--accent-color);
-  transform: scale(1.05);
+.toolbar-pill:hover {
+  background: rgba(28, 25, 23, 0.09);
+  color: var(--pricing-ink);
 }
 
-.nav-btn:disabled {
-  opacity: 0.3;
+.toolbar-pill.is-active {
+  background: #111;
+  color: #faf7f2;
+  box-shadow: none;
+}
+
+.toolbar-pill.is-action {
+  padding-right: 12px;
+}
+
+.toolbar-pill.is-action:hover {
+  border-color: rgba(42, 92, 255, 0.22);
+  color: var(--pricing-accent);
+  background: rgba(42, 92, 255, 0.08);
+}
+
+.toolbar-pill__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 253, 249, 0.28);
+  box-shadow: inset 0 0 0 3px rgba(255, 253, 249, 0.55);
+  flex-shrink: 0;
+}
+
+.toolbar-pill.is-active .toolbar-pill__dot {
+  background: #fffdf9;
+  box-shadow: inset 0 0 0 3px rgba(28, 25, 23, 0.35);
+}
+
+.toolbar-pill__chevron {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 500;
+  opacity: 0.75;
+  transform: translateY(-0.5px);
+}
+
+.tier-switch {
+  display: flex;
+  justify-self: center;
+  width: min(420px, 100%);
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(28, 25, 23, 0.06);
+  border: 1px solid transparent;
+  gap: 4px;
+}
+
+.tier-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--pricing-muted);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.tier-btn:hover:not(:disabled) {
+  color: var(--pricing-ink);
+}
+
+.tier-btn.active {
+  background: #fffdf9;
+  color: var(--pricing-ink);
+  box-shadow: none;
+  border: 1px solid var(--pricing-line);
+}
+
+.tier-btn:disabled {
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
-.nav-btn-left {
-  position: absolute;
-  left: -4px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.nav-btn-right {
-  position: absolute;
-  right: -4px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.plans-grid {
-  display: flex;
-  flex-wrap: nowrap;
+.duration-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
   align-items: stretch;
-  gap: 32px;
-  overflow-x: auto;
-  overflow-y: visible; /* 改为 visible，允许标签超出容器 */
-  scroll-behavior: smooth;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-  width: 100%;
-  max-width: 100%;
-  flex: 1 1 0; /* 重要：允许 flex 子元素缩小，不会撑开父容器 */
-  min-width: 0; /* 重要：允许 flex 子元素缩小 */
-  box-sizing: border-box;
-  padding-top: 20px; /* 为标签留出空间 */
-  margin-top: -20px; /* 抵消 padding-top 对布局的影响 */
+  margin-bottom: 48px;
 }
 
-/* 隐藏滚动条 */
-.plans-grid::-webkit-scrollbar {
-  display: none;
-}
-
-/* 卡片等宽，高度跟随最高卡片 */
-.plans-grid .plan-card,
-.plans-grid .custom-plan-card {
-  width: 320px;
-  height: auto;
-  min-height: 0;
-  flex: 0 0 320px;
-  max-width: 320px;
-  align-self: stretch;
-}
-
-/* 当只有一个或两个卡片时，居中显示 */
-.plans-grid.single-plan,
-.plans-grid.centered-plans {
-  justify-content: center;
-}
-
-.plan-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 32px;
-  padding: 32px;
+.duration-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  transition: all 0.5s;
-  position: relative;
-  box-shadow: var(--shadow-sm);
-  overflow: visible;
+  min-height: 500px;
+  padding: 24px 18px 20px;
+  border-radius: 16px;
+  background: var(--pricing-card);
+  border: 1px solid var(--pricing-line);
+  box-shadow: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
-.plan-card:hover {
-  transform: translateY(-12px);
+.duration-card:hover {
+  border-color: rgba(28, 25, 23, 0.18);
 }
 
-.plan-card.popular {
-  border-color: rgba(147, 51, 234, 0.2);
-  box-shadow: 0 20px 50px rgba(147, 51, 234, 0.1);
-  border-width: 4px;
-  border-style: solid;
-  border-image: linear-gradient(
-      to right,
-      rgba(147, 51, 234, 0.2),
-      rgba(236, 72, 153, 0.2)
-    )
-    1;
+.duration-card.is-recommended {
+  border-color: rgba(42, 92, 255, 0.45);
+  box-shadow: 0 0 0 1px rgba(42, 92, 255, 0.12);
 }
 
-.popular-badge {
-  position: absolute;
-  top: -16px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 24px;
-  background: var(--accent-gradient);
-  color: white;
-  font-size: 10px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  border-radius: 9999px;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
-  font-family: "Inter", sans-serif;
+.duration-card.is-current:not(.is-recommended) {
+  border-color: rgba(28, 25, 23, 0.28);
 }
 
-.plan-header {
-  margin-bottom: 32px;
-}
-
-.plan-title-wrapper {
-  display: flex;
+.duration-card.is-empty {
   justify-content: flex-start;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
+  opacity: 0.78;
 }
 
-.plan-title {
-  font-size: 24px;
-  font-weight: 900;
+.recommend-tag,
+.current-tag {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.recommend-tag {
+  background: var(--pricing-accent);
+  color: #fff;
+}
+
+.current-tag {
+  background: #111;
+  color: #fff;
+}
+
+.card-top {
+  margin-bottom: 16px;
+}
+
+.card-name {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-family: 'Space Grotesk', 'PingFang SC', sans-serif;
+}
+
+.card-desc {
   margin: 0;
-  font-family: "Space Grotesk", sans-serif;
-  line-height: 1.2;
-  word-break: keep-all;
-  white-space: normal;
-  flex: 1;
-  min-width: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--pricing-muted);
+  min-height: 40px;
 }
 
-.current-badge {
-  padding: 4px 10px;
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-  font-size: 10px;
-  font-weight: 900;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-family: "Inter", sans-serif;
-  white-space: nowrap;
-  flex-shrink: 0;
-  line-height: 1.2;
+.empty-hint {
+  margin-bottom: 24px;
 }
 
-.plan-desc {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  transition: color 0.3s ease;
-  margin: 0 0 24px 0;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  font-family: "Inter", sans-serif;
+.card-price-block {
+  margin-bottom: 16px;
 }
 
-.plan-price {
+.card-price {
   display: flex;
   align-items: baseline;
   gap: 4px;
 }
 
-.plan-price-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
+.price-amount {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
-.plan-quota {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  line-height: 1.15;
-  flex-shrink: 0;
+.price-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pricing-muted);
 }
 
-.plan-quota .quota-value {
-  font-size: 28px;
-  font-weight: 900;
-  color: #9333ea;
-  font-family: "Space Grotesk", sans-serif;
-}
-
-.plan-quota .quota-label {
-  margin-top: 2px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-tertiary);
-  letter-spacing: 0.04em;
-}
-
-.plan-discount,
-.mobile-plan-discount {
+.card-discount {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -966,458 +984,400 @@ onUnmounted(() => {
 
 .price-original {
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: rgba(28, 25, 23, 0.4);
   text-decoration: line-through;
-  font-family: "Space Grotesk", sans-serif;
 }
 
-.discount-badge-inline {
+.discount-chip {
   display: inline-flex;
-  align-items: center;
   padding: 2px 8px;
-  border-radius: 9999px;
-  background: rgba(236, 72, 153, 0.12);
-  color: #db2777;
+  border-radius: 6px;
+  background: rgba(196, 92, 58, 0.12);
+  color: var(--pricing-warm);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
 }
 
-.discount-saved {
-  font-size: 12px;
-  font-weight: 600;
-  color: #db2777;
-}
-
-.price-value {
-  font-size: 48px;
-  font-weight: 900;
-  font-style: italic;
-  letter-spacing: -0.02em;
-  font-family: "Space Grotesk", sans-serif;
-}
-
-.price-unit {
-  color: var(--text-tertiary);
-  transition: color 0.3s ease;
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-family: "Inter", sans-serif;
-}
-
-.plan-features {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex: 1 1 auto;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  transition: color 0.3s ease;
-  font-weight: 700;
-  font-family: "Inter", sans-serif;
-}
-
-.feature-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(147, 51, 234, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent-color);
-  transition: color 0.3s ease;
-  flex-shrink: 0;
-}
-
-.plan-btn {
+.buy-btn {
   width: 100%;
-  margin-top: auto;
-  padding: 20px;
-  border-radius: 16px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 12px;
-  transition: all 0.3s;
+  margin-bottom: 14px;
+  padding: 12px 16px;
   border: none;
+  border-radius: 10px;
+  background: #111;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  font-family: "Inter", sans-serif;
+  transition: background 0.15s ease;
 }
 
-.plan-btn:not(.disabled) {
-  background: black;
-  color: white;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+.buy-btn:hover:not(:disabled) {
+  background: #000;
 }
 
-.plan-btn:not(.disabled):hover {
-  background: rgba(0, 0, 0, 0.8);
-  box-shadow: 0 12px 40px rgba(147, 51, 234, 0.2);
+.buy-btn.is-primary {
+  background: var(--pricing-accent);
 }
 
-.plan-btn.disabled {
-  background: var(--bg-tertiary);
-  color: var(--text-disabled);
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
-  cursor: default;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+.buy-btn.is-primary:hover:not(:disabled) {
+  background: #1f4de6;
 }
 
-/* 定制方案卡片 */
-.custom-plan-card {
-  border: 2px dashed var(--accent-color);
-  background: linear-gradient(
-    135deg,
-    rgba(147, 51, 234, 0.05) 0%,
-    rgba(147, 51, 234, 0.02) 100%
-  );
+.buy-btn.is-current,
+.buy-btn:disabled {
+  background: rgba(28, 25, 23, 0.08);
+  color: rgba(28, 25, 23, 0.45);
+  cursor: not-allowed;
+}
+
+.gift-quota {
+  margin-bottom: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(28, 25, 23, 0.035);
+  border: 1px solid var(--pricing-line);
+}
+
+.gift-quota__head {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.custom-plan-card:hover {
-  border-color: var(--accent-color);
-  background: linear-gradient(
-    135deg,
-    rgba(147, 51, 234, 0.08) 0%,
-    rgba(147, 51, 234, 0.04) 100%
-  );
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(147, 51, 234, 0.15);
-}
-
-.custom-plan-content {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-}
-
-.custom-plan-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2);
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 8px;
   margin-bottom: 8px;
 }
 
-.custom-plan-title {
-  font-size: 20px;
-  font-weight: 900;
-  color: var(--accent-color);
-  margin: 0;
-  font-family: "Space Grotesk", sans-serif;
+.gift-quota__title {
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--pricing-accent);
 }
 
-.custom-plan-desc {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.6;
-  font-family: "Inter", sans-serif;
+.gift-quota__note {
+  font-size: 12px;
+  color: var(--pricing-muted);
 }
 
-.custom-plan-link {
-  font-size: 14px;
+.gift-quota__note::before {
+  content: '(';
+}
+
+.gift-quota__note::after {
+  content: ')';
+}
+
+.gift-quota__amount {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.gift-quota__value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.gift-quota__unit {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--pricing-muted);
+}
+
+.gift-quota__usage {
+  padding-top: 10px;
+  border-top: 1px solid var(--pricing-line);
+}
+
+.gift-quota__usage-label {
+  margin-bottom: 8px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--accent-color);
-  text-decoration: none;
+  color: var(--pricing-muted);
+}
+
+.gift-quota__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gift-quota__tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  transition: all 0.3s ease;
-  font-family: "Inter", sans-serif;
-  margin-top: 8px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--pricing-line);
+  font-size: 11px;
+  font-weight: 650;
+  color: rgba(28, 25, 23, 0.78);
+  line-height: 1.3;
 }
 
-.custom-plan-link:hover {
-  color: var(--accent-color-light);
-  transform: translateX(4px);
+.card-features {
+  list-style: none;
+  margin: 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--pricing-line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.card-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(28, 25, 23, 0.78);
+  line-height: 1.45;
+}
+
+.feature-mark {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pricing-accent-soft);
+  color: var(--pricing-accent);
+}
+
+.empty-packages {
+  text-align: center;
+  margin: -28px 0 36px;
+  color: var(--pricing-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.compare-section {
+  margin-top: 4px;
+  padding: 24px 20px 16px;
+  border-radius: 16px;
+  background: var(--pricing-card);
+  border: 1px solid var(--pricing-line);
+  box-shadow: none;
+}
+
+.compare-title {
+  margin: 0 0 18px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-family: 'Space Grotesk', 'PingFang SC', sans-serif;
+}
+
+.compare-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px 12px;
+  color: var(--pricing-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.compare-table-wrap {
+  overflow-x: auto;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 12px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--pricing-line);
+  font-size: 13px;
+}
+
+.compare-table thead th {
+  font-weight: 750;
+}
+
+.compare-table tbody th {
+  text-align: left;
+  font-weight: 650;
+  color: rgba(28, 25, 23, 0.82);
+}
+
+.compare-table .is-current {
+  background: rgba(42, 92, 255, 0.05);
+}
+
+.compare-yes {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--pricing-accent-soft);
+  color: var(--pricing-accent);
+}
+
+.compare-no {
+  color: rgba(28, 25, 23, 0.28);
+  font-weight: 600;
+}
+
+.compare-empty {
+  text-align: center;
+  color: var(--pricing-muted);
+  padding: 28px 12px !important;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--pricing-muted);
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(255, 253, 249, 0.55);
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-line,
+.skeleton-btn {
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    rgba(28, 25, 23, 0.06) 25%,
+    rgba(28, 25, 23, 0.12) 37%,
+    rgba(28, 25, 23, 0.06) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.2s ease infinite;
+}
+
+.skeleton-line {
+  height: 14px;
+  margin-bottom: 12px;
+}
+
+.skeleton-title {
+  width: 42%;
+  height: 22px;
+  margin-bottom: 16px;
+}
+
+.skeleton-desc {
+  width: 88%;
+  margin-bottom: 24px;
+}
+
+.skeleton-price {
+  width: 48%;
+  height: 34px;
+  margin-bottom: 18px;
+}
+
+.skeleton-short {
+  width: 58%;
+}
+
+.skeleton-btn {
+  height: 44px;
+  margin-top: 18px;
+  border-radius: 12px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (max-width: 1200px) {
+  .duration-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 960px) {
-  .plans-view.is-mobile {
+  .plans-view {
+    gap: 20px;
     padding-top: 0;
-    padding-bottom: 8px;
-    gap: 12px;
   }
 
-  .mobile-active-plans {
-    display: flex;
-    flex-direction: column;
+  .plan-toolbar {
+    grid-template-columns: 1fr;
     gap: 10px;
+    margin-bottom: 20px;
   }
 
-  .mobile-active-plans__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .mobile-active-plans__title {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 800;
-    line-height: 1.25;
-    color: var(--text-primary);
-    font-family: "Space Grotesk", sans-serif;
-  }
-
-  .mobile-active-plan-card {
-    padding: 14px;
-    border-radius: 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-  }
-
-  .mobile-active-plan-card.is-warning {
-    border-color: rgba(245, 158, 11, 0.35);
-  }
-
-  .mobile-active-plan-card__top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .mobile-active-plan-card__name {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .mobile-active-plan-card__expiry {
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--text-tertiary);
-  }
-
-  .mobile-active-plan-card__stats {
-    margin-top: 10px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    color: var(--text-tertiary);
-    font-weight: 600;
-  }
-
-  .unlimited-quota {
-    color: #9333ea;
-    font-weight: 700;
-  }
-
-  .plans-title {
-    font-size: 22px;
-    margin: 0 0 8px;
-    line-height: 1.25;
-  }
-
-  .plans-desc {
-    font-size: 13px;
-    padding: 0;
-    line-height: 1.5;
-  }
-
-  .plans-header {
-    margin: 0;
-    text-align: left;
-    max-width: none;
-  }
-
-  .duration-selector-wrapper {
-    padding: 0;
-    margin-bottom: 0;
-  }
-
-  .mobile-duration-tabs {
+  .toolbar-pill {
     width: 100%;
+    min-height: 40px;
   }
 
-  .mobile-duration-tabs :deep(.van-tabs__nav--card) {
-    margin: 0;
-    border-radius: 12px;
+  .tier-switch {
+    width: 100%;
+    justify-self: stretch;
   }
 
-  .mobile-plans {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-height: 120px;
+  .duration-grid {
+    margin-bottom: 32px;
   }
 
-  .mobile-plan-card {
-    position: relative;
-    padding: 18px 14px 14px;
-    border-radius: 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+  .duration-card {
+    min-height: 0;
   }
 
-  .mobile-plan-card.popular {
-    border-color: rgba(147, 51, 234, 0.35);
+  .compare-section {
+    padding: 18px 12px 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-hero {
+    margin-bottom: 20px;
   }
 
-  .mobile-popular-tag {
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
+  .pricing-title {
+    font-size: 22px;
   }
 
-  .mobile-current-tag {
-    position: absolute;
-    top: 12px;
-    right: 12px;
+  .duration-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 
-  .mobile-plan-name {
-    margin: 6px 0 4px;
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text-primary);
-    font-family: "Space Grotesk", sans-serif;
-  }
-
-  .mobile-plan-desc {
-    margin: 0 0 10px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    line-height: 1.5;
-  }
-
-  .mobile-plan-price-row {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  .mobile-plan-price {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    margin-bottom: 0;
-  }
-
-  .mobile-plan-price .price-value {
+  .price-amount {
     font-size: 32px;
-    font-weight: 900;
-    color: var(--text-primary);
-    font-family: "Space Grotesk", sans-serif;
   }
 
-  .mobile-plan-price .price-unit {
-    font-size: 13px;
-    color: var(--text-tertiary);
-  }
-
-  .mobile-plan-quota {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    line-height: 1.15;
-    flex-shrink: 0;
-  }
-
-  .mobile-plan-quota .quota-value {
-    font-size: 26px;
-    font-weight: 900;
-    color: #9333ea;
-    font-family: "Space Grotesk", sans-serif;
-  }
-
-  .mobile-plan-quota .quota-label {
-    margin-top: 2px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-tertiary);
-  }
-
-  .mobile-plan-features {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-
-  .mobile-feature {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-
-  .mobile-plan-btn {
-    --van-button-primary-background: #1c1917;
-    --van-button-primary-border-color: #1c1917;
-    font-weight: 700;
-  }
-
-  .mobile-custom-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px;
-    border-radius: 16px;
-    background: rgba(147, 51, 234, 0.06);
-    border: 1px dashed rgba(147, 51, 234, 0.35);
-    cursor: pointer;
-  }
-
-  .mobile-custom-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .mobile-custom-body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .mobile-custom-body h4 {
-    margin: 0 0 4px;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--accent-color);
-  }
-
-  .mobile-custom-body p {
-    margin: 0;
-    font-size: 12px;
-    color: var(--text-secondary);
+  .card-name {
+    font-size: 20px;
   }
 }
 </style>

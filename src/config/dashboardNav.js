@@ -20,8 +20,8 @@ export const desktopNavItems = [
   },
   {
     id: 'plans',
-    label: '套餐计划',
-    shortLabel: '套餐',
+    label: '会员计划',
+    shortLabel: '会员',
     iconComponent: Box,
     vantIcon: 'gift-o',
     path: '/dashboard/plans'
@@ -56,8 +56,8 @@ export const mobileNavItems = [
   },
   {
     id: 'plans',
-    label: '套餐计划',
-    shortLabel: '套餐',
+    label: '会员计划',
+    shortLabel: '会员',
     iconComponent: Box,
     vantIcon: 'gift-o',
     path: '/dashboard/plans'

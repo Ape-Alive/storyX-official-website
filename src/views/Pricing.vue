@@ -34,20 +34,19 @@
         </button>
       </div>
 
-      <!-- 加载骨架 -->
+      <!-- 加载骨架：列式，无卡片 -->
       <div
         v-if="loading"
-        class="duration-grid"
+        class="plan-matrix"
         aria-busy="true"
         aria-live="polite"
       >
-        <div v-for="n in 4" :key="n" class="duration-card skeleton-card">
+        <div v-for="n in 4" :key="n" class="plan-col skeleton-col">
           <div class="skeleton-line skeleton-title" />
-          <div class="skeleton-line skeleton-desc" />
           <div class="skeleton-line skeleton-price" />
+          <div class="skeleton-btn" />
           <div class="skeleton-line" />
           <div class="skeleton-line skeleton-short" />
-          <div class="skeleton-btn" />
         </div>
         <div class="loading-overlay">
           <el-icon class="is-loading" :size="28"><Loading /></el-icon>
@@ -55,13 +54,14 @@
         </div>
       </div>
 
-      <!-- 周 / 月 / 季 / 年 四列 -->
-      <div v-else class="duration-grid">
+      <!-- 周 / 月 / 季 / 年：参考 Cursor 列式布局，不用卡片分割 -->
+      <div v-else class="plan-matrix" role="list">
         <article
           v-for="slot in durationCards"
           :key="slot.key"
+          role="listitem"
           :class="[
-            'duration-card',
+            'plan-col',
             {
               'is-recommended': slot.pkg?.isRecommended,
               'is-empty': !slot.pkg,
@@ -69,57 +69,53 @@
           ]"
         >
           <template v-if="slot.pkg">
-            <div v-if="slot.pkg.isRecommended" class="recommend-tag">推荐</div>
+            <div class="plan-col__head">
+              <div class="plan-col__title-row">
+                <h3 class="plan-col__name">{{ slot.pkg.cardTitle }}</h3>
+                <span v-if="slot.pkg.isRecommended" class="plan-col__badge">推荐</span>
+              </div>
+              <p class="plan-col__desc">{{ slot.pkg.cardDesc }}</p>
 
-            <div class="card-top">
-              <h3 class="card-name">{{ slot.pkg.cardTitle }}</h3>
-              <p class="card-desc">{{ slot.pkg.cardDesc }}</p>
-            </div>
-
-            <div class="card-price-block">
-              <div class="card-price">
+              <div class="plan-col__price">
                 <span class="price-amount">¥{{ formatPrice(slot.pkg.displayPrice) }}</span>
                 <span class="price-unit">/{{ slot.unitLabel }}</span>
               </div>
-              <div v-if="slot.pkg.hasDiscount" class="card-discount">
+              <div v-if="slot.pkg.hasDiscount" class="plan-col__discount">
                 <span class="price-original">¥{{ formatPrice(slot.pkg.originalPrice) }}</span>
                 <span class="discount-chip">{{ slot.pkg.discountLabel }}</span>
               </div>
+
+              <button
+                type="button"
+                :class="['buy-btn', { 'is-primary': slot.pkg.isRecommended }]"
+                :disabled="checkoutVisible && checkoutPkg?.id === slot.pkg.id"
+                @click="handleSubscribe(slot.pkg)"
+              >
+                {{ buyButtonText }}
+              </button>
             </div>
 
-            <button
-              type="button"
-              :class="['buy-btn', { 'is-primary': slot.pkg.isRecommended }]"
-              :disabled="checkoutVisible && checkoutPkg?.id === slot.pkg.id"
-              @click="handleSubscribe(slot.pkg)"
-            >
-              {{ buyButtonText }}
-            </button>
-
-            <!-- 赠送积分（参考图二结构，积分取套餐额度） -->
-            <div class="gift-quota">
-              <div class="gift-quota__head">
-                <span class="gift-quota__title">赠送积分</span>
-                <span class="gift-quota__note">会员过期清空</span>
-              </div>
-              <div class="gift-quota__amount">
+            <div class="plan-col__row">
+              <div class="plan-col__row-label">赠送积分</div>
+              <div class="plan-col__row-value">
                 <span class="gift-quota__value">{{ formatGiftQuota(slot.pkg.quota) }}</span>
                 <span class="gift-quota__unit">积分</span>
-              </div>
-              <div class="gift-quota__usage">
-                <div class="gift-quota__usage-label">可用于</div>
-                <div class="gift-quota__tags">
-                  <span
-                    v-for="tag in QUOTA_USAGE_TAGS"
-                    :key="tag"
-                    class="gift-quota__tag"
-                  >{{ tag }}</span>
-                </div>
+                <span class="gift-quota__note">会员过期清空</span>
               </div>
             </div>
 
-            <!-- 权限文案：仅取后台 permissionTexts / effectivePermissionTexts -->
-            <ul v-if="slot.pkg.features.length" class="card-features">
+            <div class="plan-col__row">
+              <div class="plan-col__row-label">可用于</div>
+              <div class="plan-col__tags">
+                <span
+                  v-for="tag in QUOTA_USAGE_TAGS"
+                  :key="tag"
+                  class="plan-col__tag"
+                >{{ tag }}</span>
+              </div>
+            </div>
+
+            <ul v-if="slot.pkg.features.length" class="plan-col__features">
               <li
                 v-for="feature in slot.pkg.features"
                 :key="feature.label"
@@ -133,9 +129,11 @@
           </template>
 
           <template v-else>
-            <h3 class="card-name">{{ slot.label }}</h3>
-            <p class="card-desc empty-hint">该版本暂未上架此周期套餐</p>
-            <button type="button" class="buy-btn" disabled>暂不可购</button>
+            <div class="plan-col__head">
+              <h3 class="plan-col__name">{{ slot.label }}</h3>
+              <p class="plan-col__desc">该版本暂未上架此周期套餐</p>
+              <button type="button" class="buy-btn" disabled>暂不可购</button>
+            </div>
           </template>
         </article>
       </div>
@@ -144,7 +142,7 @@
         当前版本暂无可用套餐
       </div>
 
-      <!-- 各版本功能比较 -->
+      <!-- 各版本功能比较：扁平表格，无卡片外壳 -->
       <section class="compare-section" aria-labelledby="compare-heading">
         <h2 id="compare-heading" class="compare-title">各版本功能比较</h2>
 
@@ -157,7 +155,7 @@
           <table class="compare-table">
             <thead>
               <tr>
-                <th scope="col">功能</th>
+                <th scope="col" class="compare-feature-col">功能</th>
                 <th
                   v-for="tier in tiers"
                   :key="tier.roleKey"
@@ -702,95 +700,89 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-.duration-grid {
+/* 列式套餐矩阵：无卡片边框 / 阴影 / 圆角底 */
+.plan-matrix {
   position: relative;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-  align-items: stretch;
-  margin-bottom: 64px;
+  gap: 0;
+  align-items: start;
+  margin-bottom: 72px;
+  border-top: 1px solid var(--pricing-line);
 }
 
-.duration-card {
-  position: relative;
+.plan-col {
   display: flex;
   flex-direction: column;
-  min-height: 520px;
-  padding: 28px 22px 24px;
-  border-radius: 18px;
-  background: var(--pricing-card);
-  border: 1px solid var(--pricing-line);
-  box-shadow: 0 14px 36px rgba(28, 25, 23, 0.05);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  min-width: 0;
+  padding: 28px 20px 8px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--pricing-line);
+  box-shadow: none;
+  border-radius: 0;
 }
 
-.duration-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 40px rgba(28, 25, 23, 0.08);
+.plan-col:last-child {
+  border-right: none;
 }
 
-.duration-card.is-recommended {
-  border-color: rgba(17, 17, 17, 0.45);
-  box-shadow:
-    0 0 0 1px rgba(17, 17, 17, 0.18),
-    0 18px 40px rgba(17, 17, 17, 0.1);
+.plan-col.is-recommended {
+  background: rgba(28, 25, 23, 0.03);
 }
 
-.duration-card.is-empty {
-  justify-content: flex-start;
-  opacity: 0.78;
+.plan-col.is-empty {
+  opacity: 0.72;
 }
 
-.recommend-tag {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 5px 14px;
-  border-radius: 999px;
-  background: var(--pricing-accent);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.plan-col__head {
+  padding-bottom: 20px;
+  margin-bottom: 4px;
 }
 
-.card-top {
-  margin-bottom: 18px;
+.plan-col__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-.card-name {
-  margin: 0 0 8px;
-  font-size: 24px;
+.plan-col__name {
+  margin: 0;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
   font-family: "Space Grotesk", "PingFang SC", sans-serif;
 }
 
-.card-desc {
-  margin: 0;
+.plan-col__badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.plan-col__desc {
+  margin: 0 0 18px;
   font-size: 13px;
   line-height: 1.55;
   color: var(--pricing-muted);
   min-height: 40px;
 }
 
-.empty-hint {
-  margin-bottom: 24px;
-}
-
-.card-price-block {
-  margin-bottom: 20px;
-}
-
-.card-price {
+.plan-col__price {
   display: flex;
   align-items: baseline;
   gap: 4px;
+  margin-bottom: 8px;
 }
 
 .price-amount {
-  font-size: 40px;
+  font-size: 36px;
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -803,12 +795,12 @@ onMounted(() => {
   color: var(--pricing-muted);
 }
 
-.card-discount {
+.plan-col__discount {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  margin-bottom: 16px;
 }
 
 .price-original {
@@ -829,58 +821,68 @@ onMounted(() => {
 
 .buy-btn {
   width: 100%;
-  margin-bottom: 16px;
-  padding: 14px 16px;
-  border: none;
-  border-radius: 12px;
+  margin-top: 4px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   background: rgba(28, 25, 23, 0.08);
   color: var(--pricing-ink);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .buy-btn:hover:not(:disabled) {
   background: rgba(28, 25, 23, 0.14);
-  transform: translateY(-1px);
 }
 
 .buy-btn.is-primary {
-  background: var(--pricing-accent);
+  background: #111;
   color: #fff;
 }
 
 .buy-btn.is-primary:hover:not(:disabled) {
-  background: #000000;
+  background: #000;
 }
 
 .buy-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
-.gift-quota {
-  margin-bottom: 16px;
-  padding: 14px 14px 12px;
-  border-radius: 14px;
-  background: rgba(28, 25, 23, 0.035);
-  border: 1px solid var(--pricing-line);
+.plan-col__row {
+  padding: 14px 0;
+  border-top: 1px solid var(--pricing-line);
 }
 
-.gift-quota__head {
+.plan-col__row-label {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pricing-muted);
+}
+
+.plan-col__row-value {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 6px 8px;
-  margin-bottom: 8px;
 }
 
-.gift-quota__title {
+.gift-quota__value {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-family: "Space Grotesk", sans-serif;
+  color: var(--pricing-ink);
+}
+
+.gift-quota__unit {
   font-size: 13px;
-  font-weight: 750;
-  color: var(--pricing-accent);
+  font-weight: 650;
+  color: var(--pricing-muted);
 }
 
 .gift-quota__note {
@@ -896,78 +898,48 @@ onMounted(() => {
   content: ")";
 }
 
-.gift-quota__amount {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.gift-quota__value {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  font-family: "Space Grotesk", sans-serif;
-  color: var(--pricing-ink);
-}
-
-.gift-quota__unit {
-  font-size: 13px;
-  font-weight: 650;
-  color: var(--pricing-muted);
-}
-
-.gift-quota__usage {
-  padding-top: 12px;
-  border-top: 1px solid var(--pricing-line);
-}
-
-.gift-quota__usage-label {
-  margin-bottom: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--pricing-muted);
-}
-
-.gift-quota__tags {
+.plan-col__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.gift-quota__tag {
+.plan-col__tag {
   display: inline-flex;
-  align-items: center;
-  padding: 4px 9px;
-  border-radius: 8px;
-  background: rgba(255, 253, 249, 0.9);
+  padding: 3px 8px;
+  border-radius: 6px;
   border: 1px solid var(--pricing-line);
+  background: transparent;
   font-size: 11px;
   font-weight: 650;
   color: rgba(28, 25, 23, 0.78);
   line-height: 1.3;
 }
 
-.card-features {
+.plan-col__features {
   list-style: none;
   margin: 0;
-  padding: 16px 0 0;
+  padding: 8px 0 16px;
   border-top: 1px solid var(--pricing-line);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  flex: 1;
+  gap: 0;
 }
 
-.card-features li {
+.plan-col__features li {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(28, 25, 23, 0.06);
   font-size: 13px;
   font-weight: 600;
   color: rgba(28, 25, 23, 0.78);
   line-height: 1.45;
+}
+
+.plan-col__features li:last-child {
+  border-bottom: none;
 }
 
 .feature-mark {
@@ -979,13 +951,13 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--pricing-accent-soft);
-  color: var(--pricing-accent);
+  background: rgba(17, 17, 17, 0.08);
+  color: #111;
 }
 
 .empty-packages {
   text-align: center;
-  margin: -36px 0 48px;
+  margin: -40px 0 48px;
   color: var(--pricing-muted);
   font-size: 14px;
   font-weight: 600;
@@ -993,14 +965,14 @@ onMounted(() => {
 
 .compare-section {
   margin-top: 8px;
-  padding: 28px 24px 20px;
-  border-radius: 18px;
-  background: rgba(255, 253, 249, 0.72);
-  border: 1px solid var(--pricing-line);
+  padding: 8px 0 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
 .compare-title {
-  margin: 0 0 20px;
+  margin: 0 0 24px;
   text-align: center;
   font-size: 22px;
   font-weight: 800;
@@ -1099,19 +1071,17 @@ onMounted(() => {
   color: var(--pricing-muted);
   font-size: 14px;
   font-weight: 600;
-  background: rgba(246, 241, 234, 0.42);
-  backdrop-filter: blur(2px);
+  background: rgba(247, 247, 244, 0.72);
   pointer-events: none;
-  border-radius: 18px;
 }
 
-.skeleton-card {
+.skeleton-col {
   pointer-events: none;
 }
 
 .skeleton-line,
 .skeleton-btn {
-  border-radius: 10px;
+  border-radius: 8px;
   background: linear-gradient(
     90deg,
     rgba(28, 25, 23, 0.06) 25%,
@@ -1133,11 +1103,6 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-.skeleton-desc {
-  width: 88%;
-  margin-bottom: 24px;
-}
-
 .skeleton-price {
   width: 48%;
   height: 34px;
@@ -1149,9 +1114,9 @@ onMounted(() => {
 }
 
 .skeleton-btn {
-  height: 44px;
-  margin-top: 18px;
-  border-radius: 12px;
+  height: 42px;
+  margin: 8px 0 18px;
+  border-radius: 999px;
 }
 
 @keyframes skeleton-shimmer {
@@ -1164,8 +1129,16 @@ onMounted(() => {
 }
 
 @media (max-width: 1100px) {
-  .duration-grid {
+  .plan-matrix {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .plan-col:nth-child(2n) {
+    border-right: none;
+  }
+
+  .plan-col:nth-child(n + 3) {
+    border-top: 1px solid var(--pricing-line);
   }
 }
 
@@ -1194,30 +1167,37 @@ onMounted(() => {
     justify-self: stretch;
   }
 
-  .duration-grid {
-    margin-bottom: 40px;
-  }
-
-  .duration-card:hover {
-    transform: none;
+  .plan-matrix {
+    margin-bottom: 48px;
   }
 
   .compare-section {
-    padding: 22px 14px 12px;
+    padding: 0;
   }
 }
 
 @media (max-width: 640px) {
-  .duration-grid {
+  .plan-matrix {
     grid-template-columns: 1fr;
   }
 
-  .price-amount {
-    font-size: 34px;
+  .plan-col {
+    border-right: none;
+    border-top: 1px solid var(--pricing-line);
+    padding-left: 0;
+    padding-right: 0;
   }
 
-  .card-name {
-    font-size: 22px;
+  .plan-col:first-child {
+    border-top: none;
+  }
+
+  .price-amount {
+    font-size: 32px;
+  }
+
+  .plan-col__name {
+    font-size: 20px;
   }
 }
 </style>

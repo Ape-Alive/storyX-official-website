@@ -86,17 +86,16 @@
 
       <div
         v-if="loading"
-        class="duration-grid"
+        class="plan-matrix"
         aria-busy="true"
         aria-live="polite"
       >
-        <div v-for="n in 4" :key="n" class="duration-card skeleton-card">
+        <div v-for="n in 4" :key="n" class="plan-col skeleton-col">
           <div class="skeleton-line skeleton-title" />
-          <div class="skeleton-line skeleton-desc" />
           <div class="skeleton-line skeleton-price" />
+          <div class="skeleton-btn" />
           <div class="skeleton-line" />
           <div class="skeleton-line skeleton-short" />
-          <div class="skeleton-btn" />
         </div>
         <div class="loading-overlay">
           <el-icon class="is-loading" :size="28"><Loading /></el-icon>
@@ -104,12 +103,13 @@
         </div>
       </div>
 
-      <div v-else class="duration-grid">
+      <div v-else class="plan-matrix" role="list">
         <article
           v-for="slot in durationCards"
           :key="slot.key"
+          role="listitem"
           :class="[
-            'duration-card',
+            'plan-col',
             {
               'is-recommended': slot.pkg?.isRecommended,
               'is-current': slot.pkg?.isCurrent,
@@ -118,62 +118,60 @@
           ]"
         >
           <template v-if="slot.pkg">
-            <div v-if="slot.pkg.isRecommended" class="recommend-tag">推荐</div>
-            <div v-else-if="slot.pkg.isCurrent" class="current-tag">当前会员</div>
+            <div class="plan-col__head">
+              <div class="plan-col__title-row">
+                <h3 class="plan-col__name">{{ slot.pkg.cardTitle }}</h3>
+                <span v-if="slot.pkg.isRecommended" class="plan-col__badge">推荐</span>
+                <span v-else-if="slot.pkg.isCurrent" class="plan-col__badge is-current">当前会员</span>
+              </div>
+              <p class="plan-col__desc">{{ slot.pkg.cardDesc }}</p>
 
-            <div class="card-top">
-              <h3 class="card-name">{{ slot.pkg.cardTitle }}</h3>
-              <p class="card-desc">{{ slot.pkg.cardDesc }}</p>
-            </div>
-
-            <div class="card-price-block">
-              <div class="card-price">
+              <div class="plan-col__price">
                 <span class="price-amount">¥{{ formatPrice(slot.pkg.displayPrice) }}</span>
                 <span class="price-unit">/{{ slot.unitLabel }}</span>
               </div>
-              <div v-if="slot.pkg.hasDiscount" class="card-discount">
+              <div v-if="slot.pkg.hasDiscount" class="plan-col__discount">
                 <span class="price-original">¥{{ formatPrice(slot.pkg.originalPrice) }}</span>
                 <span class="discount-chip">{{ slot.pkg.discountLabel }}</span>
               </div>
+
+              <button
+                type="button"
+                :class="[
+                  'buy-btn',
+                  {
+                    'is-primary': slot.pkg.isRecommended && !slot.pkg.buttonStatus?.disabled,
+                    'is-current': slot.pkg.buttonStatus?.disabled,
+                  },
+                ]"
+                :disabled="slot.pkg.buttonStatus?.disabled || (checkoutVisible && checkoutPkg?.id === slot.pkg.id)"
+                @click="handleSelectPlan(slot.pkg)"
+              >
+                {{ slot.pkg.buttonStatus?.text || '立即购买' }}
+              </button>
             </div>
 
-            <button
-              type="button"
-              :class="[
-                'buy-btn',
-                {
-                  'is-primary': slot.pkg.isRecommended && !slot.pkg.buttonStatus?.disabled,
-                  'is-current': slot.pkg.buttonStatus?.disabled,
-                },
-              ]"
-              :disabled="slot.pkg.buttonStatus?.disabled || (checkoutVisible && checkoutPkg?.id === slot.pkg.id)"
-              @click="handleSelectPlan(slot.pkg)"
-            >
-              {{ slot.pkg.buttonStatus?.text || '立即购买' }}
-            </button>
-
-            <div class="gift-quota">
-              <div class="gift-quota__head">
-                <span class="gift-quota__title">赠送积分</span>
-                <span class="gift-quota__note">会员过期清空</span>
-              </div>
-              <div class="gift-quota__amount">
+            <div class="plan-col__row">
+              <div class="plan-col__row-label">赠送积分</div>
+              <div class="plan-col__row-value">
                 <span class="gift-quota__value">{{ formatGiftQuota(slot.pkg.quota) }}</span>
                 <span class="gift-quota__unit">积分</span>
-              </div>
-              <div class="gift-quota__usage">
-                <div class="gift-quota__usage-label">可用于</div>
-                <div class="gift-quota__tags">
-                  <span
-                    v-for="tag in QUOTA_USAGE_TAGS"
-                    :key="tag"
-                    class="gift-quota__tag"
-                  >{{ tag }}</span>
-                </div>
+                <span class="gift-quota__note">会员过期清空</span>
               </div>
             </div>
 
-            <ul v-if="slot.pkg.features.length" class="card-features">
+            <div class="plan-col__row">
+              <div class="plan-col__row-label">可用于</div>
+              <div class="plan-col__tags">
+                <span
+                  v-for="tag in QUOTA_USAGE_TAGS"
+                  :key="tag"
+                  class="plan-col__tag"
+                >{{ tag }}</span>
+              </div>
+            </div>
+
+            <ul v-if="slot.pkg.features.length" class="plan-col__features">
               <li
                 v-for="feature in slot.pkg.features"
                 :key="feature.label"
@@ -187,9 +185,11 @@
           </template>
 
           <template v-else>
-            <h3 class="card-name">{{ slot.label }}</h3>
-            <p class="card-desc empty-hint">该版本暂未上架此周期套餐</p>
-            <button type="button" class="buy-btn" disabled>暂不可购</button>
+            <div class="plan-col__head">
+              <h3 class="plan-col__name">{{ slot.label }}</h3>
+              <p class="plan-col__desc">该版本暂未上架此周期套餐</p>
+              <button type="button" class="buy-btn" disabled>暂不可购</button>
+            </div>
           </template>
         </article>
       </div>
@@ -844,105 +844,92 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-.duration-grid {
+.plan-matrix {
   position: relative;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  align-items: stretch;
+  gap: 0;
+  align-items: start;
   margin-bottom: 48px;
+  border-top: 1px solid var(--pricing-line);
 }
 
-.duration-card {
-  position: relative;
+.plan-col {
   display: flex;
   flex-direction: column;
-  min-height: 500px;
-  padding: 24px 18px 20px;
-  border-radius: 16px;
-  background: var(--pricing-card);
-  border: 1px solid var(--pricing-line);
+  min-width: 0;
+  padding: 24px 16px 8px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--pricing-line);
   box-shadow: none;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  border-radius: 0;
 }
 
-.duration-card:hover {
-  border-color: rgba(28, 25, 23, 0.18);
+.plan-col:last-child {
+  border-right: none;
 }
 
-.duration-card.is-recommended {
-  border-color: rgba(17, 17, 17, 0.45);
-  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.12);
+.plan-col.is-recommended,
+.plan-col.is-current {
+  background: rgba(28, 25, 23, 0.03);
 }
 
-.duration-card.is-current:not(.is-recommended) {
-  border-color: rgba(28, 25, 23, 0.28);
+.plan-col.is-empty {
+  opacity: 0.72;
 }
 
-.duration-card.is-empty {
-  justify-content: flex-start;
-  opacity: 0.78;
+.plan-col__head {
+  padding-bottom: 16px;
 }
 
-.recommend-tag,
-.current-tag {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 5px 14px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.plan-col__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-.recommend-tag {
-  background: var(--pricing-accent);
-  color: #fff;
-}
-
-.current-tag {
-  background: #111;
-  color: #fff;
-}
-
-.card-top {
-  margin-bottom: 16px;
-}
-
-.card-name {
-  margin: 0 0 8px;
-  font-size: 22px;
+.plan-col__name {
+  margin: 0;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.02em;
   font-family: 'Space Grotesk', 'PingFang SC', sans-serif;
 }
 
-.card-desc {
-  margin: 0;
+.plan-col__badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.plan-col__badge.is-current {
+  background: #525252;
+}
+
+.plan-col__desc {
+  margin: 0 0 16px;
   font-size: 13px;
   line-height: 1.55;
   color: var(--pricing-muted);
   min-height: 40px;
 }
 
-.empty-hint {
-  margin-bottom: 24px;
-}
-
-.card-price-block {
-  margin-bottom: 16px;
-}
-
-.card-price {
+.plan-col__price {
   display: flex;
   align-items: baseline;
   gap: 4px;
+  margin-bottom: 8px;
 }
 
 .price-amount {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -955,12 +942,12 @@ onMounted(() => {
   color: var(--pricing-muted);
 }
 
-.card-discount {
+.plan-col__discount {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  margin-bottom: 14px;
 }
 
 .price-original {
@@ -981,10 +968,10 @@ onMounted(() => {
 
 .buy-btn {
   width: 100%;
-  margin-bottom: 14px;
+  margin-top: 4px;
   padding: 12px 16px;
-  border: none;
-  border-radius: 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   background: #111;
   color: #fff;
   font-size: 14px;
@@ -998,11 +985,11 @@ onMounted(() => {
 }
 
 .buy-btn.is-primary {
-  background: var(--pricing-accent);
+  background: #111;
 }
 
 .buy-btn.is-primary:hover:not(:disabled) {
-  background: #000000;
+  background: #000;
 }
 
 .buy-btn.is-current,
@@ -1012,26 +999,37 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-.gift-quota {
-  margin-bottom: 14px;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(28, 25, 23, 0.035);
-  border: 1px solid var(--pricing-line);
+.plan-col__row {
+  padding: 14px 0;
+  border-top: 1px solid var(--pricing-line);
 }
 
-.gift-quota__head {
+.plan-col__row-label {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pricing-muted);
+}
+
+.plan-col__row-value {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 6px 8px;
-  margin-bottom: 8px;
 }
 
-.gift-quota__title {
+.gift-quota__value {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.gift-quota__unit {
   font-size: 13px;
-  font-weight: 750;
-  color: var(--pricing-accent);
+  font-weight: 650;
+  color: var(--pricing-muted);
 }
 
 .gift-quota__note {
@@ -1047,77 +1045,47 @@ onMounted(() => {
   content: ')';
 }
 
-.gift-quota__amount {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.gift-quota__value {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  font-family: 'Space Grotesk', sans-serif;
-}
-
-.gift-quota__unit {
-  font-size: 13px;
-  font-weight: 650;
-  color: var(--pricing-muted);
-}
-
-.gift-quota__usage {
-  padding-top: 10px;
-  border-top: 1px solid var(--pricing-line);
-}
-
-.gift-quota__usage-label {
-  margin-bottom: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--pricing-muted);
-}
-
-.gift-quota__tags {
+.plan-col__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.gift-quota__tag {
+.plan-col__tag {
   display: inline-flex;
-  align-items: center;
-  padding: 4px 9px;
-  border-radius: 8px;
-  background: #fff;
+  padding: 3px 8px;
+  border-radius: 6px;
   border: 1px solid var(--pricing-line);
+  background: transparent;
   font-size: 11px;
   font-weight: 650;
   color: rgba(28, 25, 23, 0.78);
-  line-height: 1.3;
 }
 
-.card-features {
+.plan-col__features {
   list-style: none;
   margin: 0;
-  padding: 14px 0 0;
+  padding: 8px 0 12px;
   border-top: 1px solid var(--pricing-line);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  flex: 1;
+  gap: 0;
 }
 
-.card-features li {
+.plan-col__features li {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(28, 25, 23, 0.06);
   font-size: 13px;
   font-weight: 600;
   color: rgba(28, 25, 23, 0.78);
   line-height: 1.45;
+}
+
+.plan-col__features li:last-child {
+  border-bottom: none;
 }
 
 .feature-mark {
@@ -1129,13 +1097,13 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--pricing-accent-soft);
-  color: var(--pricing-accent);
+  background: rgba(17, 17, 17, 0.08);
+  color: #111;
 }
 
 .empty-packages {
   text-align: center;
-  margin: -28px 0 36px;
+  margin: -24px 0 36px;
   color: var(--pricing-muted);
   font-size: 14px;
   font-weight: 600;
@@ -1143,10 +1111,10 @@ onMounted(() => {
 
 .compare-section {
   margin-top: 4px;
-  padding: 24px 20px 16px;
-  border-radius: 16px;
-  background: var(--pricing-card);
-  border: 1px solid var(--pricing-line);
+  padding: 8px 0 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
   box-shadow: none;
 }
 
@@ -1312,9 +1280,21 @@ onMounted(() => {
   }
 }
 
+.skeleton-col {
+  pointer-events: none;
+}
+
 @media (max-width: 1200px) {
-  .duration-grid {
+  .plan-matrix {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .plan-col:nth-child(2n) {
+    border-right: none;
+  }
+
+  .plan-col:nth-child(n + 3) {
+    border-top: 1px solid var(--pricing-line);
   }
 }
 
@@ -1340,16 +1320,12 @@ onMounted(() => {
     justify-self: stretch;
   }
 
-  .duration-grid {
+  .plan-matrix {
     margin-bottom: 32px;
   }
 
-  .duration-card {
-    min-height: 0;
-  }
-
   .compare-section {
-    padding: 18px 12px 10px;
+    padding: 0;
   }
 }
 
@@ -1362,17 +1338,27 @@ onMounted(() => {
     font-size: 22px;
   }
 
-  .duration-grid {
+  .plan-matrix {
     grid-template-columns: 1fr;
-    gap: 14px;
+  }
+
+  .plan-col {
+    border-right: none;
+    border-top: 1px solid var(--pricing-line);
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .plan-col:first-child {
+    border-top: none;
   }
 
   .price-amount {
-    font-size: 32px;
+    font-size: 30px;
   }
 
-  .card-name {
-    font-size: 20px;
+  .plan-col__name {
+    font-size: 18px;
   }
 }
 </style>

@@ -28,21 +28,23 @@ import { ArrowLeft } from '@element-plus/icons-vue'
   gap: 4px;
   padding: 7px 12px;
   border-radius: 8px;
-  background: #111;
-  border: 1px solid #111;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(17, 17, 17, 0.12);
   box-shadow: none;
-  color: #fff;
+  color: rgba(17, 17, 17, 0.58);
   font-size: 12px;
   font-weight: 600;
   text-decoration: none;
   font-family: 'Inter', 'PingFang SC', sans-serif;
-  transition: background 0.15s, border-color 0.15s;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .auth-back-home:hover {
-  background: #000;
-  border-color: #000;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(17, 17, 17, 0.22);
+  color: #111;
 }
 
 @media (max-width: 960px) {

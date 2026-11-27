@@ -298,30 +298,52 @@ const handleRegister = async () => {
 <style scoped>
 .auth-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 72px 24px 24px;
   position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 55% at 12% 18%, rgba(28, 25, 23, 0.07), transparent 58%),
+    radial-gradient(ellipse 65% 50% at 88% 82%, rgba(87, 83, 78, 0.09), transparent 55%),
+    linear-gradient(165deg, #f8f7f5 0%, #efeeec 48%, #f4f3f1 100%);
+}
+
+.auth-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(17, 17, 17, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 17, 17, 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 20%, transparent 75%);
 }
 
 .auth-container {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 400px;
 }
 
 .auth-card {
-  background: #fff;
-  border: 1px solid #e8e8e8;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(17, 17, 17, 0.08);
   border-radius: 12px;
   padding: 28px 24px 24px;
   box-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .auth-header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 
 .auth-title {
@@ -349,12 +371,12 @@ const handleRegister = async () => {
 }
 
 .auth-form :deep(.el-form-item) {
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .auth-form :deep(.el-form-item:last-child) {
   margin-bottom: 0;
-  margin-top: 4px;
+  margin-top: 12px;
 }
 
 .auth-form :deep(.el-form-item__error) {
@@ -496,12 +518,14 @@ const handleRegister = async () => {
 
 @media (max-width: 960px) {
   .auth-page {
-    padding: 64px 16px 20px;
+    padding: max(96px, 14vh) 16px 48px;
     align-items: flex-start;
+    justify-content: center;
   }
 
   .auth-container {
     max-width: 100%;
+    margin-top: min(6vh, 40px);
   }
 
   .auth-card {
@@ -509,10 +533,12 @@ const handleRegister = async () => {
     border-radius: 0;
     padding: 8px 0 0;
     background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .auth-header {
-    margin-bottom: 16px;
+    margin-bottom: 24px;
   }
 
   .auth-title {
@@ -521,7 +547,7 @@ const handleRegister = async () => {
   }
 
   .auth-form :deep(.el-form-item) {
-    margin-bottom: 10px;
+    margin-bottom: 18px;
   }
 
   .auth-form :deep(.el-input__wrapper) {
@@ -547,7 +573,11 @@ const handleRegister = async () => {
 
 @media (max-width: 480px) {
   .auth-page {
-    padding: 56px 14px 16px;
+    padding: max(88px, 12vh) 14px 40px;
+  }
+
+  .auth-container {
+    margin-top: min(6vh, 48px);
   }
 
   .auth-title {

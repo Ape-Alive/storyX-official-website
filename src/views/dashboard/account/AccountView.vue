@@ -1,15 +1,5 @@
 <template>
   <div class="account-page" :class="{ 'is-mobile': isMobile }">
-    <header class="page-head">
-      <div class="page-head__icon" aria-hidden="true">
-        <el-icon :size="22"><User /></el-icon>
-      </div>
-      <div>
-        <h1 class="page-head__title">个人中心</h1>
-        <p class="page-head__desc">管理您的账户信息、套餐权益与联系支持</p>
-      </div>
-    </header>
-
     <!-- 顶部资料卡 -->
     <section id="profile" class="profile-banner card">
       <div class="profile-banner__left">
@@ -238,7 +228,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { showSuccessToast, showFailToast } from 'vant'
 import {
-  User,
   UserFilled,
   EditPen,
   Present,
@@ -535,38 +524,6 @@ watch(() => route.hash, scrollToHash)
   color: var(--ink);
 }
 
-.page-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
-.page-head__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #111;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.page-head__title {
-  margin: 0 0 4px;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
-.page-head__desc {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted);
-}
-
 .card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -689,7 +646,7 @@ watch(() => route.hash, scrollToHash)
   display: grid;
   grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.4fr);
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .account-col {
@@ -697,6 +654,11 @@ watch(() => route.hash, scrollToHash)
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+  min-height: 100%;
+}
+
+.account-col > .card:last-child {
+  flex: 1;
 }
 
 .info-grid {
@@ -917,19 +879,28 @@ watch(() => route.hash, scrollToHash)
   gap: 0;
   padding: 0;
   overflow: hidden;
+  align-items: stretch;
 }
 
 .support-card__panel {
   padding: 22px 20px;
-  background: #111;
-  color: rgba(255, 255, 255, 0.88);
+  background:
+    radial-gradient(ellipse 80% 120% at 100% 0%, rgba(28, 25, 23, 0.08), transparent 55%),
+    linear-gradient(135deg, #f4f3f1 0%, #ebeae7 100%);
+  color: var(--ink);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .support-card__icon {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(28, 25, 23, 0.08);
+  color: var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -940,21 +911,21 @@ watch(() => route.hash, scrollToHash)
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 800;
-  color: #fff;
+  color: var(--ink);
 }
 
 .support-card__desc {
   margin: 0 0 16px;
   font-size: 13px;
   line-height: 1.55;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--muted);
 }
 
 .support-card__email {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #fff;
+  color: var(--ink);
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
@@ -965,9 +936,10 @@ watch(() => route.hash, scrollToHash)
 }
 
 .support-card__sla {
-  margin-top: 14px;
+  margin-top: auto;
+  padding-top: 14px;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--muted);
 }
 
 .support-form {
@@ -975,6 +947,8 @@ watch(() => route.hash, scrollToHash)
   display: flex;
   flex-direction: column;
   gap: 12px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .form-row {
@@ -1048,7 +1022,7 @@ watch(() => route.hash, scrollToHash)
   width: 100%;
   border-radius: 10px;
   min-height: 42px;
-  margin-top: 4px;
+  margin-top: auto;
 }
 
 .btn-outline {
@@ -1105,12 +1079,13 @@ watch(() => route.hash, scrollToHash)
     align-items: flex-start;
   }
 
-  .page-head__title {
-    font-size: 22px;
-  }
-
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .support-card__panel {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
   }
 
   .card {

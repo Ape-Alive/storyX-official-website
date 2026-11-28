@@ -1151,62 +1151,160 @@ onMounted(() => {
 
 @media (max-width: 960px) {
   .pricing-page {
-    padding-top: 80px;
-    padding-bottom: 88px;
+    padding-top: 72px;
+    padding-bottom: 64px;
+    background:
+      radial-gradient(ellipse 90% 40% at 50% 0%, rgba(17, 17, 17, 0.05), transparent 55%),
+      linear-gradient(180deg, #f6f5f2 0%, #f1f0ec 100%);
   }
 
   .pricing-container {
-    padding: 36px 18px 72px;
+    padding: 28px 18px 64px;
+  }
+
+  .pricing-hero {
+    margin-bottom: 22px;
+  }
+
+  .pricing-title {
+    font-size: 26px;
+    letter-spacing: -0.02em;
+  }
+
+  .pricing-subtitle {
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 0 8px;
   }
 
   .plan-toolbar {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    display: block;
+    margin-bottom: 28px;
   }
 
+  /* 移动端隐藏：会员计划 / 采购咨询 */
   .toolbar-pill {
-    width: 100%;
-    min-height: 40px;
+    display: none;
   }
 
   .tier-switch {
     width: 100%;
     justify-self: stretch;
+    padding: 3px;
+    background: rgba(28, 25, 23, 0.07);
+  }
+
+  .tier-btn {
+    padding: 11px 10px;
+    font-size: 13px;
   }
 
   .plan-matrix {
-    margin-bottom: 48px;
+    margin-bottom: 40px;
+    border-top: none;
+    gap: 12px;
   }
 
   .compare-section {
     padding: 0;
   }
+
+  .compare-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
 }
 
 @media (max-width: 640px) {
+  .pricing-container {
+    padding: 20px 16px 56px;
+  }
+
+  .pricing-hero {
+    margin-bottom: 18px;
+  }
+
+  .pricing-title {
+    font-size: 24px;
+  }
+
+  .plan-toolbar {
+    margin-bottom: 20px;
+  }
+
   .plan-matrix {
     grid-template-columns: 1fr;
     min-height: 0;
+    gap: 0;
+    border-radius: 14px;
+    border: 1px solid var(--pricing-line);
+    background: rgba(255, 255, 255, 0.55);
+    overflow: hidden;
   }
 
   .plan-col {
-    min-height: 360px;
+    min-height: 0;
     border-right: none;
     border-top: 1px solid var(--pricing-line);
-    padding-left: 0;
-    padding-right: 0;
+    padding: 22px 18px 18px;
   }
 
   .plan-col:first-child {
     border-top: none;
   }
 
-  .price-amount {
-    font-size: 32px;
+  .plan-col.is-recommended {
+    background: rgba(28, 25, 23, 0.035);
+  }
+
+  .plan-col__head {
+    padding-bottom: 16px;
   }
 
   .plan-col__name {
-    font-size: 20px;
+    font-size: 19px;
+  }
+
+  .plan-col__desc {
+    margin-bottom: 14px;
+    min-height: 0;
+    font-size: 13px;
+  }
+
+  .price-amount {
+    font-size: 30px;
+  }
+
+  .buy-btn {
+    margin-top: 10px;
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+
+  .plan-col__row {
+    padding: 12px 0;
+  }
+
+  .plan-col__features {
+    padding-bottom: 4px;
+  }
+
+  .plan-col__features li {
+    padding: 9px 0;
+    font-size: 13px;
+  }
+
+  .compare-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    border: 1px solid var(--pricing-line);
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  .compare-table {
+    min-width: 520px;
   }
 }
 </style>

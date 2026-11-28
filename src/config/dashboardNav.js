@@ -1,22 +1,14 @@
-import { DataBoard, TrendCharts, Box, CreditCard, Message } from '@element-plus/icons-vue'
+import { TrendCharts, Box, User } from '@element-plus/icons-vue'
 
-/** 桌面侧栏导航 */
+/** 桌面侧栏：监控 / 会员计划 / 我的 */
 export const desktopNavItems = [
-  {
-    id: 'dashboard',
-    label: '控制台首页',
-    shortLabel: '首页',
-    iconComponent: DataBoard,
-    vantIcon: 'home-o',
-    path: '/dashboard/home'
-  },
   {
     id: 'usage',
     label: '使用监控',
     shortLabel: '监控',
     iconComponent: TrendCharts,
     vantIcon: 'chart-trending-o',
-    path: '/dashboard/usage'
+    path: '/dashboard/usage',
   },
   {
     id: 'plans',
@@ -24,27 +16,19 @@ export const desktopNavItems = [
     shortLabel: '会员',
     iconComponent: Box,
     vantIcon: 'gift-o',
-    path: '/dashboard/plans'
+    path: '/dashboard/plans',
   },
   {
-    id: 'orders',
-    label: '财务订单',
-    shortLabel: '订单',
-    iconComponent: CreditCard,
-    vantIcon: 'orders-o',
-    path: '/dashboard/orders'
+    id: 'account',
+    label: '我的',
+    shortLabel: '我的',
+    iconComponent: User,
+    vantIcon: 'user-o',
+    path: '/dashboard/account',
   },
-  {
-    id: 'contact',
-    label: '联系我们',
-    shortLabel: '联系',
-    iconComponent: Message,
-    vantIcon: 'envelop-o',
-    path: '/dashboard/contact'
-  }
 ]
 
-/** 移动底栏：监控作为首页 */
+/** 移动底栏：监控 / 会员 / 我的 */
 export const mobileNavItems = [
   {
     id: 'usage',
@@ -52,7 +36,7 @@ export const mobileNavItems = [
     shortLabel: '首页',
     iconComponent: TrendCharts,
     vantIcon: 'home-o',
-    path: '/dashboard/usage'
+    path: '/dashboard/usage',
   },
   {
     id: 'plans',
@@ -60,24 +44,16 @@ export const mobileNavItems = [
     shortLabel: '会员',
     iconComponent: Box,
     vantIcon: 'gift-o',
-    path: '/dashboard/plans'
+    path: '/dashboard/plans',
   },
   {
-    id: 'orders',
-    label: '财务订单',
-    shortLabel: '订单',
-    iconComponent: CreditCard,
-    vantIcon: 'orders-o',
-    path: '/dashboard/orders'
+    id: 'account',
+    label: '我的',
+    shortLabel: '我的',
+    iconComponent: User,
+    vantIcon: 'user-o',
+    path: '/dashboard/account',
   },
-  {
-    id: 'contact',
-    label: '联系我们',
-    shortLabel: '联系',
-    iconComponent: Message,
-    vantIcon: 'envelop-o',
-    path: '/dashboard/contact'
-  }
 ]
 
 /** @deprecated 兼容旧引用，默认桌面项 */
@@ -88,6 +64,9 @@ export function getDashboardNavItems(isMobile) {
 }
 
 export function isDashboardNavActive(routePath, itemPath) {
+  if (itemPath === '/dashboard/account') {
+    return routePath === itemPath || routePath.startsWith('/dashboard/account/')
+  }
   return (
     routePath === itemPath ||
     (itemPath === '/dashboard/home' && routePath === '/dashboard')

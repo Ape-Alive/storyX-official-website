@@ -19,7 +19,12 @@
                 <div class="user-name">{{ userName || '用户' }}</div>
                 <div class="user-email">{{ userEmail || 'user@example.com' }}</div>
               </div>
-              <el-dropdown-item divided command="theme">
+              <el-dropdown-item divided command="account">
+                <div class="dropdown-item-content">
+                  <span>个人中心</span>
+                </div>
+              </el-dropdown-item>
+              <el-dropdown-item command="theme">
                 <div class="dropdown-item-content">
                   <span>主题</span>
                   <div class="dropdown-item-right">
@@ -116,6 +121,8 @@ const handleDownload = () => {
 const handleCommand = (command) => {
   if (command === 'logout') {
     handleLogout()
+  } else if (command === 'account') {
+    router.push(isMobileDevice() ? '/dashboard/account' : '/dashboard/account/packages')
   } else if (command === 'theme') {
     themeStore.toggleTheme()
   } else if (command === 'download') {

@@ -520,11 +520,11 @@ const handleProcurement = () => {
   if (!getToken()) {
     router.push({
       path: "/auth/login",
-      query: { redirect: "/dashboard/contact" },
+      query: { redirect: "/dashboard/account/contact" },
     });
     return;
   }
-  router.push("/dashboard/contact");
+  router.push("/dashboard/account/contact");
 };
 
 const onCheckoutSuccess = () => {};

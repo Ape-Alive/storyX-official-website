@@ -3,6 +3,7 @@ import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { getToken } from '@/utils/storage'
+import { isMobileDevice } from '@/utils/device'
 
 const routes = [
   {
@@ -85,9 +86,49 @@ const routes = [
         component: () => import('@/views/dashboard/PlansView.vue')
       },
       {
+        path: 'account',
+        component: () => import('@/views/dashboard/account/AccountView.vue'),
+        children: [
+          {
+            path: '',
+            name: 'DashboardAccount',
+            component: {
+              name: 'AccountHubBlank',
+              render() {
+                return null
+              },
+            },
+          },
+          {
+            path: 'packages',
+            name: 'DashboardAccountPackages',
+            component: () => import('@/views/dashboard/account/MyPackagesView.vue'),
+          },
+          {
+            path: 'orders',
+            name: 'DashboardAccountOrders',
+            component: () => import('@/views/dashboard/OrdersView.vue'),
+          },
+          {
+            path: 'profile',
+            name: 'DashboardAccountProfile',
+            component: () => import('@/views/dashboard/account/ProfileView.vue'),
+          },
+          {
+            path: 'invite',
+            name: 'DashboardAccountInvite',
+            component: () => import('@/views/dashboard/account/InviteView.vue'),
+          },
+          {
+            path: 'contact',
+            name: 'DashboardAccountContact',
+            component: () => import('@/views/dashboard/ContactView.vue'),
+          },
+        ],
+      },
+      {
         path: 'orders',
-        name: 'DashboardOrders',
-        component: () => import('@/views/dashboard/OrdersView.vue')
+        redirect: '/dashboard/account/orders',
       },
       {
         path: 'docs',
@@ -96,8 +137,7 @@ const routes = [
       },
       {
         path: 'contact',
-        name: 'DashboardContact',
-        component: () => import('@/views/dashboard/ContactView.vue')
+        redirect: '/dashboard/account/contact',
       }
     ]
   },
@@ -121,7 +161,7 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫：检查登录状态
+// 路由守卫：检查登录状态；PC 进入「我的」枢纽时落到我的套餐
 router.beforeEach((to, from, next) => {
   const token = getToken()
 
@@ -131,17 +171,28 @@ router.beforeEach((to, from, next) => {
       path: '/auth/login',
       query: { redirect: to.fullPath }
     })
+    return
   }
+
   // 如果已登录用户访问登录/注册页，重定向到仪表盘
-  else if (
+  if (
     token &&
     (to.path === '/auth/login' || to.path === '/auth/register' || to.path === '/auth/forgot-password')
   ) {
     next('/dashboard/usage')
+    return
   }
-  else {
-    next()
+
+  // PC：/dashboard/account 直接进我的套餐；移动端保留枢纽列表
+  if (
+    (to.path === '/dashboard/account' || to.path === '/dashboard/account/') &&
+    !isMobileDevice()
+  ) {
+    next('/dashboard/account/packages')
+    return
   }
+
+  next()
 })
 
 export default router

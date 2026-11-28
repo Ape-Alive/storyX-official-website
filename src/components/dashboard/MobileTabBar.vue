@@ -19,14 +19,14 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { mobileNavItems } from '@/config/dashboardNav'
+import { mobileNavItems, isDashboardNavActive } from '@/config/dashboardNav'
 
 const route = useRoute()
 const navItems = mobileNavItems
 
 const active = computed({
   get() {
-    const idx = navItems.findIndex((item) => route.path === item.path)
+    const idx = navItems.findIndex((item) => isDashboardNavActive(route.path, item.path))
     return idx >= 0 ? idx : 0
   },
   set() {

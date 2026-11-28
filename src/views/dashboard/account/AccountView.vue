@@ -5,11 +5,6 @@
   <!-- 移动：枢纽 / 子页 -->
   <div v-else class="mobile-account">
     <div v-if="isHub" class="mobile-hub">
-      <header class="mobile-hub__head">
-        <h1 class="mobile-hub__title">个人中心</h1>
-        <p class="mobile-hub__desc">账户、套餐与支持</p>
-      </header>
-
       <section class="hub-profile">
         <div class="hub-profile__avatar">{{ userInitials }}</div>
         <div class="hub-profile__meta">
@@ -18,8 +13,12 @@
             <span v-if="hasActivePackage" class="hub-vip">VIP</span>
           </div>
           <div class="hub-profile__email">{{ displayEmail }}</div>
-          <div v-if="userId" class="hub-profile__id">ID {{ maskedUserId }}</div>
+          <div v-if="userId" class="hub-profile__id">
+            <span>ID {{ maskedUserId }}</span>
+            <button type="button" class="hub-copy" @click="copyUserId">复制</button>
+          </div>
         </div>
+        <router-link class="hub-edit" to="/dashboard/account/profile">编辑资料</router-link>
       </section>
 
       <div class="hub-stats">
@@ -73,6 +72,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { showSuccessToast, showFailToast } from 'vant'
 import { useDevice } from '@/utils/device'
 import { getUserInfo } from '@/utils/storage'
 import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
@@ -136,6 +136,16 @@ const remainingQuotaText = computed(() => {
 
 const goHub = () => router.push('/dashboard/account')
 
+const copyUserId = async () => {
+  if (!userId.value) return
+  try {
+    await navigator.clipboard.writeText(userId.value)
+    showSuccessToast('已复制用户 ID')
+  } catch {
+    showFailToast('复制失败')
+  }
+}
+
 const loadHubStats = async () => {
   try {
     const response = await getMyPackages({ activeOnly: false, page: 1, pageSize: 50 })
@@ -168,33 +178,17 @@ watch(isHub, (hub) => {
   padding-bottom: 12px;
 }
 
-.mobile-hub__head {
-  margin-bottom: 16px;
-}
-
-.mobile-hub__title {
-  margin: 0 0 4px;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
-.mobile-hub__desc {
-  margin: 0;
-  font-size: 13px;
-  color: rgba(28, 25, 23, 0.55);
-}
-
 .hub-profile {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   padding: 18px 16px;
   border-radius: 16px;
+  border: 1px solid rgba(28, 25, 23, 0.08);
   background:
-    radial-gradient(ellipse 80% 120% at 100% 0%, rgba(28, 25, 23, 0.1), transparent 55%),
-    linear-gradient(135deg, #2a2725 0%, #111 100%);
-  color: #fff;
+    radial-gradient(ellipse 80% 120% at 100% 0%, rgba(28, 25, 23, 0.08), transparent 55%),
+    linear-gradient(135deg, #f4f3f1 0%, #ebeae7 100%);
+  color: #1c1917;
   margin-bottom: 12px;
 }
 
@@ -202,13 +196,19 @@ watch(isHub, (hub) => {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
+  background: #111;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
   font-weight: 800;
   flex-shrink: 0;
+}
+
+.hub-profile__meta {
+  flex: 1;
+  min-width: 0;
 }
 
 .hub-profile__name-row {
@@ -227,8 +227,8 @@ watch(isHub, (hub) => {
   display: inline-flex;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #fff;
-  color: #111;
+  background: #111;
+  color: #fff;
   font-size: 10px;
   font-weight: 800;
 }
@@ -237,8 +237,39 @@ watch(isHub, (hub) => {
 .hub-profile__id {
   margin-top: 3px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(28, 25, 23, 0.55);
   word-break: break-all;
+}
+
+.hub-profile__id {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hub-copy {
+  border: 1px solid rgba(28, 25, 23, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 650;
+  color: #1c1917;
+  cursor: pointer;
+}
+
+.hub-edit {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(28, 25, 23, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1c1917;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .hub-stats {

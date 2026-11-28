@@ -3,6 +3,7 @@ import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import { getToken } from '@/utils/storage'
+import { isMobileDevice } from '@/utils/device'
 
 const routes = [
   {
@@ -86,32 +87,56 @@ const routes = [
       },
       {
         path: 'account',
-        name: 'DashboardAccount',
         component: () => import('@/views/dashboard/account/AccountView.vue'),
-      },
-      {
-        path: 'account/packages',
-        redirect: { path: '/dashboard/account', hash: '#packages' },
-      },
-      {
-        path: 'account/orders',
-        redirect: { path: '/dashboard/account', hash: '#orders' },
-      },
-      {
-        path: 'account/profile',
-        redirect: { path: '/dashboard/account', hash: '#profile' },
-      },
-      {
-        path: 'account/invite',
-        redirect: { path: '/dashboard/account', hash: '#invite' },
-      },
-      {
-        path: 'account/contact',
-        redirect: { path: '/dashboard/account', hash: '#contact' },
+        children: [
+          {
+            path: '',
+            name: 'DashboardAccount',
+            component: {
+              name: 'AccountHubBlank',
+              render() {
+                return null
+              },
+            },
+          },
+          {
+            path: 'packages',
+            name: 'DashboardAccountPackages',
+            component: () => import('@/views/dashboard/account/MyPackagesView.vue'),
+            props: { embedded: true },
+          },
+          {
+            path: 'orders',
+            name: 'DashboardAccountOrders',
+            component: () => import('@/views/dashboard/OrdersView.vue'),
+            props: { embedded: true },
+          },
+          {
+            path: 'profile',
+            name: 'DashboardAccountProfile',
+            component: () => import('@/views/dashboard/account/ProfileView.vue'),
+            props: { embedded: true },
+          },
+          {
+            path: 'invite',
+            name: 'DashboardAccountInvite',
+            component: () => import('@/views/dashboard/account/InviteView.vue'),
+            props: { embedded: true },
+          },
+          {
+            path: 'contact',
+            name: 'DashboardAccountContact',
+            component: () => import('@/views/dashboard/ContactView.vue'),
+            props: { embedded: true },
+          },
+        ],
       },
       {
         path: 'orders',
-        redirect: { path: '/dashboard/account', hash: '#orders' },
+        redirect: () =>
+          isMobileDevice()
+            ? '/dashboard/account/orders'
+            : { path: '/dashboard/account', hash: '#orders' },
       },
       {
         path: 'docs',
@@ -120,7 +145,10 @@ const routes = [
       },
       {
         path: 'contact',
-        redirect: { path: '/dashboard/account', hash: '#contact' },
+        redirect: () =>
+          isMobileDevice()
+            ? '/dashboard/account/contact'
+            : { path: '/dashboard/account', hash: '#contact' },
       }
     ]
   },
@@ -161,6 +189,14 @@ router.beforeEach((to, from, next) => {
     (to.path === '/auth/login' || to.path === '/auth/register' || to.path === '/auth/forgot-password')
   ) {
     next('/dashboard/usage')
+  }
+  // PC：账户子路径回到单页锚点；移动端走子页
+  else if (
+    !isMobileDevice() &&
+    /^\/dashboard\/account\/(packages|orders|profile|invite|contact)\/?$/.test(to.path)
+  ) {
+    const section = to.path.split('/').pop()
+    next({ path: '/dashboard/account', hash: `#${section}` })
   } else {
     next()
   }

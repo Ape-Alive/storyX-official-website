@@ -567,7 +567,11 @@ const handleTierChange = async (roleKey) => {
 }
 
 const handleContact = () => {
-  router.push({ path: '/dashboard/account', hash: '#contact' })
+  router.push(
+    isMobile.value
+      ? '/dashboard/account/contact'
+      : { path: '/dashboard/account', hash: '#contact' },
+  )
 }
 
 const handleSelectPlan = (pkg) => {

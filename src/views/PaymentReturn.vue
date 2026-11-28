@@ -33,7 +33,7 @@ const isPaidStatus = (status) =>
   ['success', 'paid', 'completed'].includes(String(status || '').toLowerCase())
 
 const goPlans = () => router.push('/dashboard/plans')
-const goOrders = () => router.push({ path: '/dashboard/account', hash: '#orders' })
+const goOrders = () => router.push('/dashboard/account/orders')
 
 const finishSuccess = (packageName) => {
   title.value = '支付成功'

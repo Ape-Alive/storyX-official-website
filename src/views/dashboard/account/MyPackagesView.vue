@@ -97,6 +97,13 @@ import { formatQuota, isUnlimitedQuota } from '@/composables/useMyActivePackages
 import { useDevice } from '@/utils/device'
 import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
 
+const props = defineProps({
+  embedded: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const router = useRouter()
 const { isMobile } = useDevice()
 const { runPageBoot } = useDashboardPageBoot()
@@ -195,6 +202,10 @@ const goPlans = () => {
 }
 
 onMounted(() => {
+  if (props.embedded) {
+    loadPackages()
+    return
+  }
   runPageBoot(() => loadPackages())
 })
 </script>
@@ -202,6 +213,7 @@ onMounted(() => {
 <style scoped>
 .my-packages {
   color: #1c1917;
+  padding-top: 0;
 }
 
 .my-packages__header {

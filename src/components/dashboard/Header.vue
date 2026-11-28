@@ -122,7 +122,7 @@ const handleCommand = (command) => {
   if (command === 'logout') {
     handleLogout()
   } else if (command === 'account') {
-    router.push(isMobileDevice() ? '/dashboard/account' : '/dashboard/account/packages')
+    router.push('/dashboard/account')
   } else if (command === 'theme') {
     themeStore.toggleTheme()
   } else if (command === 'download') {

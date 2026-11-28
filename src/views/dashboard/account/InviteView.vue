@@ -100,6 +100,13 @@ import { formatQuota } from '@/composables/useMyActivePackages'
 import { useDevice } from '@/utils/device'
 import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
 
+const props = defineProps({
+  embedded: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const { isMobile } = useDevice()
 const { runPageBoot } = useDashboardPageBoot()
 
@@ -145,6 +152,10 @@ const copyCode = async () => {
 }
 
 onMounted(() => {
+  if (props.embedded) {
+    loadInvite()
+    return
+  }
   runPageBoot(() => loadInvite())
 })
 </script>

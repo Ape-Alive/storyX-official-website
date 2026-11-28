@@ -2,7 +2,7 @@
   <div class="orders-view" :class="{ 'is-mobile': isMobile }">
     <div class="orders-header">
       <div class="orders-header-left">
-        <h2 class="orders-title">购买记录</h2>
+        <h2 class="orders-title">{{ props.embedded ? '财务订单' : '购买记录' }}</h2>
         <p v-if="!isMobile" class="orders-desc">查看套餐订阅与支付订单</p>
       </div>
 
@@ -127,6 +127,13 @@ import { getMyOrders } from '@/api/order'
 import { useDevice } from '@/utils/device'
 import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
 
+const props = defineProps({
+  embedded: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const { isMobile } = useDevice()
 const { runPageBoot } = useDashboardPageBoot()
 const orders = ref([])
@@ -232,14 +239,18 @@ const handlePageChange = (page) => {
 }
 
 onMounted(() => {
+  if (props.embedded) {
+    loadOrders()
+    return
+  }
   runPageBoot(() => loadOrders())
 })
 </script>
 
 <style scoped>
 .orders-view {
-  animation: fadeInSlide 0.5s ease-out;
-  padding-top: 8px;
+  animation: none;
+  padding-top: 0;
   color: var(--text-primary);
 }
 

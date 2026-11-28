@@ -131,6 +131,13 @@ import { useDevice } from '@/utils/device'
 import { submitFeedback } from '@/api/feedback'
 import { useDashboardPageBoot } from '@/composables/useDashboardPageBoot'
 
+const props = defineProps({
+  embedded: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const { isMobile } = useDevice()
 const { finishPageBoot } = useDashboardPageBoot()
 const submitting = ref(false)
@@ -142,7 +149,7 @@ const form = reactive({
 })
 
 onMounted(() => {
-  finishPageBoot()
+  if (!props.embedded) finishPageBoot()
 })
 
 const handleSubmit = async () => {

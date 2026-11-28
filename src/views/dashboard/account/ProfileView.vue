@@ -42,6 +42,13 @@ import { showSuccessToast, showFailToast } from 'vant'
 import { getUserInfo } from '@/utils/storage'
 import { useDevice } from '@/utils/device'
 
+defineProps({
+  embedded: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const { isMobile } = useDevice()
 const user = computed(() => getUserInfo() || {})
 const userIdRevealed = ref(false)

@@ -1,19 +1,14 @@
 <template>
   <div class="plans-view" :class="{ 'is-mobile': isMobile }">
-    <section v-if="isMobile" class="mobile-active-plans" v-loading="activePlansLoading">
+    <!-- 移动端仅在有活跃会员时展示，去掉空状态占位，与官网定价页一致 -->
+    <section
+      v-if="isMobile && activePlans.length > 0"
+      class="mobile-active-plans"
+      v-loading="activePlansLoading"
+    >
       <div class="mobile-active-plans__header">
         <h2 class="mobile-active-plans__title">活跃会员</h2>
       </div>
-
-      <van-empty
-        v-if="!activePlansLoading && activePlans.length === 0"
-        image="search"
-        description="暂无活跃会员"
-      >
-        <van-button round type="primary" size="small" @click="scrollToBuy">
-          立即开通会员
-        </van-button>
-      </van-empty>
 
       <div
         v-for="plan in activePlans"
@@ -57,7 +52,7 @@
         <p class="pricing-subtitle">按版本挑选周卡到年卡，权益即时生效</p>
       </header>
 
-      <div class="plan-toolbar" ref="buyAnchorRef">
+      <div class="plan-toolbar">
         <button type="button" class="toolbar-pill is-active" aria-current="page">
           <span class="toolbar-pill__dot" aria-hidden="true" />
           <span>会员计划</span>
@@ -294,7 +289,6 @@ const {
   loadMyPackages: loadActivePackages,
 } = useMyActivePackages({ immediate: false })
 
-const buyAnchorRef = ref(null)
 const checkoutVisible = ref(false)
 const checkoutPkg = ref(null)
 const checkoutOrderType = ref('purchase')
@@ -344,10 +338,6 @@ const QUOTA_USAGE_TAGS = [
   '场景视频',
   'AI 画布',
 ]
-
-const scrollToBuy = () => {
-  buyAnchorRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
 
 const resolveDurationSlot = (pkg) => {
   const name = `${pkg.displayName || ''} ${pkg.name || ''}`
@@ -1305,26 +1295,114 @@ onMounted(() => {
   }
 }
 
+/* 移动端与官网定价页对齐：去掉标题区与左右胶囊，仅保留版本切换 */
+.plans-view.is-mobile {
+  gap: 16px;
+  padding-top: 0;
+}
+
+.plans-view.is-mobile .pricing-hero {
+  display: none;
+}
+
+.plans-view.is-mobile .plan-toolbar {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.plans-view.is-mobile .toolbar-pill {
+  display: none;
+}
+
+.plans-view.is-mobile .tier-switch {
+  width: 100%;
+  padding: 3px;
+  background: rgba(28, 25, 23, 0.07);
+}
+
+.plans-view.is-mobile .tier-btn {
+  padding: 11px 10px;
+  font-size: 13px;
+}
+
+.plans-view.is-mobile .plan-matrix {
+  margin-bottom: 28px;
+  border-top: none;
+  border-radius: 14px;
+  border: 1px solid var(--pricing-line);
+  background: rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+  min-height: 0;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.plans-view.is-mobile .plan-col {
+  min-height: 0;
+  border-right: none;
+  border-top: 1px solid var(--pricing-line);
+  padding: 22px 16px 16px;
+}
+
+.plans-view.is-mobile .plan-col:first-child {
+  border-top: none;
+}
+
+.plans-view.is-mobile .plan-col__desc {
+  min-height: 0;
+}
+
+.plans-view.is-mobile .buy-btn {
+  min-height: 44px;
+  margin-top: 10px;
+  font-size: 15px;
+}
+
+.plans-view.is-mobile .compare-section {
+  padding: 0;
+}
+
+.plans-view.is-mobile .compare-title {
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+
+.plans-view.is-mobile .compare-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  border: 1px solid var(--pricing-line);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.plans-view.is-mobile .compare-table {
+  min-width: 520px;
+}
+
 @media (max-width: 960px) {
   .plans-view {
     gap: 20px;
     padding-top: 0;
   }
 
+  .pricing-hero {
+    display: none;
+  }
+
   .plan-toolbar {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    display: block;
     margin-bottom: 20px;
   }
 
   .toolbar-pill {
-    width: 100%;
-    min-height: 40px;
+    display: none;
   }
 
   .tier-switch {
     width: 100%;
     justify-self: stretch;
+    padding: 3px;
+    background: rgba(28, 25, 23, 0.07);
   }
 
   .plan-matrix {
@@ -1337,10 +1415,6 @@ onMounted(() => {
 }
 
 @media (max-width: 640px) {
-  .pricing-hero {
-    margin-bottom: 20px;
-  }
-
   .pricing-title {
     font-size: 22px;
   }
@@ -1348,18 +1422,26 @@ onMounted(() => {
   .plan-matrix {
     grid-template-columns: 1fr;
     min-height: 0;
+    border-top: none;
+    border-radius: 14px;
+    border: 1px solid var(--pricing-line);
+    background: rgba(255, 255, 255, 0.55);
+    overflow: hidden;
   }
 
   .plan-col {
-    min-height: 340px;
+    min-height: 0;
     border-right: none;
     border-top: 1px solid var(--pricing-line);
-    padding-left: 0;
-    padding-right: 0;
+    padding: 22px 16px 16px;
   }
 
   .plan-col:first-child {
     border-top: none;
+  }
+
+  .plan-col__desc {
+    min-height: 0;
   }
 
   .price-amount {
@@ -1368,6 +1450,12 @@ onMounted(() => {
 
   .plan-col__name {
     font-size: 18px;
+  }
+
+  .buy-btn {
+    min-height: 44px;
+    margin-top: 10px;
+    font-size: 15px;
   }
 }
 </style>
